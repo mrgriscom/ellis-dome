@@ -9,6 +9,8 @@ import java.util.Arrays;
 // p: play/plause
 // .: ff 5 sec
 // ,: rewind 5 sec
+// >: ff 60 sec
+// <: rewind 60 sec
 
 enum VideoSizing {
     STRETCH_TO_FIT,
@@ -19,7 +21,7 @@ enum VideoSizing {
 
 public class VideoPlayer extends FadecandySketch<Object> implements OPC.FramePostprocessor {
 
-    static final double[] skips = {5};
+    static final double[] skips = {5, 60};
 
     Movie mov;
     boolean playing;
@@ -101,10 +103,19 @@ public class VideoPlayer extends FadecandySketch<Object> implements OPC.FramePos
 
     void keyPressed() {
         int dir = 0;
+        int iskip = -1;
         if (app.key == '.') {
             dir = 1;
+            iskip = 0;
         } else if (app.key == ',') {
             dir = -1;
+            iskip = 0;
+        } else if (app.key == '>') {
+            dir = 1;
+            iskip = 1;
+        } else if (app.key == '<') {
+            dir = -1;
+            iskip = 1;
         } else if (app.key == 'p') {
             if (playing) {
                 mov.pause();
@@ -115,7 +126,7 @@ public class VideoPlayer extends FadecandySketch<Object> implements OPC.FramePos
         }
 
         if (dir != 0) {
-            double t = Math.max(0, Math.min(mov.duration(), mov.time() + dir * skips[0]));
+            double t = Math.max(0, Math.min(mov.duration(), mov.time() + dir * skips[iskip]));
             mov.jump((float)t);
             System.out.println(String.format("%.2f / %.2f", t, mov.duration()));
         }
