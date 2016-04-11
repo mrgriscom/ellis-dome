@@ -1,5 +1,11 @@
 *~
 *.jar
 
-# dumped pixel positions for simulator; TODO write this to a better place than every sketch directory
+# dumped pixel positions for simulator;
 layout.json
+
+# build output
+bin*
+
+# exported processing sketches
+*application*

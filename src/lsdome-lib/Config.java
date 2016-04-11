@@ -1,13 +1,40 @@
 // Global configuration variables.
+import java.util.*;
+import java.io.*;
 
-public interface Config {
 
+public class Config {
+
+    private static class ConfigInstance {
+        public static Config config = new Config();
+    }
+    
+    public static Config getConfig() {
+        return ConfigInstance.config;
+    }
+    
+    private Config()
+    {
+        FADECANDY_HOST = "127.0.0.1";
+        
+        Properties properties = new Properties();
+        try {
+        
+            properties.load(new FileInputStream("config.properties"));
+            FADECANDY_HOST = properties.getProperty("opcHost");
+        } catch (IOException e) {
+            // do nothing. Use defaults. Meh.
+        }
+        System.out.println(System.getProperty("user.dir"));
+        System.out.println(FADECANDY_HOST);
+    }
+    
     // Debug mode.
     static final boolean DEBUG = false;
 
     // Fadecandy server.
-    static final String FADECANDY_HOST = "127.0.0.1";
-    //static final String FADECANDY_HOST = "192.168.1.135";
+    //public String FADECANDY_HOST = "127.0.0.1";
+    public String FADECANDY_HOST;
 
     // Size of single panel's pixel grid.
     static final int PANEL_SIZE = 15;
@@ -21,5 +48,4 @@ public interface Config {
     static final boolean PARTIAL_LAYOUT = false;
     // The larger layout. Ignored if PARTIAL_LAYOUT is false.
     static final PanelLayout FULL_PANEL_LAYOUT = PanelLayout._24;
-
 }

@@ -1,7 +1,7 @@
 import java.util.*;
 import processing.core.*;
 
-public class Twinkle extends PixelGridSketch<Object> {
+public class TwinkleSketch extends PixelGridSketch<Object> {
 
     // Skew of initial brightness of stars. Higher means fewer bright stars.
     // >= 1.
@@ -29,7 +29,7 @@ public class Twinkle extends PixelGridSketch<Object> {
     HashMap<DomeCoord, Double> brightness;
     HashMap<DomeCoord, Double> saturation;
 
-    public Twinkle(PApplet app, int size_px) {
+    public TwinkleSketch(PApplet app, int size_px) {
         super(app, size_px);
     }
 

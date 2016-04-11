@@ -1,6 +1,6 @@
 // Twinkling stars.
 
-FadecandySketch driver = new Twinkle(this, 300);
+FadecandySketch driver = new TwinkleSketch(this, 300);
 
 void setup() {
   driver.init();

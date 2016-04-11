@@ -13,4 +13,8 @@ void draw() {
   driver.draw();
 }
 
+void keyPressed(){
+   driver.processKeyInput();
+}
+
 

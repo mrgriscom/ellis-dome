@@ -38,15 +38,19 @@ public class CloudsSketch extends PointSampleSketch<PVector, CloudsState> {
             return drawRing(p, t);
         case 2:
             return drawDot(p, t);
+        case 3:
+            return drawIDontEvenKnow(p, t);
+        case 4:
+            return drawNoire(p, t);
+        case 5:
+            return drawSnowflake(p, t);            
         default:
             throw new RuntimeException();
         }
     }
-
-    void beforeFrame(double t) {
-        hud = false;
+    
+    void processKeyInput(){
         if (app.keyPressed) {
-            hud = (app.key == 'v' || app.key == 'V');
             if (app.key == 'c') {
                 mode = 0;
             }
@@ -56,19 +60,23 @@ public class CloudsSketch extends PointSampleSketch<PVector, CloudsState> {
             if (app.key == 'd') {
                 mode = 2;
             }
+            if (app.key == 'm') {
+                mode = 3;
+            }
+            if (app.key == 'n') {
+                mode = 4;
+            }
+            if (app.key == 'b') {
+                mode = 5;
+            }
         }
     }
 
+    void beforeFrame(double t) {
+
+    }
+
     void afterFrame(double t) {
-        if (hud) {
-            // Show the FPS
-            int txtSize = 16;
-            app.textSize(txtSize);
-            app.fill(0, 100, 100);
-            app.text((int)app.frameRate + "fps", 2, (txtSize + 2)); 
-            app.text("dx " + state.dx, 2, (txtSize + 2) * 2);
-            app.text("dy " + state.dy, 2, (txtSize + 2) * 3);
-        }
     }
 
     int drawCloud(PVector p, double t) {
@@ -122,7 +130,7 @@ public class CloudsSketch extends PointSampleSketch<PVector, CloudsState> {
     }
 
     int drawDot(PVector p, double t) {
-        boolean track_mouse = true;
+        boolean track_mouse = true;  
         double minRadius = .2;
         double maxRadius = .5;
         double pulsePeriod = 1.5;  //s
@@ -136,14 +144,137 @@ public class CloudsSketch extends PointSampleSketch<PVector, CloudsState> {
         PVector center;
         if (track_mouse) {
             center = normalizePoint(screenToXy(LayoutUtil.V(app.mouseX, app.mouseY)));
-        } else {
+        }
+        else
+        {
             center = LayoutUtil.Vrot(LayoutUtil.V(cyclicValue(t, radialPeriod), 0), t/rotPeriod * 2*Math.PI);
         }
+        
         double dist = LayoutUtil.Vsub(p, center).mag();
         double k = (dist > radius ? 0. : cyclicValue(dist, 2*radius));
 
         return color(hue, sat, k);
     }
+
+
+    // Return a value from 1 to 0 and back gain as x moves from 0 to 'period'
+    double moireCyclicValue(double x, double period) {
+        double val = (Math.exp(Math.sin(x*x/2000.0*Math.PI)) - 0.36787944)*108.0;
+        double variance = 0.001;
+      
+        return (variance*val);
+    }
+
+    int drawIDontEvenKnow(PVector p, double t) {
+        double minRadius = .2;
+        double maxRadius = .5;
+        double radialPeriod = 20;  //s
+        double rotPeriod = 7.3854;  //s
+        double hue = 0.1*t;
+        double sat = 0.1*t;
+        
+        
+        double scale = .9;
+        double z = scale;
+        double n = fractalNoise(state.dx + p.x*scale, state.dy + p.y*scale, z);
+        
+        double radius =     minRadius  *  0.5*moireCyclicValue(t, rotPeriod ) ;
+                        
+        PVector center = LayoutUtil.Vrot(LayoutUtil.V(1, 0),0);
+        double dist = LayoutUtil.Vsub(p, center).mag();
+
+        double sqr = Math.pow(n, 2);
+        return color(
+                     MathUtil.fmod(hue + n, 0.9), 
+                     hue*(1. - constrain(sqr, 0, 0.9)), 
+                     cyclicValue(dist, hue*(1- constrain(sqr, 0, 0.9)))
+                     );
+        
+        
+    }
+
+
+    // Return a value from 1 to 0 and back gain as x moves from 0 to 'period'
+    double noireCyclicValue(double x, double period) {
+        double val = (Math.exp(Math.sin(x*x/2000.0*Math.PI)) - 0.36787944)*108.0;
+        double variance = 0.001;
+      
+        return (variance*val);
+    }
+
+
+    int drawNoire(PVector p, double t) {
+        double minRadius = .2;
+        double maxRadius = .5;
+        double radialPeriod = 20;  //s
+        double rotPeriod = 7.3854;  //s
+        double hue = 0.1*t;
+        double sat = 0.1*t;
+        
+        double radius = minRadius  *  noireCyclicValue(t, rotPeriod ) ;
+                        
+        PVector center = LayoutUtil.Vrot(LayoutUtil.V(0, 0), 1);
+        double dist = LayoutUtil.Vsub(p, center).mag();
+        double k = cyclicValue(dist, radius);
+
+        return color(hue, sat, k);
+        
+    }
+    
+    
+
+    double snowflakeCyclicValue(double x, double period) {
+        double val = (Math.exp(Math.sin(x/2000.0*Math.PI)))*10.0;
+        double variance = 0.01;
+      
+        return (variance*val);
+    }
+
+
+
+    double oldradius = 0;
+
+    int drawSnowflake(PVector p, double t) {
+        double minRadius = .2;
+        double maxRadius = .5;
+        double radialPeriod = 20;  //s
+        double rotPeriod = 7.3854;  //s
+        double hue = 0.1*t;
+        double sat = 0.1*t;
+        
+        
+        double radius = minRadius  *  snowflakeCyclicValue(t, rotPeriod ) ;
+        
+        if (oldradius <= 0)
+        {
+          oldradius = radius;
+        }
+        
+        if (oldradius != 0)
+        {
+          radius = (radius + oldradius) / 2;
+          oldradius = radius; 
+
+        }
+                   
+        PVector center = LayoutUtil.Vrot(LayoutUtil.V(0, 0), 1);
+        double dist = LayoutUtil.Vsub(p, center).mag();
+
+        
+        double k = constrain(hue, 0, 255);
+        double n = cyclicValue(dist, radius) + 0.1*moireCyclicValue(dist, radius);
+        k -= n;
+        
+        
+       double saturation = constrain(Math.pow(1.15 * noise(t * 0.122), 2.5), 0, 1);
+       
+
+        return color(MathUtil.fmod(saturation, 0.9), saturation, MathUtil.fmod(k, 0.9));
+        
+    }
+
+
+
 
     double fractalNoise(double x, double y, double z) {
         double r = 0;

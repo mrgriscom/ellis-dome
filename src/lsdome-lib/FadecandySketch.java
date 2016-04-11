@@ -96,7 +96,7 @@ public class FadecandySketch<S> {
     void init() {
         app.size(width, height, app.P2D);
 
-        String hostname = Config.FADECANDY_HOST;
+        String hostname = Config.getConfig().FADECANDY_HOST;
         int port = 7890;
         opc = new OPC(app, hostname, port);
 
@@ -106,13 +106,13 @@ public class FadecandySketch<S> {
         coords = config.fill(panel_size);
         points = config.coordsToXy(coords);
         
-        LayoutUtil.generateOPCSimLayout(pixelLocationsInOrder(), app, "layout.json");
+        //LayoutUtil.generateOPCSimLayout(pixelLocationsInOrder(), app, "layout.json");
         
         radius = getRadius();
         registerScreenSamples();
 
         app.colorMode(app.HSB, COLOR_STEPS);
-
+        
         state = initialState();
     }
 
@@ -175,9 +175,10 @@ public class FadecandySketch<S> {
         draw(t);
         afterFrame(t);
 
-        if (Config.DEBUG) {
-            System.out.println(app.frameRate);
-        }
+        // The HUD: think this space is (almost) never mapped to pixels.
+        app.fill(0,0,100);
+        app.text("opc @" + opc.host, 100, app.height - 10);
+        app.text(String.format("%.1ffps", app.frameRate), 10, app.height - 10);
     }
 
     void _updateState(double t) {
@@ -197,7 +198,7 @@ public class FadecandySketch<S> {
 
     // **OVERRIDE** this with your sketch's drawing code. 't' is the global clock in seconds.
     void draw(double t) {
-        System.out.println("nothing to draw");
+        //System.out.println("nothing to draw");
     }
 
     // **OVERRIDE** to handle keyboard input.

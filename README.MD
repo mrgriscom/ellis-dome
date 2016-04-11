@@ -26,11 +26,18 @@ This should yield magic.
 Grab this: 
 
     git clone https://github.com/zestyping/openpixelcontrol.git
+    
+And maybe some dependcies. on ubuntu:
+
+    sudo apt-get install mesa-common-dev freeglut3-dev
+
+Build the thing:
+   
     make
     
-Then, grab `13panel-gl_server.json` from `src/config/` and  put it in `openpixelcontrol/layouts`.
+Then, grab `13panel-gl_server.json` from our lsdome `src/config/` and  put it in `openpixelcontrol/layouts`.
     
-    bin/gl_server -l /13panel-gl_server.json
+    bin/gl_server -l /13panel-gl_server.json -p 7890
     
-to start the simulator. Actually, do this before you do the previous step.
+to start the simulator.
 
