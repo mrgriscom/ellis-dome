@@ -35,11 +35,6 @@ public class DeadPixelTest extends PixelGridSketch<Object> {
     }
 
     int drawPixel(DomeCoord c, double t) {
-        boolean blinkOn = MathUtil.fmod(t, 1.) < .75;
-        if (!blinkOn) {
-            return 0x0;
-        }
-
         int i = coordOrder.get(c);
         if (Arrays.binarySearch(Config.DEAD_PIXELS, i) >= 0) {
             return color(0., 1., 1.);

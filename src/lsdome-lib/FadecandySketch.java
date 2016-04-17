@@ -106,7 +106,7 @@ public class FadecandySketch<S> {
         coords = config.fill(panel_size);
         points = config.coordsToXy(coords);
         
-        //LayoutUtil.generateOPCSimLayout(pixelLocationsInOrder(), app, "layout.json");
+        //LayoutUtil.generateOPCSimLayout(pixelLocationsInOrder(), app, "layout.json", true);
         
         radius = getRadius();
         registerScreenSamples();
