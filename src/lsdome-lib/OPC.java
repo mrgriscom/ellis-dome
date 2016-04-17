@@ -210,8 +210,6 @@ public class OPC implements Runnable
     }
 
     int numPixels = pixelLocations.length;
-    int ledAddress = 4;
-
     setPixelCount(numPixels);
     app.loadPixels();
 
@@ -223,18 +221,13 @@ public class OPC implements Runnable
       framePostprocessor.postProcessFrame(pixelBuffer);
     }
     for (int i = 0; i < numPixels; i++) {
-      int pixel = pixelBuffer[i];
-
-      packetData[ledAddress] = (byte)(pixel >> 16);
-      packetData[ledAddress + 1] = (byte)(pixel >> 8);
-      packetData[ledAddress + 2] = (byte)pixel;
-      ledAddress += 3;
-
-      if (enableShowLocations) {
-        // FIXME this doesn't seem to work?
-        int pixelLocation = pixelLocations[i];
-        app.pixels[pixelLocation] = 0xFFFFFF ^ pixel;
-      }
+        int pixel = pixelBuffer[i];
+        setPixel(i, pixel);
+        if (enableShowLocations) {
+            // FIXME this doesn't seem to work?
+            int pixelLocation = pixelLocations[i];
+            app.pixels[pixelLocation] = 0xFFFFFF ^ pixel;
+        }
     }
 
     writePixels();
@@ -249,6 +242,9 @@ public class OPC implements Runnable
   // by draw() and by setPixel().
   void setPixelCount(int numPixels)
   {
+    int numDeadPixels = Config.DEAD_PIXELS.length;
+    numPixels -= numDeadPixels;
+
     int numBytes = 3 * numPixels;
     int packetLen = 4 + numBytes;
     if (packetData == null || packetData.length != packetLen) {
@@ -261,10 +257,29 @@ public class OPC implements Runnable
     }
   }
 
+    // Return whether this pixel is marked dead.
+    static boolean isDeadPixel(int i) {
+        return Arrays.binarySearch(Config.DEAD_PIXELS, i) >= 0;
+    }
+
+    // Return number of dead pixels before this pixel.
+    static int deadPixelOffset(int i) {
+        assert !isDeadPixel(i);
+        int offset = Arrays.binarySearch(Config.DEAD_PIXELS, i);
+        offset = -(offset + 1);
+        return offset;
+    }
+
   // Directly manipulate a pixel in the output buffer. This isn't needed
   // for pixels that are mapped to the screen.
   void setPixel(int number, int c)
   {
+      if (isDeadPixel(number)) {
+          return;
+      } else {
+          number -= deadPixelOffset(number);
+      }
+
     int offset = 4 + number * 3;
     if (packetData == null || packetData.length < offset + 3) {
       setPixelCount(number + 1);

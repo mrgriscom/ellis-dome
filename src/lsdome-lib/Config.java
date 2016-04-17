@@ -36,6 +36,11 @@ public class Config {
     //public String FADECANDY_HOST = "127.0.0.1";
     public String FADECANDY_HOST;
 
+    // The index of dead pixels that have been bypassed in the dome. Although
+    // still rendered in software, these pixels will be skipped when sending to
+    // the fadecandy. Must be sorted in ascending order.
+    static final int[] DEAD_PIXELS = {};
+
     // Size of single panel's pixel grid.
     static final int PANEL_SIZE = 15;
 
