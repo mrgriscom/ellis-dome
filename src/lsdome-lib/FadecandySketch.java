@@ -33,6 +33,8 @@ public class FadecandySketch<S> {
     // Reference to fadecandy controller
     OPC opc;
 
+    InputControl ctrl;
+
     // Positions of all the pixels in triangular grid coordinates (and in the order seen by
     // the fadecandy).
     ArrayList<DomeCoord> coords;
@@ -114,6 +116,9 @@ public class FadecandySketch<S> {
         app.colorMode(app.HSB, COLOR_STEPS);
         
         state = initialState();
+
+        ctrl = new InputControl();
+        ctrl.init();
     }
 
     // **OVERRIDE** (optional)
@@ -170,6 +175,7 @@ public class FadecandySketch<S> {
     void draw() {
         double t = app.millis() / 1000.;
 
+        ctrl.processInput();
         _updateState(t);
         beforeFrame(t);
         draw(t);

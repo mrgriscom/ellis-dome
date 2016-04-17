@@ -6,15 +6,14 @@ public class TubeSketch extends PointSampleSketch<PVector, Double> {
     static final double DEFAULT_FOV = 120.;
     static final int DEFAULT_SUBSAMPLING = 4;
 
-    double fov;  // Aperture from opposite ends of the display area, in degrees.
-    BufferedReader input;
+    int numCheckers = 4;
 
+    double fov;  // Aperture from opposite ends of the display area, in degrees.
     double speed = 1.;
 
     TubeSketch(PApplet app, double fov, int size_px, int subsampling, boolean temporal_jitter) {
         super(app, size_px, subsampling, temporal_jitter);
         this.fov = fov;
-        input = app.createReader("/tmp/pipe");
     }
 
     TubeSketch(PApplet app, int size_px, double fov) {
@@ -27,6 +26,31 @@ public class TubeSketch extends PointSampleSketch<PVector, Double> {
 
     TubeSketch(PApplet app, int size_px) {
         this(app, size_px, DEFAULT_FOV);
+    }
+
+    void init() {
+        super.init();
+
+        ctrl.registerHandler("jog_a", new InputControl.InputHandler() {
+                public void jog(boolean pressed) {
+                    boolean forward = pressed;
+
+                    if (Math.abs(speed) > .02) {
+                        final double SPEED_INC = 1.01;
+                        speed *= (forward == speed > 0 ? SPEED_INC : 1./SPEED_INC);
+                    } else {
+                        final double SPEED_STEP = .001;
+                        speed += (forward ? 1 : -1) * SPEED_STEP;
+                    }
+                    System.out.println(""+speed);
+                }
+            });
+        ctrl.registerHandler("browse", new InputControl.InputHandler() {
+                public void jog(boolean pressed) {
+                    numCheckers += (pressed ? 1 : -1);
+                    System.out.println(numCheckers);
+                }
+            });
     }
 
     double subsamplingBoost(PVector p) {
@@ -55,41 +79,9 @@ public class TubeSketch extends PointSampleSketch<PVector, Double> {
         double u_pct = MathUtil.fmod(uv.x / (2*Math.PI), 1.);
         double dist = uv.y + pos;
         //boolean chk = ((int)MathUtil.fmod((uv.x + dist)/(.25*Math.PI), 2.) + (int)MathUtil.fmod((uv.x - dist)/(.25*Math.PI), 2.)) % 2 == 0;
-        boolean chk = ((int)MathUtil.fmod((uv.x)/(.25*Math.PI), 2.) + (int)MathUtil.fmod((dist)/(.25*Math.PI), 2.)) % 2 == 0;
+        boolean chk = ((int)MathUtil.fmod((uv.x)/(Math.PI/numCheckers), 2.) + (int)MathUtil.fmod((dist)/(Math.PI/numCheckers), 2.)) % 2 == 0;
         //boolean chk = (MathUtil.fmod((uv.x + dist) / Math.PI, 2.) < 1.);
         return color(MathUtil.fmod(u_pct + dist/10., 1.), .5, chk ? 1 : .05);
-    }
-
-    void beforeFrame(double t) {
-        if (input != null) {
-            try {
-                while (input.ready()) {
-                    String line = input.readLine();
-                    System.out.println(line);
-                    
-                    int action = 0;
-                    if (line.equals("jog_a inc")) {
-                        action = 1;
-                    } else if (line.equals("jog_a dec")) {
-                        action = -1;
-                    }
-                    if (action == 0) {
-                        continue;
-                    }
-
-                    if (Math.abs(speed) > .02) {
-                        final double SPEED_INC = 1.01;
-                        speed *= (action > 0 == speed > 0 ? SPEED_INC : 1./SPEED_INC);
-                    } else {
-                        final double SPEED_STEP = .001;
-                        speed += (action > 0 ? 1 : -1) * SPEED_STEP;
-                    }
-                    System.out.println(""+speed);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
 }

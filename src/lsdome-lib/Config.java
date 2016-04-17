@@ -53,4 +53,7 @@ public class Config {
     static final boolean PARTIAL_LAYOUT = false;
     // The larger layout. Ignored if PARTIAL_LAYOUT is false.
     static final PanelLayout FULL_PANEL_LAYOUT = PanelLayout._24;
+
+    // File path to get data from MIDI control device.
+    static final String MIDI_SOCKET = "/tmp/pipe";
 }
