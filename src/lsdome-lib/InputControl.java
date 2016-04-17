@@ -59,6 +59,10 @@ public class InputControl {
 
     void processInputEvent(String event) {
         String[] parts = event.split(" ");
+        if (parts.length != 2) {
+            System.err.println("can't understand " + event);
+            return;
+        }
         String name = parts[0];
         String evt = parts[1];
         InputHandler handler = handlers.get(name);

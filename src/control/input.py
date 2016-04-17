@@ -197,7 +197,7 @@ if __name__ == "__main__":
         device = DJ2GoDevice('Numark DJ2Go MIDI 1')
     except IOError:
         device = MockDevice()
-        print 'using mock device'
+        print 'using mock midi device'
     device.start()
 
     class Handler(object):
