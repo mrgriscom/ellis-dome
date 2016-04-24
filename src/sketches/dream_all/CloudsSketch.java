@@ -1,4 +1,5 @@
 import processing.core.*;
+import java.util.*;
 
 public class CloudsSketch extends PointSampleSketch<PVector, CloudsState> {
 
@@ -11,6 +12,10 @@ public class CloudsSketch extends PointSampleSketch<PVector, CloudsState> {
         super(app, size_px);
 
         mode = 0;
+    }
+
+    void configureSketch(Properties props) {
+        mode = Integer.valueOf(props.getProperty("mode", "0"));
     }
 
     CloudsState initialState() {
