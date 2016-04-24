@@ -1,5 +1,6 @@
 *~
 *.jar
+sketch.properties
 
 # dumped pixel positions for simulator;
 layout.json

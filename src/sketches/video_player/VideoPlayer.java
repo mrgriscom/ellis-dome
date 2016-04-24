@@ -1,6 +1,7 @@
+import java.util.Arrays;
+import java.util.Properties;
 import processing.core.*;
 import processing.video.*;
-import java.util.Arrays;
 
 // Play video from file. Will size the projection area to the smallest bounding rectangle for the pixels.
 // Aspect ratio is not preserved (support for such is a TODO). Dynamic contrast stretch is supported.
@@ -23,10 +24,12 @@ public class VideoPlayer extends FadecandySketch<Object> implements OPC.FramePos
 
     static final double[] skips = {5, 60};
 
+    String filename;
     Movie mov;
     boolean playing;
     VideoSizing sizeMode;
     boolean contrastStretch;
+    boolean repeat;
 
     // 'projection' rectangle to get more of the video area to overlap the panels
     double px0;
@@ -41,16 +44,26 @@ public class VideoPlayer extends FadecandySketch<Object> implements OPC.FramePos
 
     public VideoPlayer(PApplet app, int size_px, String filename, VideoSizing sizeMode, boolean contrastStretch) {
         super(app, size_px);
-        mov = new Movie(app, filename);
+        this.filename = filename;
         this.sizeMode = sizeMode;
         this.contrastStretch = contrastStretch;
     }
 
+    void configureSketch(Properties props) {
+        filename = props.getProperty("path", filename);
+        repeat = props.getProperty("repeat", "false").equals("true");
+    }
+
     void init() {
         super.init();
+        mov = new Movie(app, filename);
         opc.framePostprocessor = this;
 
-        mov.play(); // or loop() ?
+        if (repeat) {
+            mov.loop();
+        } else {
+            mov.play();
+        }
         playing = true;
         System.out.println("duration: " + mov.duration());
         // TODO some event when playback has finished?

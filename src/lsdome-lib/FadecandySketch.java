@@ -17,6 +17,7 @@ void draw() {
 */
 
 import java.util.*;
+import java.io.*;
 import processing.core.*;
 
 // S is the type of the state that is maintained and updated each frame.
@@ -97,6 +98,7 @@ public class FadecandySketch<S> {
     // super.init()!
     void init() {
         app.size(width, height, app.P2D);
+        _configureSketch();
 
         String hostname = Config.getConfig().FADECANDY_HOST;
         int port = 7890;
@@ -119,6 +121,21 @@ public class FadecandySketch<S> {
 
         ctrl = new InputControl();
         ctrl.init();
+    }
+
+    void _configureSketch() {
+        Properties properties = new Properties();
+        try {        
+            properties.load(new FileInputStream(new File(app.sketchPath(""), "sketch.properties").getPath()));
+            configureSketch(properties);
+        } catch (IOException e) {
+            System.err.println("no sketch properties found");
+        }
+    }
+
+    // **OVERRIDE** (optional)
+    void configureSketch(Properties props) {
+
     }
 
     // **OVERRIDE** (optional)
