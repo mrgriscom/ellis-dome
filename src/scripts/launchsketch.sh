@@ -24,4 +24,5 @@ mkfifo $MIDI_SOCKET
 run-this-one unbuffer python $SRC_DIR/control/input.py > $MIDI_SOCKET &
 
 # Launch the sketch.
+killall -9 $PROCESSING_DIR/java/bin/java
 $PROCESSING_DIR/processing-java --sketch=$SKETCH_DIR --run --output=$(mktemp -d) --force
