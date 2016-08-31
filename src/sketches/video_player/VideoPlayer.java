@@ -39,7 +39,7 @@ public class VideoPlayer extends FadecandySketch<Object> implements OPC.FramePos
     boolean sizeModeInitialized = false;
 
     public VideoPlayer(PApplet app, int size_px, String filename) {
-        this(app, size_px, filename, VideoSizing.STRETCH_TO_FIT, false);
+        this(app, size_px, filename, VideoSizing.STRETCH_TO_FIT, true);
     }
 
     public VideoPlayer(PApplet app, int size_px, String filename, VideoSizing sizeMode, boolean contrastStretch) {

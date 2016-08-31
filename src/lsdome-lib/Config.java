@@ -16,6 +16,8 @@ public class Config {
     private Config()
     {
         FADECANDY_HOST = "127.0.0.1";
+        //FADECANDY_HOST = "192.168.2.1";
+        //FADECANDY_HOST = "10.0.0.115";
         
         Properties properties = new Properties();
         try {

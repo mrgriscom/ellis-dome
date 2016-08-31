@@ -13,9 +13,8 @@ def load_sketches():
     VIDEO_DIR = '/home/drew/dome/video'
 
     sketches = {
-        'CloudFlock': None,
-        'dream_all': [{'mode': i} for i in (0, 1, 3, 4, 5)],
-        'grid_test': None,
+        'dream_all': [{'mode': i} for i in (1, 3, 4)],
+        #'grid_test': None,
         'kscopevomitcomet': None,
         'PixelFlock': None,
         'pixel_test': None,
@@ -34,11 +33,25 @@ def run_sketch(sketch_config, secs, processing_dir):
     sketch, params = sketch_config
     print 'running', sketch, params
 
+    befcmd = None
+    aftcmd = None
+
+    if params.get('path') == '/home/drew/dome/video/the_knife-we_share_our_mothers_health.mp4':
+        return
+        secs = 225
+        befcmd = 'audacious --pause'
+        aftcmd = 'audacious --play'
+
     with open(os.path.join(sketch_dir(sketch), 'sketch.properties'), 'w') as f:
         f.write('\n'.join('%s=%s' % (k, v) for k, v in params.iteritems()))
 
+    if befcmd:
+        os.popen(befcmd)
     p = Popen('%s %s %s' % (os.path.join(src_dir, 'scripts', 'launchsketch.sh'), processing_dir, sketch), shell=True)
     time.sleep(secs)
+
+    if aftcmd:
+        os.popen(aftcmd)
 
     # killing happens in launchscript so we don't hang during recompile time
     #Popen('killall -9 %s' % os.path.join(processing_dir, 'java', 'bin', 'java'), shell=True).wait()
@@ -54,5 +67,12 @@ if __name__ == "__main__":
 
     for sketch, _ in sketches:
         assert os.path.exists(sketch_dir(sketch))
+
+    last_sketch = None
+
     while True:
-        run_sketch(random.choice(sketches), time_per_sketch, processing_dir)
+        new_sketch = random.choice(sketches)
+        if new_sketch == last_sketch:
+            continue
+        run_sketch(new_sketch, time_per_sketch, processing_dir)
+        last_sketch = new_sketch
