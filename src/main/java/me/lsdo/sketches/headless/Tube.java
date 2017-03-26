@@ -24,6 +24,7 @@ public class Tube extends XYAnimation {
     double pos = 0;
 
     double v_height_baseline = 0;
+    double h_skew_baseline = 0;
 
     InputControl ctrl;
     
@@ -67,6 +68,7 @@ public class Tube extends XYAnimation {
 		@Override
                 public void jog(boolean pressed) {
                     boolean forward = pressed;
+		    double h_skew_prev = h_skew;
                     if (Math.abs(h_skew) > .02) {
                         final double SKEW_INC = 1.01;
                         h_skew *= (forward == h_skew > 0 ? SKEW_INC : 1./SKEW_INC);
@@ -74,6 +76,8 @@ public class Tube extends XYAnimation {
                         final double SKEW_STEP = .001;
                         h_skew += (forward ? 1 : -1) * SKEW_STEP;
                     }
+		    final double REL_BASELINE = 1;
+		    h_skew_baseline += (pos + REL_BASELINE) * (h_skew_prev - h_skew);
                     System.out.println("h-skew: " + h_skew);
                 }
             });
@@ -118,7 +122,10 @@ public class Tube extends XYAnimation {
                     v_height = HMIN * Math.pow(HMAX / HMIN, val);
 
 		    final double REL_BASELINE = 1.;
-		    v_height_baseline += (pos + REL_BASELINE - v_height_baseline) * v_height / v_height_prev;
+		    // This is actually the correct formula, however:
+		    //v_height_baseline += (pos + REL_BASELINE - v_height_baseline) * (1 - v_height / v_height_prev);
+		    // this typo creates the cool hypnosis/warp effect.
+		    v_height_baseline += (pos + REL_BASELINE - v_height_baseline) * (v_height / v_height_prev);
 
 		    System.out.println("v-height: " + v_height);
                 }
@@ -157,7 +164,7 @@ public class Tube extends XYAnimation {
 
     int checker(double dist, double u_unit) {
         boolean v_on = (v_height > 0 ? MathUtil.fmod((dist - v_height_baseline) / v_height - v_offset * u_unit, 1.) < v_asym : false);
-        boolean u_on = (MathUtil.fmod((u_unit + h_skew * dist) * h_checks, 1.) < h_asym);
+        boolean u_on = (MathUtil.fmod((u_unit + h_skew_baseline + h_skew * dist) * h_checks, 1.) < h_asym);
         boolean chk = u_on ^ v_on;
         return OpcColor.getHsbColor(MathUtil.fmod(u_unit + dist/10., 1.), .5, chk ? 1 : .05);
     }
