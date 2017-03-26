@@ -30,6 +30,8 @@ public class Tube extends XYAnimation {
     double speed_sensitivity_incr = 2.;
     double hskew_sensitivity = 1.;
     double hskew_sensitivity_incr = 2.;
+
+    boolean vheight_warp_mode = true;
     
     InputControl ctrl;
     
@@ -127,10 +129,13 @@ public class Tube extends XYAnimation {
                     v_height = HMIN * Math.pow(HMAX / HMIN, val);
 
 		    final double REL_BASELINE = 1.;
-		    // This is actually the correct formula, however:
-		    //v_height_baseline += (pos + REL_BASELINE - v_height_baseline) * (1 - v_height / v_height_prev);
-		    // this typo creates the cool hypnosis/warp effect.
-		    v_height_baseline += (pos + REL_BASELINE - v_height_baseline) * (v_height / v_height_prev);
+		    if (!vheight_warp_mode) {
+		      // This is actually the correct formula, however:
+		      v_height_baseline += (pos + REL_BASELINE - v_height_baseline) * (1 - v_height / v_height_prev);
+		    } else {
+  		      // this typo creates the cool hypnosis/warp effect.
+		      v_height_baseline += (pos + REL_BASELINE - v_height_baseline) * (v_height / v_height_prev);
+		    }
 
 		    System.out.println("v-height: " + v_height);
                 }
@@ -177,6 +182,12 @@ public class Tube extends XYAnimation {
 			hskew_sensitivity /= hskew_sensitivity_incr;
 			System.out.println("h-skew sensitivity: " + hskew_sensitivity);
                     }
+                }
+            });
+        ctrl.registerHandler("playpause_b", new InputControl.InputHandler() {
+		@Override
+                public void button(boolean pressed) {
+		    vheight_warp_mode = !pressed;
                 }
             });
     }
