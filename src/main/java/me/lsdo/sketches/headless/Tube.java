@@ -48,7 +48,7 @@ public class Tube extends XYAnimation {
     private void initControl() {
         ctrl = new InputControl();
 	ctrl.init();
-	
+
         ctrl.registerHandler("jog_a", new InputControl.InputHandler() {
 		@Override
                 public void jog(boolean pressed) {
@@ -188,6 +188,20 @@ public class Tube extends XYAnimation {
 		@Override
                 public void button(boolean pressed) {
 		    vheight_warp_mode = !pressed;
+                }
+            });
+        ctrl.registerHandler("back", new InputControl.InputHandler() {
+		@Override
+                public void button(boolean pressed) {
+		    if (pressed) {
+			// reset
+			speed = 1.;
+			v_offset = 0;
+			h_checks = 4;
+			h_skew = 0;
+			speed_sensitivity = 1;
+			hskew_sensitivity = 1;
+		    }
                 }
             });
     }
