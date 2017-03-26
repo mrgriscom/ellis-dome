@@ -40,6 +40,7 @@ public class Tube extends XYAnimation {
 	ctrl.init();
 	
         ctrl.registerHandler("jog_a", new InputControl.InputHandler() {
+		@Override
                 public void jog(boolean pressed) {
                     boolean forward = pressed;
 
@@ -54,12 +55,14 @@ public class Tube extends XYAnimation {
                 }
             });
         ctrl.registerHandler("browse", new InputControl.InputHandler() {
+		@Override
                 public void jog(boolean pressed) {
                     h_checks += (pressed ? 1 : -1);
                     System.out.println("h-checks: " + h_checks);
                 }
             });
         ctrl.registerHandler("jog_b", new InputControl.InputHandler() {
+		@Override
                 public void jog(boolean pressed) {
                     boolean forward = pressed;
                     if (Math.abs(h_skew) > .02) {
@@ -73,18 +76,21 @@ public class Tube extends XYAnimation {
                 }
             });
         ctrl.registerHandler("pitch_a", new InputControl.InputHandler() {
+		@Override
                 public void slider(double val) {
                     h_asym = val;
 		    System.out.println("h-asym: " + h_asym);
                 }
             });
         ctrl.registerHandler("pitch_b", new InputControl.InputHandler() {
+		@Override
                 public void slider(double val) {
                     v_asym = val;
 		    System.out.println("v-asym: " + v_asym);		    
                 }
             });
         ctrl.registerHandler("pitch_inc_a", new InputControl.InputHandler() {
+		@Override
                 public void button(boolean pressed) {
                     if (pressed) {
                         v_offset += 1;
@@ -93,6 +99,7 @@ public class Tube extends XYAnimation {
                 }
             });
         ctrl.registerHandler("pitch_dec_a", new InputControl.InputHandler() {
+		@Override
                 public void button(boolean pressed) {
                     if (pressed) {
                         v_offset -= 1;
@@ -101,6 +108,7 @@ public class Tube extends XYAnimation {
                 }
             });
         ctrl.registerHandler("mixer", new InputControl.InputHandler() {
+		@Override
                 public void slider(double val) {
                     double HMIN = .2;
                     double HMAX = 8.;

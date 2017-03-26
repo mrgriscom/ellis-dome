@@ -21,15 +21,15 @@ public class InputControl {
     Socket subscriber;
 
     public static class InputHandler {
-        void button(boolean pressed) {
+        public void button(boolean pressed) {
             throw new RuntimeException("handler did not override!");
         }
 
-        void slider(double val) {
+        public void slider(double val) {
             throw new RuntimeException("handler did not override!");
         }
 
-        void jog(boolean inc) {
+        public void jog(boolean inc) {
             throw new RuntimeException("handler did not override!");
         }
     }
