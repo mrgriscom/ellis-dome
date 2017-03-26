@@ -23,6 +23,8 @@ public class Tube extends XYAnimation {
     double speed = 1.;
     double pos = 0;
 
+    double v_height_baseline = 0;
+
     InputControl ctrl;
     
     public Tube(Dome dome, OPC opc) {
@@ -112,7 +114,12 @@ public class Tube extends XYAnimation {
                 public void slider(double val) {
                     double HMIN = .2;
                     double HMAX = 8.;
+		    double v_height_prev = v_height;
                     v_height = HMIN * Math.pow(HMAX / HMIN, val);
+
+		    final double REL_BASELINE = 1.;
+		    v_height_baseline += (pos + REL_BASELINE - v_height_baseline) * v_height / v_height_prev;
+
 		    System.out.println("v-height: " + v_height);
                 }
             });
@@ -149,7 +156,7 @@ public class Tube extends XYAnimation {
     }
 
     int checker(double dist, double u_unit) {
-        boolean v_on = (v_height > 0 ? MathUtil.fmod(dist / v_height - v_offset * u_unit, 1.) < v_asym : false);
+        boolean v_on = (v_height > 0 ? MathUtil.fmod((dist - v_height_baseline) / v_height - v_offset * u_unit, 1.) < v_asym : false);
         boolean u_on = (MathUtil.fmod((u_unit + h_skew * dist) * h_checks, 1.) < h_asym);
         boolean chk = u_on ^ v_on;
         return OpcColor.getHsbColor(MathUtil.fmod(u_unit + dist/10., 1.), .5, chk ? 1 : .05);
