@@ -26,6 +26,11 @@ public class Tube extends XYAnimation {
     double v_height_baseline = 0;
     double h_skew_baseline = 0;
 
+    double speed_sensitivity = 1.;
+    double speed_sensitivity_incr = 2.;
+    double hskew_sensitivity = 1.;
+    double hskew_sensitivity_incr = 2.;
+    
     InputControl ctrl;
     
     public Tube(Dome dome, OPC opc) {
@@ -48,10 +53,10 @@ public class Tube extends XYAnimation {
                     boolean forward = pressed;
 
                     if (Math.abs(speed) > .02) {
-                        final double SPEED_INC = 1.01;
+                        final double SPEED_INC = 1. + (.01 * speed_sensitivity);
                         speed *= (forward == speed > 0 ? SPEED_INC : 1./SPEED_INC);
                     } else {
-                        final double SPEED_STEP = .001;
+                        final double SPEED_STEP = .001 * speed_sensitivity;
                         speed += (forward ? 1 : -1) * SPEED_STEP;
                     }
                     System.out.println("speed: " + speed);
@@ -70,10 +75,10 @@ public class Tube extends XYAnimation {
                     boolean forward = pressed;
 		    double h_skew_prev = h_skew;
                     if (Math.abs(h_skew) > .02) {
-                        final double SKEW_INC = 1.01;
+                        final double SKEW_INC = 1. + (.01 * hskew_sensitivity);
                         h_skew *= (forward == h_skew > 0 ? SKEW_INC : 1./SKEW_INC);
                     } else {
-                        final double SKEW_STEP = .001;
+                        final double SKEW_STEP = .001 * hskew_sensitivity;
                         h_skew += (forward ? 1 : -1) * SKEW_STEP;
                     }
 		    final double REL_BASELINE = 1;
@@ -128,6 +133,50 @@ public class Tube extends XYAnimation {
 		    v_height_baseline += (pos + REL_BASELINE - v_height_baseline) * (v_height / v_height_prev);
 
 		    System.out.println("v-height: " + v_height);
+                }
+            });
+        ctrl.registerHandler("playpause_a", new InputControl.InputHandler() {
+		@Override
+                public void button(boolean pressed) {
+                    if (pressed) {
+			speed = -speed;
+                    }
+                }
+            });
+        ctrl.registerHandler("headphone_a", new InputControl.InputHandler() {
+		@Override
+                public void button(boolean pressed) {
+                    if (pressed) {
+			speed_sensitivity *= speed_sensitivity_incr;
+			System.out.println("speed sensitivity: " + speed_sensitivity);
+                    }
+                }
+            });
+        ctrl.registerHandler("sync_a", new InputControl.InputHandler() {
+		@Override
+                public void button(boolean pressed) {
+                    if (pressed) {
+			speed_sensitivity /= speed_sensitivity_incr;
+			System.out.println("speed sensitivity: " + speed_sensitivity);
+                    }
+                }
+            });
+        ctrl.registerHandler("headphone_b", new InputControl.InputHandler() {
+		@Override
+                public void button(boolean pressed) {
+                    if (pressed) {
+			hskew_sensitivity *= hskew_sensitivity_incr;
+			System.out.println("h-skew sensitivity: " + hskew_sensitivity);
+                    }
+                }
+            });
+        ctrl.registerHandler("sync_b", new InputControl.InputHandler() {
+		@Override
+                public void button(boolean pressed) {
+                    if (pressed) {
+			hskew_sensitivity /= hskew_sensitivity_incr;
+			System.out.println("h-skew sensitivity: " + hskew_sensitivity);
+                    }
                 }
             });
     }
