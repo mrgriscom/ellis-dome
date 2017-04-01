@@ -76,13 +76,8 @@ public class Tube extends XYAnimation {
                 public void jog(boolean pressed) {
                     boolean forward = pressed;
 		    double h_skew_prev = h_skew;
-                    if (Math.abs(h_skew) > .02) {
-                        final double SKEW_INC = 1. + (.01 * hskew_sensitivity);
-                        h_skew *= (forward == h_skew > 0 ? SKEW_INC : 1./SKEW_INC);
-                    } else {
-                        final double SKEW_STEP = .001 * hskew_sensitivity;
-                        h_skew += (forward ? 1 : -1) * SKEW_STEP;
-                    }
+		    final double SKEW_STEP = .001 * hskew_sensitivity;
+		    h_skew += (forward ? 1 : -1) * SKEW_STEP;
 		    final double REL_BASELINE = 1;
 		    h_skew_baseline += (pos + REL_BASELINE) * (h_skew_prev - h_skew);
                     System.out.println("h-skew: " + h_skew);
