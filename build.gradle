@@ -79,6 +79,16 @@ dependencies {
     compile name: 'video'
 }
 
+// TODO try to find these in online repo (though risk of incompatibilities like seen with other processing deps still applies)
+repositories {
+    flatDir {
+        dirs new File(local_processing_user_dir, 'libraries/openkinect_processing/library')
+    }
+}
+dependencies {
+    compile name: 'openkinect_processing'
+}
+
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
 

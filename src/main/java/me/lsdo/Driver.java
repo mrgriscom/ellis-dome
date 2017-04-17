@@ -18,6 +18,7 @@ public class Driver
 	processingSketches.put("pixelflock", PixelFlock.class);
 	processingSketches.put("particlefft", ParticleFFT.class);
 	processingSketches.put("video", VideoPlayer.class);
+	processingSketches.put("kinecttest", KinectTest.class);
 
 	headlessSketches.put("cloud", Cloud.class);
 	headlessSketches.put("dontknow", DontKnow.class);
