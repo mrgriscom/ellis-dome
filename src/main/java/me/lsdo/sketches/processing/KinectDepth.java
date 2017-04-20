@@ -11,7 +11,7 @@ import org.openkinect.processing.*;
 import processing.core.*;
 import me.lsdo.processing.*;
 
-public class KinectTest extends PApplet {
+public class KinectDepth extends PApplet {
 
     CanvasSketch canvas;
     
@@ -27,6 +27,7 @@ public class KinectTest extends PApplet {
 	kinect = new Kinect(this);
 	kinect.initDepth();
 	kinect.enableColorDepth(true);
+	kinect.enableMirror(true);
 
 	//kinect.initVideo();
 	//kinect.enableIR(true);
@@ -35,8 +36,9 @@ public class KinectTest extends PApplet {
 
     public void draw() {
 	background(0);
-	image(kinect.getDepthImage(), 0, 80);
-	//image(kinect.getVideoImage(), 0, 80);
+	int offset = (640 - 480) / 2;
+	image(kinect.getDepthImage(), 0, offset);
+	//image(kinect.getVideoImage(), 0, offset);
 
 	canvas.draw();
     }

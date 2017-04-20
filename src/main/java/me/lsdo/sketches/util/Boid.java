@@ -42,7 +42,19 @@ class Boid {
 
     private Random random;
 
+    public static interface BoidManipulator {
+	public void manipulate(Boid b);
+    }
+
+    BoidManipulator manipulator;
+    
     public Boid(float x, float y, int hue, int boxWidth, int boxHeight) {
+	this(x, y, hue, boxWidth, boxHeight, null);
+    }
+	
+    public Boid(float x, float y, int hue, int boxWidth, int boxHeight, BoidManipulator manipulator) {
+	this.manipulator = manipulator;
+	
         acceleration = new PVector(0, 0);
         velocity = PVector.random2D();
         location = new PVector(x, y);
@@ -80,7 +92,7 @@ class Boid {
         sat = brightness;
     }
 
-    void applyForce(PVector force) {
+    public void applyForce(PVector force) {
         // We could add mass here if we want A = F / M
         acceleration.add(force);
     }
@@ -102,11 +114,17 @@ class Boid {
 
     // Method to update location
     void update() {
+
         // Update velocity
         velocity.add(acceleration);
         // Limit speed
         velocity.limit(maxspeed);
         location.add(velocity);
+
+	if (manipulator != null) {
+	    manipulator.manipulate(this);
+	}
+	
         // Reset accelertion to 0 each cycle
         acceleration.mult(0);
         //update color
