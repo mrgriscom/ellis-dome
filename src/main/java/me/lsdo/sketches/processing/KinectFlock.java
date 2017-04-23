@@ -1,5 +1,6 @@
 package me.lsdo.sketches.processing;
 
+import java.util.*;
 import me.lsdo.sketches.util.*;
 import processing.core.*;
 import ddf.minim.analysis.*;
@@ -34,21 +35,32 @@ public class KinectFlock extends PApplet {
 
     int[] depth;
     PImage display;
-    int thresh = 700;
 
-    public PVector kinectAvg;
+    int depthThresh;
+    int excludeWindowWidth = 200;
+    int highlightWindowWidth = 100;
+    
+    public List<PVector> kinectKeyPoints;
 
     Boid.BoidManipulator repulsor = new Boid.BoidManipulator() {
+	    public PVector kinectScreenToXy(PVector p) {
+		double x = (p.x - 150) / 150.;
+		double y = -(p.y - 150) / 150.;
+		return new PVector((float)x, (float)y);
+	    }
+
+	    // this seems to repulse boids but not in the right places
 	    public void manipulate(Boid b) {
-		if (kinectAvg != null) {
-		    double x = (b.location.x - 150) / 150.;
-		    double y = -(b.location.y - 150) / 150.;
-		    x -= kinectAvg.x;
-		    y -= kinectAvg.y;
+		for (PVector kinectRef : kinectKeyPoints) {
+		    PVector boid = kinectScreenToXy(b.location);
+		    PVector knect = kinectScreenToXy(kinectRef);
+		    
+		    double x = boid.x - knect.x;
+		    double y = boid.y - knect.y;
 		    double len = Math.pow(x*x+y*y, .5);
 		    double normx = x / len;
 		    double normy = y / len;
-		    double strength = .1 / Math.max(len * len, .01);
+		    double strength = .4 /*.1*/ / Math.max(len * len, .01);
 
 		    // whirlpool
 		    //location.add(new PVector((float)(strength * normy), (float)(strength * -normx)));
@@ -62,6 +74,8 @@ public class KinectFlock extends PApplet {
     public void setup() {
         size(300, 300);
 
+	depthThresh = Config.getSketchProperty("maxdepth", 750);
+	
         simple = new CanvasSketch(this, new Dome(), new OPC());
 
         minim = new Minim(this);
@@ -89,40 +103,84 @@ public class KinectFlock extends PApplet {
     public void draw() {
         background(0);
 
-
 	depth = kinect.getRawDepth();
+	kinectKeyPoints = new ArrayList<PVector>();
+	while (true) {
+	    PVector closest = null;
+	    int closestDepth = 0;
+	   
+ 	    for (int x = 0; x < kinect.width; x++) {
+		for (int y = 0; y < kinect.height; y++) {
+		    int i = x + y*kinect.width;
+		    int rawDepth = depth[i];
+		    if (rawDepth == 0 || rawDepth > depthThresh) {
+			continue;
+		    }
+		    
+		    boolean excluded = false;
+		    for (PVector keyPoint : kinectKeyPoints) {
+			if (Math.abs(keyPoint.x - x) < excludeWindowWidth / 2 &&
+			    Math.abs(keyPoint.y - y) < excludeWindowWidth / 2) {
+			    excluded = true;
+			    break;
+			}
+		    }
+		    if (excluded) {
+			continue;
+		    }
+
+		    if (closest != null && rawDepth >= closestDepth) {
+			continue;
+		    }
+		    
+		    closest = new PVector(x, y);
+		    closestDepth = rawDepth;
+		}
+	    }
+	    if (closest != null) {
+		kinectKeyPoints.add(closest);
+	    } else {
+		break;
+	    }
+	}
+	/*
+	for (PVector keyPoint : kinectKeyPoints) {
+	    System.out.println(keyPoint);
+	}
+	if (kinectKeyPoints.size() > 0) {
+	    System.out.println("----- " + System.currentTimeMillis());
+	}
+	*/
+	    
+	
 	display.loadPixels();
-	int xsum = 0;
-	int ysum = 0;
-	int n = 0;
 	for (int x = 0; x < kinect.width; x++) {
 	    for (int y = 0; y < kinect.height; y++) {
 		int i = x + y*kinect.width;
 		int rawDepth = depth[i];
-		if (rawDepth < thresh) {
-		    display.pixels[i] = color(0, 50, 50);
-		    xsum += x;
-		    ysum += y;
-		    n += 1;
+
+		boolean active = false;
+		for (PVector keyPoint : kinectKeyPoints) {
+		    float dx = keyPoint.x - x;
+		    float dy = keyPoint.y - y;
+		    if (dx*dx + dy*dy < highlightWindowWidth * highlightWindowWidth) {
+			active = true;
+			break;
+		    }
+		}
+
+		double lum = (rawDepth == 0 || rawDepth > 2000 ? 0. : 1. - Math.max(rawDepth-600., 0.) / (900. - 600));
+		if (active) {
+		    display.pixels[i] = color(0, 100, (int)(100*lum));
 		} else {
-		    display.pixels[i] = color(0, 0, 0);
+		    display.pixels[i] = color(50, 30, (int)(100*lum));
 		}
 	    }
 	}
 	display.updatePixels();
-	if (n == 0) {
-	    kinectAvg = null;
-	} else {
-	    double avgX = (float)xsum / n / 640. * 2 - 1;
-	    double avgY = -((float)ysum / n / 480. * 2 - 1) * 480 / 640;
-	    kinectAvg = new PVector((float)avgX, (float)avgY);
-	}
-	System.out.println(kinectAvg);
 
-	
 	image(display, 0, 37.5f, 300, 225);
 	
-
 	flock.run();
 
         for (Boid b : flock.boids)
