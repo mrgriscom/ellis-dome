@@ -3,6 +3,8 @@ Interface with a MIDI control device and dump certain midi events (button presse
 movements, etc.) to a zero-mq pub/sub socket to be read by the processing process.
 """
 
+# Note: pygame.pypm may be unreliable. Might have to patch pygame.midi to use system pypm instead (apt package python-portmidi) (and remove broken pypm.so)
+
 import pygame
 from pygame.locals import *
 from pygame import midi
@@ -13,6 +15,8 @@ import zmq
 
 pygame.init()
 midi.init()
+# workaround 100% cpu bug
+pygame.mixer.quit()
 
 class MIDIDevice(threading.Thread):
     def __init__(self, interface_name):
