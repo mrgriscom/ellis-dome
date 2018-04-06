@@ -13,7 +13,7 @@ public class Kaleidoscope extends DomeAnimation<DomePixel> {
 
     // colors for the base panel. What algorithm is here?
     int getBasePixel(DomePixel c, double t) {
-        PVector2 p = dome.getLocation(c);
+        PVector2 p = c.toXY();
         p = LayoutUtil.Vrot(p, t * (.5 + 3*.5*(Math.cos(.1213*t)+1)));
         p = LayoutUtil.Vmult(p, 1/(1 + 5*.5*(Math.cos(.3025*t)+1)));
         p = LayoutUtil.Vadd(p, LayoutUtil.V(2*Math.cos(.2*t), 0));
@@ -47,7 +47,7 @@ public class Kaleidoscope extends DomeAnimation<DomePixel> {
             basePx = basePx.flip(TriCoord.Axis.U);
         }
 
-        return dome.getColor(new DomePixel(basePanel, basePx));
+        return dome.getColor(new DomePixel(basePanel, basePx, LayoutUtil.V(0, 0), 0));
     }
 }
 
