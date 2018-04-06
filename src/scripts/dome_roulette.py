@@ -18,12 +18,15 @@ def load_sketches():
         'kaleidoscope': None,
         'noire': None,
         'particlefft': None,
-        'pixelflock': None,
+        
+        #'pixelflock': None,
+        
         'pixeltest': None,
         'rings': None,
         'tube': None,
         'twinkle': None,
         'video': [{'path': os.path.join(VIDEO_DIR, p), 'repeat': 'true'} for p in os.listdir(VIDEO_DIR)],
+        'kinectflock': None,
     }
     for k, v in sketches.iteritems():
         if v is None:

@@ -26,7 +26,8 @@ public class KinectDepth extends PApplet {
 
 	kinect = new Kinect(this);
 	kinect.initDepth();
-	kinect.enableColorDepth(true);
+	//	kinect.enableColorDepth(true);
+	kinect.enableColorDepth(false);
 	kinect.enableMirror(true);
 
 	//kinect.initVideo();
@@ -40,6 +41,20 @@ public class KinectDepth extends PApplet {
 	image(kinect.getDepthImage(), 0, offset);
 	//image(kinect.getVideoImage(), 0, offset);
 
+	int[] depth = kinect.getRawDepth();
+	int maxdepth = 0;
+	for (int x = 0; x < kinect.width; x++) {
+	    for (int y = 0; y < kinect.height; y++) {
+		int i = x + y*kinect.width;
+		int rawDepth = depth[i];
+		if (rawDepth < 2000) {
+		    maxdepth = Math.max(maxdepth, rawDepth);
+		}
+	    }
+	}
+	System.out.println(maxdepth);
+
+	
 	canvas.draw();
     }
 
