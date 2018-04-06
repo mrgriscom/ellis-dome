@@ -76,7 +76,7 @@ public class KinectFlock extends PApplet {
 
 	depthThresh = Config.getSketchProperty("maxdepth", 750);
 	
-        simple = new CanvasSketch(this, new Dome(), new OPC());
+        simple = new CanvasSketch(this, new Dome(new OPC()));
 
         minim = new Minim(this);
         in = minim.getLineIn();

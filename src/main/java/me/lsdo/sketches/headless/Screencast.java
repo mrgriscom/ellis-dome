@@ -27,8 +27,8 @@ public class Screencast extends XYAnimation {
     PVector2 viewport0;
     PVector2 viewportDim;
     
-    public Screencast(Dome dome, OPC opc) {
-	super(dome, opc, Config.getSketchProperty("subsampling", SUBSAMPLING));
+    public Screencast(Dome dome) {
+	super(dome, Config.getSketchProperty("subsampling", SUBSAMPLING));
 
 	int width = Config.getSketchProperty("width", 512);
 	// If height omitted, screen pixels will map to dome canvas 1:1 (i.e., square

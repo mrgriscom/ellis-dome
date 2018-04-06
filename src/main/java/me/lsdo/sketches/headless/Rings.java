@@ -23,8 +23,8 @@ public class Rings extends XYAnimation {
 
     Perlin perlin;
 
-    public Rings(Dome dome, OPC opc) {
-        super(dome, opc);
+    public Rings(Dome dome) {
+        super(dome);
         mode = 0;
 
         dx = dy = dz = 0;

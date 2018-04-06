@@ -31,7 +31,7 @@ public class PixelFlock extends PApplet {
     public void setup() {
         size(300, 300);
 
-        simple = new CanvasSketch(this, new Dome(), new OPC());
+        simple = new CanvasSketch(this, new Dome(new OPC()));
 
         minim = new Minim(this);
         in = minim.getLineIn();

@@ -20,8 +20,8 @@ public class Cloud extends XYAnimation {
 
     private Perlin perlin;
 
-    public Cloud(Dome dome, OPC opc) {
-        super(dome, opc);
+    public Cloud(Dome dome) {
+        super(dome);
 
         dx = dy = dz = 0;
 

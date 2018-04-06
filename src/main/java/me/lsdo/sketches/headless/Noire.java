@@ -7,8 +7,8 @@ import me.lsdo.processing.*;
  */
 public class Noire extends XYAnimation {
 
-    public Noire(Dome dome, OPC opc) {
-        super(dome, opc);
+    public Noire(Dome dome) {
+        super(dome);
     }
 
     @Override

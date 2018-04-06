@@ -15,8 +15,8 @@ public class DontKnow extends XYAnimation {
 
     Perlin perlin;
 
-    public DontKnow(Dome dome, OPC opc) {
-        super(dome, opc);
+    public DontKnow(Dome dome) {
+        super(dome);
 
         dx = dy = 0;
 

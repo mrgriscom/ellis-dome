@@ -3,7 +3,7 @@ package me.lsdo.sketches.headless;
 import java.util.*;
 import me.lsdo.processing.*;
 
-public class Twinkle extends DomeAnimation{
+public class Twinkle extends DomeAnimation<LedPixel> {
 
     // Skew of initial brightness of stars. Higher means fewer bright stars.
     // >= 1.
@@ -28,21 +28,21 @@ public class Twinkle extends DomeAnimation{
     // Perform this many twinkling iterations per frame.
     final int SIMULATED_SPEEDUP = 1;
 
-    private HashMap<DomeCoord, Double> brightness;
-    private HashMap<DomeCoord, Double> saturation;
+    private HashMap<LedPixel, Double> brightness;
+    private HashMap<LedPixel, Double> saturation;
 
-    public Twinkle(Dome dome, OPC opc) {
-        super(dome, opc);
-        brightness = new HashMap<DomeCoord, Double>();
-        saturation = new HashMap<DomeCoord, Double>();
-        for (DomeCoord c : dome.coords) {
+    public Twinkle(Dome dome) {
+        super(dome);
+        brightness = new HashMap<LedPixel, Double>();
+        saturation = new HashMap<LedPixel, Double>();
+        for (LedPixel c : dome.coords) {
             brightness.put(c, Math.pow(Math.random(), POWER_LAW));
             saturation.put(c, Math.random());
         }
     }
 
     @Override
-    public int drawPixel(DomeCoord c, double t) {
+    public int drawPixel(LedPixel c, double t) {
         double b = brightness.get(c);
         for (int i = 0; i < SIMULATED_SPEEDUP; i++) {
             double rand = 2*(Math.random() - .5);

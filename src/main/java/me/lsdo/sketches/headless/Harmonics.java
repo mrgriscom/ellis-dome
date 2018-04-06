@@ -3,7 +3,7 @@ package me.lsdo.sketches.headless;
 import me.lsdo.processing.*;
 import java.util.*;
 
-public class Harmonics extends DomeAnimation {
+public class Harmonics extends DomeAnimation<DomePixel> {
 
     public static final double BASELINE_CYCLE_LENGTH = 30. / 9;  // sec/panel
     
@@ -19,13 +19,13 @@ public class Harmonics extends DomeAnimation {
 	{2, 1, 0}
     };
     
-    public Harmonics(Dome dome, OPC opc) {
-	super(dome, opc);
+    public Harmonics(Dome dome) {
+	super(dome);
 
 	// Iteration order matters. Currently follows the order visible to the fadecandy.
 	// If this is radially symmetric, it yields nice patterns.
 	panelCount = new HashMap<TriCoord, Integer>();
-	for (DomeCoord c : dome.coords) {
+	for (DomePixel c : dome.coords) {
 	    if (!panelCount.containsKey(c.panel)) {
 		panelCount.put(c.panel, panelCount.size());
 	    }
@@ -44,7 +44,7 @@ public class Harmonics extends DomeAnimation {
     }
     
     @Override
-    public int drawPixel(DomeCoord c, double t) {
+    public int drawPixel(DomePixel c, double t) {
 	int panelId = panelCount.get(c.panel);
 
 	int round = (int)Math.floor(t / cycleLength);

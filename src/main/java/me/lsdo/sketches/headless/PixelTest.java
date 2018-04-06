@@ -10,26 +10,26 @@ package me.lsdo.sketches.headless;
 import me.lsdo.processing.*;
 import java.util.*;
 
-public class PixelTest extends DomeAnimation {
+public class PixelTest extends DomeAnimation<DomePixel> {
 
-    private HashMap<DomeCoord, Integer> coordOrder;
+    private HashMap<DomePixel, Integer> coordOrder;
     private static final int ARM_LENGTH = 4;
     private int px_per_panel;
     private int total_arms;
 
-    public PixelTest(Dome dome, OPC opc) {
-        super(dome, opc);
-        coordOrder = new HashMap<DomeCoord, Integer>();
+    public PixelTest(Dome dome) {
+        super(dome);
+        coordOrder = new HashMap<DomePixel, Integer>();
         for (int i = 0; i < dome.coords.size(); i++) {
             coordOrder.put(dome.coords.get(i), i);
         }
 
-        px_per_panel = LayoutUtil.pixelsPerPanel(15);
+        px_per_panel = DomeLayoutUtil.pixelsPerPanel(15);
 	total_arms = (int)Math.ceil((double)dome.getNumPoints() / (px_per_panel * ARM_LENGTH));
     }
 
     @Override
-    protected int drawPixel(DomeCoord c, double t) {
+    protected int drawPixel(DomePixel c, double t) {
         float creep_speed = 20;
         float ramp_length = 100;
 

@@ -35,12 +35,12 @@ public class Tube extends XYAnimation {
     
     InputControl ctrl;
     
-    public Tube(Dome dome, OPC opc) {
-        this(dome, opc, DEFAULT_SUBSAMPLING, DEFAULT_FOV);
+    public Tube(Dome dome) {
+        this(dome, DEFAULT_SUBSAMPLING, DEFAULT_FOV);
     }
 
-    public Tube(Dome dome, OPC opc, int base_subsampling, double fov) {
-        super(dome, opc, base_subsampling);
+    public Tube(Dome dome, int base_subsampling, double fov) {
+        super(dome, base_subsampling);
 	this.fov = fov;
 	initControl();
     }

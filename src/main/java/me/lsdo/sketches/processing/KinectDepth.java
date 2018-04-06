@@ -20,9 +20,8 @@ public class KinectDepth extends PApplet {
     public void setup() {
 	size(640, 640);
 
-        Dome dome = new Dome();
-        OPC opc = new OPC();
-        canvas = new CanvasSketch(this, dome, opc);
+        Dome dome = new Dome(new OPC());
+        canvas = new CanvasSketch(this, dome);
 
 	kinect = new Kinect(this);
 	kinect.initDepth();

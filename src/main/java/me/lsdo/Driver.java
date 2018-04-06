@@ -18,7 +18,7 @@ public class Driver
 	processingSketches.put("pixelflock", PixelFlock.class);
 	processingSketches.put("particlefft", ParticleFFT.class);
 	processingSketches.put("video", VideoPlayer.class);
-	processingSketches.put("kinectdepth", KinectDepth.class);
+	//processingSketches.put("kinectdepth", KinectDepth.class);
 	processingSketches.put("kinectflock", KinectFlock.class);
 
 	headlessSketches.put("cloud", Cloud.class);
@@ -47,11 +47,11 @@ public class Driver
 	    app.main(new String[] {sketch.getName()});
 	} else {
 	    // Headless
-	    Dome dome = new Dome();
 	    OPC opc = new OPC();
+	    Dome dome = new Dome(opc);
 
 	    if (args.length > 0) {
-		RunAnimation(dome, opc, args[0], 0);
+		RunAnimation(dome, args[0], 0);
 	    } else {
 		// TODO this should probably be replaced by last year's python launcher
 		// script, which can also shuffle parameters within each sketch, and
@@ -67,13 +67,13 @@ public class Driver
 		sketches.removeAll(excludeFromShuffle);
 		List<String> animations = new ArrayList<String>(sketches);
 		while (true) {
-		    RunAnimation(dome, opc, animations.get(random.nextInt(animations.size())), 60);
+		    RunAnimation(dome, animations.get(random.nextInt(animations.size())), 60);
 		}
 	    }
 	}
     }
 
-    private static void RunAnimation(Dome dome, OPC opc, String name, int duration)
+    private static void RunAnimation(Dome dome, String name, int duration)
     {
 	if (!headlessSketches.containsKey(name)) {
 	    throw new RuntimeException("animation [" + name + "] not recognized");
@@ -82,7 +82,7 @@ public class Driver
 	Class<DomeAnimation> sketch = headlessSketches.get(name);
         DomeAnimation animation;	
 	try {
-	    animation = sketch.getConstructor(Dome.class, OPC.class).newInstance(new Object[] {dome, opc});
+	    animation = sketch.getConstructor(Dome.class).newInstance(new Object[] {dome});
 	} catch (Exception e) {
 	    throw new RuntimeException(e);
 	}	

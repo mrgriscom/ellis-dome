@@ -35,9 +35,8 @@ public class ParticleFFT extends PApplet {
     {
         size(300, 300, P3D);
 
-        Dome dome = new Dome();
-        OPC opc = new OPC();
-        canvas = new CanvasSketch(this, dome, opc);
+        Dome dome = new Dome(new OPC());
+        canvas = new CanvasSketch(this, dome);
 
         minim = new Minim(this);
 

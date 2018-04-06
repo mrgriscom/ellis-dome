@@ -6,14 +6,14 @@ package me.lsdo.sketches.headless;
 
 import me.lsdo.processing.*;
 
-public class GridTest extends DomeAnimation {
+public class GridTest extends DomeAnimation<DomePixel> {
 
-    public GridTest(Dome dome, OPC opc) {
-        super(dome, opc);
+    public GridTest(Dome dome) {
+        super(dome);
     }
 
     @Override
-    public int drawPixel(DomeCoord c, double t) {
+    public int drawPixel(DomePixel c, double t) {
         double demoPeriod = 4;
         int mode = (int)Math.floor(t / demoPeriod);
         int axisMode = mode % 3;

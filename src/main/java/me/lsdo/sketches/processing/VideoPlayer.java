@@ -48,7 +48,7 @@ public class VideoPlayer extends PApplet {
 	// TODO size based on density? and lower subsampling
         size(300, 300);
 
-        simple = new CanvasSketch(this, new Dome(), new OPC());
+        simple = new CanvasSketch(this, new Dome(new OPC()));
 
 	String path = Config.getSketchProperty("path", DEMO_VIDEO);
 	if (path.isEmpty()) {
