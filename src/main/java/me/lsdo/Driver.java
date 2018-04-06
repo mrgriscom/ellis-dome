@@ -18,6 +18,7 @@ public class Driver
 	processingSketches.put("pixelflock", PixelFlock.class);
 	processingSketches.put("particlefft", ParticleFFT.class);
 	processingSketches.put("video", VideoPlayer.class);
+	processingSketches.put("livevideo", VideoCapture.class);
 	//processingSketches.put("kinectdepth", KinectDepth.class);
 	processingSketches.put("kinectflock", KinectFlock.class);
 
