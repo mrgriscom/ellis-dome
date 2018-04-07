@@ -2,6 +2,7 @@ package me.lsdo.sketches.processing;
 
 import processing.core.*;
 import processing.video.*;
+import me.lsdo.Driver;
 import me.lsdo.processing.*;
 import java.util.Arrays;
 
@@ -48,8 +49,8 @@ public class VideoPlayer extends PApplet {
 	// TODO size based on density? and lower subsampling
         size(300, 300);
 
-        simple = new CanvasSketch(this, new Dome(new OPC()));
-
+	simple = Driver.makeCanvas(this);
+	
 	String path = Config.getSketchProperty("path", DEMO_VIDEO);
 	if (path.isEmpty()) {
 	    throw new RuntimeException("must specify video path in sketch.properties!");

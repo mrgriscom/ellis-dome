@@ -3,6 +3,7 @@ package me.lsdo.sketches.processing;
 import processing.core.*;
 import ddf.minim.analysis.*;
 import ddf.minim.*;
+import me.lsdo.Driver;
 import me.lsdo.processing.*;
 
 /**
@@ -35,9 +36,8 @@ public class ParticleFFT extends PApplet {
     {
         size(300, 300, P3D);
 
-        Dome dome = new Dome(new OPC());
-        canvas = new CanvasSketch(this, dome);
-
+	canvas = Driver.makeCanvas(this);
+	
         minim = new Minim(this);
 
         // Small buffer size!

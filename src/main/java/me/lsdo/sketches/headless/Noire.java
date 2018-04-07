@@ -7,7 +7,7 @@ import me.lsdo.processing.*;
  */
 public class Noire extends XYAnimation {
 
-    public Noire(Dome dome) {
+    public Noire(PixelMesh<? extends LedPixel> dome) {
         super(dome);
     }
 

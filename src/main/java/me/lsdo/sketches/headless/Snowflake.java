@@ -11,7 +11,7 @@ public class Snowflake extends XYAnimation{
     double oldradius = 0;
     Perlin perlin;
 
-    public Snowflake(Dome dome) {
+    public Snowflake(PixelMesh<? extends LedPixel> dome) {
         super(dome);
         perlin = new Perlin();
     }

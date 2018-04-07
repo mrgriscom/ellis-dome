@@ -2,6 +2,7 @@ package me.lsdo.sketches.processing;
 
 import processing.core.*;
 import processing.video.*;
+import me.lsdo.Driver;
 import me.lsdo.processing.*;
 import java.util.Arrays;
 
@@ -25,10 +26,10 @@ public class VideoCapture extends PApplet {
     public void setup() {
 
 	// TODO size based on density? and lower subsampling
-        size(300, 300);
+        size(600, 600);
 
-        simple = new CanvasSketch(this, new Dome(new OPC()));
-
+	simple = Driver.makeCanvas(this);
+	
 	String device = Config.getSketchProperty("camera", "");
 	String[] availableDevices = Capture.list();
 	boolean found = false;

@@ -3,7 +3,7 @@ apply plugin: 'application'
 
 mainClassName = "me.lsdo.Driver"
 
-def use_local_lsdome_processing_lib = false
+def use_local_lsdome_processing_lib = true
 def local_processing_install = '/home/drew/processing-2.2.1'
 def local_processing_user_dir = '/home/drew/sketchbook'
 
@@ -23,12 +23,13 @@ if (use_local_lsdome_processing_lib) {
     }
 } else {
     dependencies {
-        compile "me.lsdo.processing:lsdome-processing:0.9.2"
+        compile "me.lsdo.processing:lsdome-processing:0.9.3"
     }
 }
 
 dependencies {
     compile "junit:junit:3.8.2"
+    compile "com.google.code.gson:gson:2.8.2"
 
     // for FFT
     compile "ddf.minim:ddf.minim:2.2.0"

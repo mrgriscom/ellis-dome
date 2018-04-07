@@ -4,6 +4,7 @@ import me.lsdo.sketches.util.*;
 import processing.core.*;
 import ddf.minim.analysis.*;
 import ddf.minim.*;
+import me.lsdo.Driver;
 import me.lsdo.processing.*;
 
 /**
@@ -31,8 +32,8 @@ public class PixelFlock extends PApplet {
     public void setup() {
         size(300, 300);
 
-        simple = new CanvasSketch(this, new Dome(new OPC()));
-
+	simple = Driver.makeCanvas(this);
+	
         minim = new Minim(this);
         in = minim.getLineIn();
         fft = new FFT(in.bufferSize(), in.sampleRate());

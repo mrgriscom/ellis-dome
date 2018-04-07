@@ -31,7 +31,7 @@ public class Twinkle extends DomeAnimation<LedPixel> {
     private HashMap<LedPixel, Double> brightness;
     private HashMap<LedPixel, Double> saturation;
 
-    public Twinkle(Dome dome) {
+    public Twinkle(PixelMesh<? extends LedPixel> dome) {
         super(dome);
         brightness = new HashMap<LedPixel, Double>();
         saturation = new HashMap<LedPixel, Double>();

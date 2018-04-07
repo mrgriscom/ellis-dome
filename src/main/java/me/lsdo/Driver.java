@@ -35,6 +35,32 @@ public class Driver
 	headlessSketches.put("tube", Tube.class);
 	headlessSketches.put("twinkle", Twinkle.class);
     }
+
+    public static PixelMesh<DomePixel> makeDome() {
+	return new Dome(new OPC());
+    }
+    
+    public static PixelMesh<WingPixel> makePrometheus() {
+	// TODO add checking properties for 2nd opc server
+	OPC opcLeft = new OPC();
+	OPC opcRight = new OPC(opcLeft.getHost(), opcLeft.getPort() + 1);
+	return new Prometheus(opcLeft, opcRight);
+    }
+
+    public static PixelMesh<? extends LedPixel> makeGeometry() {
+	String geom = Config.getConfig().geomType;
+	if (geom.equals("lsdome")) {
+	    return makeDome();
+	} else if (geom.equals("prometheus")) {
+	    return makePrometheus();
+	} else {
+	    throw new RuntimeException("can't happen");
+	}
+    }
+
+    public static CanvasSketch makeCanvas(PApplet app) {
+        return new CanvasSketch(app, Driver.makeGeometry());
+    }
     
     public static void main(String[] args){
 	if (args.length > 0 && processingSketches.containsKey(args[0])) {
@@ -45,14 +71,15 @@ public class Driver
 	    } catch (Exception e) {
 		throw new RuntimeException(e);
 	    }
-	    app.main(new String[] {sketch.getName()});
+	    app.runSketch(new String[] {sketch.getName()}, app);
+	    // if we modify the 'app' object, calling app.main() seems to reset it;
+	    // runSketch() still seems to do the trick, so use that unless a reason not to?
+	    //app.main(new String[] {sketch.getName()});
 	} else {
 	    // Headless
-	    OPC opc = new OPC();
-	    Dome dome = new Dome(opc);
-
+	    PixelMesh<? extends LedPixel> mesh = makeGeometry();
 	    if (args.length > 0) {
-		RunAnimation(dome, args[0], 0);
+		RunAnimation(mesh, args[0], 0);
 	    } else {
 		// TODO this should probably be replaced by last year's python launcher
 		// script, which can also shuffle parameters within each sketch, and
@@ -68,13 +95,13 @@ public class Driver
 		sketches.removeAll(excludeFromShuffle);
 		List<String> animations = new ArrayList<String>(sketches);
 		while (true) {
-		    RunAnimation(dome, animations.get(random.nextInt(animations.size())), 60);
+		    RunAnimation(mesh, animations.get(random.nextInt(animations.size())), 60);
 		}
 	    }
 	}
     }
 
-    private static void RunAnimation(Dome dome, String name, int duration)
+    private static void RunAnimation(PixelMesh dome, String name, int duration)
     {
 	if (!headlessSketches.containsKey(name)) {
 	    throw new RuntimeException("animation [" + name + "] not recognized");
@@ -83,7 +110,7 @@ public class Driver
 	Class<DomeAnimation> sketch = headlessSketches.get(name);
         DomeAnimation animation;	
 	try {
-	    animation = sketch.getConstructor(Dome.class).newInstance(new Object[] {dome});
+	    animation = sketch.getConstructor(PixelMesh.class).newInstance(new Object[] {dome});
 	} catch (Exception e) {
 	    throw new RuntimeException(e);
 	}	

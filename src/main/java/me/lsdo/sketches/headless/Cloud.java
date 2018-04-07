@@ -20,7 +20,7 @@ public class Cloud extends XYAnimation {
 
     private Perlin perlin;
 
-    public Cloud(Dome dome) {
+    public Cloud(PixelMesh<? extends LedPixel> dome) {
         super(dome);
 
         dx = dy = dz = 0;

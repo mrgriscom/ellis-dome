@@ -9,6 +9,7 @@ package me.lsdo.sketches.processing;
 import org.openkinect.freenect.*;
 import org.openkinect.processing.*;
 import processing.core.*;
+import me.lsdo.Driver;
 import me.lsdo.processing.*;
 
 public class KinectDepth extends PApplet {
@@ -19,9 +20,7 @@ public class KinectDepth extends PApplet {
 
     public void setup() {
 	size(640, 640);
-
-        Dome dome = new Dome(new OPC());
-        canvas = new CanvasSketch(this, dome);
+	canvas = Driver.makeCanvas(this);
 
 	kinect = new Kinect(this);
 	kinect.initDepth();

@@ -23,7 +23,7 @@ public class Rings extends XYAnimation {
 
     Perlin perlin;
 
-    public Rings(Dome dome) {
+    public Rings(PixelMesh<? extends LedPixel> dome) {
         super(dome);
         mode = 0;
 

@@ -5,6 +5,7 @@ import me.lsdo.sketches.util.*;
 import processing.core.*;
 import ddf.minim.analysis.*;
 import ddf.minim.*;
+import me.lsdo.Driver;
 import me.lsdo.processing.*;
 import org.openkinect.freenect.*;
 import org.openkinect.processing.*;
@@ -70,14 +71,14 @@ public class KinectFlock extends PApplet {
 		}
 	    }
 	};
-    
+
     public void setup() {
         size(300, 300);
 
+	simple = Driver.makeCanvas(this);
+	
 	depthThresh = Config.getSketchProperty("maxdepth", 750);
 	
-        simple = new CanvasSketch(this, new Dome(new OPC()));
-
         minim = new Minim(this);
         in = minim.getLineIn();
         fft = new FFT(in.bufferSize(), in.sampleRate());

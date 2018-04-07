@@ -27,7 +27,7 @@ public class Screencast extends XYAnimation {
     PVector2 viewport0;
     PVector2 viewportDim;
     
-    public Screencast(Dome dome) {
+    public Screencast(PixelMesh<? extends LedPixel> dome) {
 	super(dome, Config.getSketchProperty("subsampling", SUBSAMPLING));
 
 	int width = Config.getSketchProperty("width", 512);

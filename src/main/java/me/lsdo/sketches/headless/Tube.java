@@ -35,11 +35,11 @@ public class Tube extends XYAnimation {
     
     InputControl ctrl;
     
-    public Tube(Dome dome) {
+    public Tube(PixelMesh<? extends LedPixel> dome) {
         this(dome, DEFAULT_SUBSAMPLING, DEFAULT_FOV);
     }
 
-    public Tube(Dome dome, int base_subsampling, double fov) {
+    public Tube(PixelMesh<? extends LedPixel> dome, int base_subsampling, double fov) {
         super(dome, base_subsampling);
 	this.fov = fov;
 	initControl();
