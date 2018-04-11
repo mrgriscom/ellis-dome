@@ -41,9 +41,9 @@ public class Driver
     }
     
     public static PixelMesh<WingPixel> makePrometheus() {
-	// TODO add checking properties for 2nd opc server
-	OPC opcLeft = new OPC();
-	OPC opcRight = new OPC(opcLeft.getHost(), opcLeft.getPort() + 1);
+	OPC[] opcs = Config.getConfig().makeOPCs(2);
+	OPC opcLeft = opcs[0];
+	OPC opcRight = opcs[1];
 	return new Prometheus(opcLeft, opcRight);
     }
 
