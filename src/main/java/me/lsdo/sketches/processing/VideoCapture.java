@@ -15,14 +15,8 @@ public class VideoCapture extends PApplet {
 
     Capture cam;
     VideoSizing sizeMode;
-
-    // 'projection' rectangle to get more of the video area to overlap the panels
-    double px0;
-    double pw;
-    double py0;
-    double ph;
-    boolean sizeModeInitialized = false;
-
+    boolean initialized = false;
+    
     public void setup() {
 
 	// TODO size based on density? and lower subsampling
@@ -51,50 +45,60 @@ public class VideoCapture extends PApplet {
 	}
 	
         cam = new Capture(this, device);
+	// TODO make config
+        //this.sizeMode = VideoSizing.NONE;
         this.sizeMode = VideoSizing.STRETCH_TO_FIT;
 
 	cam.start();
-
-        setProjectionArea();	
     }
 
     public void draw() {
-        if (!sizeModeInitialized) {
-            // Video dimensions aren't available until we actually draw a frame.
-            image(cam, 0, 0, width, height);
-            background(0);
-            initializeViewport();
-        }
-        image(cam, (float)px0, (float)py0, (float)pw, (float)ph);
-
-        simple.draw();
+	if (!initialized) {
+	    setVideoDimensions();
+	}
+	image(cam, 0, 0, width, height);
+	simple.draw();
     }
 
+    void setVideoDimensions() {
+	if (cam.width == 0 || cam.height == 0) {
+	    System.out.println("video dimensions not readay");
+	    return;
+	}	
+	final double aspectRatio = (double)cam.width / cam.height;
+	System.out.println(cam.width + "x" + cam.height + " " + aspectRatio + ":1");
+
+	if (sizeMode == VideoSizing.NONE) {
+	    // contract the x-axis to get back to a 1:1 aspect ratio (since processing doesn't
+	    // know the video dimensions at launch and can't size the window appropriately)
+	    simple.dome.transform = simple.dome.transform.compoundTransform(new LayoutUtil.Transform() {
+		    public PVector2 transform(PVector2 p) {
+			return LayoutUtil.V(p.x / aspectRatio, p.y);
+		    }
+		});
+	} else if (sizeMode == VideoSizing.STRETCH_TO_FIT) {
+	    PVector2 viewport[] = simple.getDome().getViewport();
+	    final PVector2 p0 = viewport[0];
+	    final PVector2 pDiag = viewport[1];
+	    simple.dome.transform = simple.dome.transform.compoundTransform(new LayoutUtil.Transform() {
+		    double reproject(double p, double p0, double dim) {
+			double normalized = (p - p0) / dim;  // should range from 0 to 1
+			return -1 * (1 - normalized) + 1 * normalized; // rescale to [-1,1] (assumes square processing canvas)
+		    }
+		    
+		    public PVector2 transform(PVector2 p) {
+			return LayoutUtil.V(reproject(p.x, p0.x, pDiag.x), reproject(p.y, p0.y, pDiag.y));
+		    }
+		});
+	}
+	
+	initialized = true;
+	simple.transformChanged();
+    }
 
     public void captureEvent(Capture c) {
 	c.read(); 
     } 
-
-    void setProjectionArea() {
-	PVector2 viewport[] = simple.getDome().getViewport();
-	PVector2 p0 = LayoutUtil.xyToScreen(viewport[0], this.width, this.height, 2*simple.getDome().getRadius(), true);
-        PVector2 p1 = LayoutUtil.xyToScreen(LayoutUtil.Vadd(viewport[0], viewport[1]), this.width, this.height, 2*simple.getDome().getRadius(), true);
-        px0 = p0.x;
-        py0 = p1.y;
-        pw = p1.x - p0.x;
-        ph = p0.y - p1.y;
-
-	System.out.println(px0 + " " + py0 + " " + pw + " " + ph);
-    }
-
-    void initializeViewport() {
-        // If we want to do stuff with aspect ratio we'd do it here.
-        System.out.println("viewport aspect ratio: " + (pw/ph));
-        System.out.println("original video aspect ratio: " + ((double)cam.width/cam.height));
-
-        sizeModeInitialized = true;
-    }
-
     
 }
 

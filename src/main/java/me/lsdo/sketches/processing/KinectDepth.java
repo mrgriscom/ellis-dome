@@ -12,6 +12,8 @@ import processing.core.*;
 import me.lsdo.Driver;
 import me.lsdo.processing.*;
 
+// This sketch is mostly for debugging. It should probably be incorporated into VideoCapture
+
 public class KinectDepth extends PApplet {
 
     CanvasSketch canvas;
