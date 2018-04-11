@@ -47,7 +47,7 @@ public class Kaleidoscope extends DomeAnimation<DomePixel> {
             basePx = basePx.flip(TriCoord.Axis.U);
         }
 
-        return dome.getColor(new DomePixel(basePanel, basePx, LayoutUtil.V(0, 0), 0));
+        return dome.getColor(new DomePixel(basePanel, basePx));
     }
 }
 
