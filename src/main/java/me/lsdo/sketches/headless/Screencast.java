@@ -18,22 +18,16 @@ public class Screencast extends XYAnimation {
     
     int width;
     int height;
-    int xo;
-    int yo;
-    boolean alignHorizontal;
-    double xscale;
-    double yscale;
+    boolean preserveAspect;
     ScreenGrabber grabber;
-    PVector2 viewport0;
-    PVector2 viewportDim;
     
     public Screencast(PixelMesh<? extends LedPixel> dome) {
 	super(dome, Config.getSketchProperty("subsampling", SUBSAMPLING));
 
 	int width = Config.getSketchProperty("width", 512);
-	// If height omitted, screen pixels will map to dome canvas 1:1 (i.e., square
-	// pixels); if height specified, x- and y-axes will independently stretch to
-	// match the dome viewport bounding box.
+	// If height omitted, set equal to width and force no_stretch. Otherwise,
+	// x- and y-axes will independently stretch to match the dome viewport
+	// bounding box.
 	int height = Config.getSketchProperty("height", -1);
 
 	// Top-left screen coordinate of the screengrab area.
@@ -41,7 +35,11 @@ public class Screencast extends XYAnimation {
 	int yo = Config.getSketchProperty("yoffset", 200);
 
 	// Align dome axis to horizontal or vertical axis of screen.
+	// TODO: this belongs in the higher-level dome transform
 	boolean alignHorizontal = Config.getSketchProperty("align_horiz", true);
+
+	// Force 1:1 pixels rather than stretching asymmetrically to fit viewport.
+	boolean preserveAspect = Config.getSketchProperty("no_stretch", false);
 
 	// Further shrink the screencap window by these factors, in order to get more
 	// of the window corners to fall within the dome's renderable area.
@@ -62,39 +60,59 @@ public class Screencast extends XYAnimation {
 	    yo = (int)windowPlacement[0].y;
 	    System.out.println(String.format("%dx%d+%d,%d", width, height, xo, yo));
 	}
-	
-	initViewport(width, height, xo, yo, alignHorizontal, xscale, yscale);
+
+	initGrabber(width, height, xo, yo, preserveAspect);
+	initViewport(alignHorizontal, xscale, yscale);
     }
 
-    public void initViewport(int width, int height, int xo, int yo, boolean alignHorizontal, double xscale, double yscale) {
-	boolean snapViewport;
-	if (height > 0) {
-	    snapViewport = true;
-	} else {
-	    snapViewport = false;
+    private void initGrabber(int width, int height, int xo, int yo, boolean preserveAspect) {
+	if (height <= 0) {
 	    height = width;
+	    preserveAspect = true;
 	}
-	
 	this.width = width;
 	this.height = height;
-	this.xo = xo;
-	this.yo = yo;
-	this.alignHorizontal = alignHorizontal;
-	this.xscale = xscale;
-	this.yscale = yscale;
-
-	initGrabber();
-	
-	if (snapViewport) {
-	    PVector2 viewport[] = dome.getViewport(rotAngle());
-	    viewport0 = normalizePoint(viewport[0]);
-	    viewportDim = normalizePoint(viewport[1]);
+	this.preserveAspect = preserveAspect;
+      
+	String grabberName = Config.getSketchProperty("grabber", "opencv");
+	if (grabberName.equals("robot")) {
+	    grabber = new RobotGrabber(width, height, xo, yo);
+	} else if (grabberName.equals("opencv")) {
+	    grabber = new OpenCvGrabber(width, height, xo, yo);
 	} else {
-	    viewport0 = LayoutUtil.V(-1, -1);
-	    viewportDim = LayoutUtil.V(2, 2);
+	    throw new RuntimeException("unknown grabber type: " + grabberName);
 	}
     }
     
+    public void initViewport(boolean alignHorizontal, final double xscale, final double yscale) {
+	if (!alignHorizontal) {
+	    dome.transform = dome.transform.compoundTransform(new LayoutUtil.Transform() {
+		    public PVector2 transform(PVector2 p) {
+			return LayoutUtil.Vrot(p, Math.PI / 2.);
+		    }
+		});
+	}
+
+	if (!preserveAspect) {
+	    PVector2 viewport[] = dome.getViewport();
+	    final PVector2 p0 = viewport[0];
+	    final PVector2 pDim = viewport[1];
+	    dome.transform = dome.transform.compoundTransform(new LayoutUtil.Transform() {
+		    double reproject(double p, double p0, double dim, double limit, double scale) {
+			double normalized = (p - p0) / dim;  // should range from 0 to 1
+			normalized = -limit * (1 - normalized) + limit * normalized; // rescale to [-x,x]
+			normalized /= scale;
+			return normalized;
+		    }
+		    
+		    public PVector2 transform(PVector2 p) {
+			return LayoutUtil.V(reproject(p.x, p0.x, pDim.x, (double)width/height, xscale),
+					    reproject(p.y, p0.y, pDim.y, 1., yscale));
+		    }
+		});
+	}
+    }
+
     public static abstract class ScreenGrabber {
 	int width;
 	int height;
@@ -180,17 +198,6 @@ public class Screencast extends XYAnimation {
 	}
     }
 
-    private void initGrabber() {
-	String grabberName = Config.getSketchProperty("grabber", "opencv");
-	if (grabberName.equals("robot")) {
-	    grabber = new RobotGrabber(width, height, xo, yo);
-	} else if (grabberName.equals("opencv")) {
-	    grabber = new OpenCvGrabber(width, height, xo, yo);
-	} else {
-	    throw new RuntimeException("unknown grabber type: " + grabberName);
-	}
-    }
-
     // depends on x11
     private PVector2[] getWindowPlacement(String targetTitle, int targetPid) {
 	final int POLL_INTERVAL = 300;  // ms
@@ -245,15 +252,9 @@ public class Screencast extends XYAnimation {
 	//System.out.println(String.format("capture: %d ms   framerate: %.1f", end - start, frameRate));
     }
 
-    private double rotAngle() {
-	return alignHorizontal ? 0. : Math.PI / 6.;
-    }
-    
     @Override
     protected PVector2 toIntermediateRepresentation(PVector2 p) {
-	p = LayoutUtil.Vrot(p, rotAngle());
-	p = LayoutUtil.V(p.x / xscale, p.y / yscale);
-	return LayoutUtil.xyToScreenAsym(p, width, height, viewportDim.x, viewportDim.y);
+	return LayoutUtil.xyToScreen(p, width, height);
     }
 
     @Override
