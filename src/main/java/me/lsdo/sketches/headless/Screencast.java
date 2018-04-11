@@ -94,22 +94,7 @@ public class Screencast extends XYAnimation {
 	}
 
 	if (!preserveAspect) {
-	    PVector2 viewport[] = dome.getViewport();
-	    final PVector2 p0 = viewport[0];
-	    final PVector2 pDim = viewport[1];
-	    dome.transform = dome.transform.compoundTransform(new LayoutUtil.Transform() {
-		    double reproject(double p, double p0, double dim, double limit, double scale) {
-			double normalized = (p - p0) / dim;  // should range from 0 to 1
-			normalized = -limit * (1 - normalized) + limit * normalized; // rescale to [-x,x]
-			normalized /= scale;
-			return normalized;
-		    }
-		    
-		    public PVector2 transform(PVector2 p) {
-			return LayoutUtil.V(reproject(p.x, p0.x, pDim.x, (double)width/height, xscale),
-					    reproject(p.y, p0.y, pDim.y, 1., yscale));
-		    }
-		});
+	    dome.transform = dome.stretchToViewport(width, height, xscale, yscale);
 	}
     }
 

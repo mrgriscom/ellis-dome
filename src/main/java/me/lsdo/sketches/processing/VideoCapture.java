@@ -77,19 +77,7 @@ public class VideoCapture extends PApplet {
 		    }
 		});
 	} else if (sizeMode == VideoSizing.STRETCH_TO_FIT) {
-	    PVector2 viewport[] = simple.getDome().getViewport();
-	    final PVector2 p0 = viewport[0];
-	    final PVector2 pDim = viewport[1];
-	    simple.dome.transform = simple.dome.transform.compoundTransform(new LayoutUtil.Transform() {
-		    double reproject(double p, double p0, double dim) {
-			double normalized = (p - p0) / dim;  // should range from 0 to 1
-			return -1 * (1 - normalized) + 1 * normalized; // rescale to [-1,1] (assumes square processing canvas)
-		    }
-		    
-		    public PVector2 transform(PVector2 p) {
-			return LayoutUtil.V(reproject(p.x, p0.x, pDim.x), reproject(p.y, p0.y, pDim.y));
-		    }
-		});
+	    simple.dome.transform = simple.dome.stretchToViewport(width, height);
 	}
 	
 	initialized = true;
