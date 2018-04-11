@@ -12,13 +12,10 @@ import static org.bytedeco.javacpp.opencv_imgcodecs.*;
 import java.nio.*;
 import java.io.*;
 
-public class Screencast extends XYAnimation {
+public class Screencast extends WindowAnimation {
 
     static final int SUBSAMPLING = 8;
     
-    int width;
-    int height;
-    boolean preserveAspect;
     ScreenGrabber grabber;
     
     public Screencast(PixelMesh<? extends LedPixel> dome) {
@@ -61,19 +58,24 @@ public class Screencast extends XYAnimation {
 	    System.out.println(String.format("%dx%d+%d,%d", width, height, xo, yo));
 	}
 
-	initGrabber(width, height, xo, yo, preserveAspect);
-	initViewport(alignHorizontal, xscale, yscale);
-    }
+	if (!alignHorizontal) {
+	    // TODO does this belong here?
+	    dome.transform = dome.transform.compoundTransform(new LayoutUtil.Transform() {
+		    public PVector2 transform(PVector2 p) {
+			return LayoutUtil.Vrot(p, Math.PI / 2.);
+		    }
+		});
+	}
 
-    private void initGrabber(int width, int height, int xo, int yo, boolean preserveAspect) {
 	if (height <= 0) {
 	    height = width;
 	    preserveAspect = true;
 	}
-	this.width = width;
-	this.height = height;
-	this.preserveAspect = preserveAspect;
-      
+	initViewport(width, height, preserveAspect, xscale, yscale);
+	initGrabber(width, height, xo, yo);
+    }
+
+    private void initGrabber(int width, int height, int xo, int yo) {      
 	String grabberName = Config.getSketchProperty("grabber", "opencv");
 	if (grabberName.equals("robot")) {
 	    grabber = new RobotGrabber(width, height, xo, yo);
@@ -83,21 +85,17 @@ public class Screencast extends XYAnimation {
 	    throw new RuntimeException("unknown grabber type: " + grabberName);
 	}
     }
-    
-    public void initViewport(boolean alignHorizontal, final double xscale, final double yscale) {
-	if (!alignHorizontal) {
-	    dome.transform = dome.transform.compoundTransform(new LayoutUtil.Transform() {
-		    public PVector2 transform(PVector2 p) {
-			return LayoutUtil.Vrot(p, Math.PI / 2.);
-		    }
-		});
-	}
 
-	if (!preserveAspect) {
-	    dome.transform = dome.stretchToViewport(width, height, xscale, yscale);
-	}
+    @Override
+    public void captureFrame() {
+	grabber.captureFrame();	
     }
-
+    
+    @Override
+    public int getPixel(int x, int y) {
+	return grabber.getPixel(x, y);
+    }
+    
     public static abstract class ScreenGrabber {
 	int width;
 	int height;
@@ -226,30 +224,6 @@ public class Screencast extends XYAnimation {
 	    } catch (Exception e) {
 		throw new RuntimeException(e);
 	    }
-	}
-    }
-    
-    @Override
-    protected void preFrame(double t, double deltaT) {
-	long start = System.currentTimeMillis();
-	grabber.captureFrame();
-	long end = System.currentTimeMillis();
-	//System.out.println(String.format("capture: %d ms   framerate: %.1f", end - start, frameRate));
-    }
-
-    @Override
-    protected PVector2 toIntermediateRepresentation(PVector2 p) {
-	return LayoutUtil.xyToScreen(p, width, height);
-    }
-
-    @Override
-    protected int samplePoint(PVector2 p, double t) {
-	int x = (int)Math.floor(p.x);
-	int y = (int)Math.floor(p.y);
-	if (x < 0 || x >= width || y < 0 || y >= height) {
-	    return 0;
-	} else {
-	    return grabber.getPixel(x, y);
 	}
     }
     

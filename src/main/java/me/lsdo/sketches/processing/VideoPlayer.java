@@ -16,35 +16,17 @@ import java.util.Arrays;
 
 // TODO support contrast stretch
 
-enum VideoSizing {
-    // Do nothing special; use the default pixel transform
-    NONE,
-    // Warp the video frame to match the mesh's viewport
-    STRETCH_TO_FIT
-}
-
-public class VideoPlayer extends PApplet {
+public class VideoPlayer extends VideoBase {
 
     //final String DEMO_VIDEO = "res/mov/bm2014_mushroom_cloud.mp4";
     final String DEMO_VIDEO = "res/mov/trexes_thunderdome.mp4";
     
-    CanvasSketch simple;
-
     static final double[] skips = {5};
 
     Movie mov;
     boolean playing;
-    VideoSizing sizeMode;
-    boolean initialized = false;
     
-    public void setup() {
-
-	// ideally just want to match the video resolution, but that's not accessible
-	// until the first frame is drawn, and processing window resizing is really sketchy
-        size(600, 600);
-
-	simple = Driver.makeCanvas(this);
-	
+    public PImage loadMedia() {
 	String path = Config.getSketchProperty("path", DEMO_VIDEO);
 	if (path.isEmpty()) {
 	    throw new RuntimeException("must specify video path in sketch.properties!");
@@ -53,51 +35,18 @@ public class VideoPlayer extends PApplet {
 	
         mov = new Movie(this, path);
 
-	boolean preserveAspect = Config.getSketchProperty("no_stretch", false);
-	this.sizeMode = preserveAspect ? VideoSizing.NONE : VideoSizing.STRETCH_TO_FIT;
-
 	if (repeat) {
 	    mov.loop();
 	} else {
 	    mov.play();
 	}
         playing = true;
-        System.out.println("duration: " + mov.duration());
-        // TODO some event when playback has finished?
-    }
-
-    public void draw() {
-	if (!initialized) {
-	    setVideoDimensions();
-	}
-	image(mov, 0, 0, width, height);
-	simple.draw();
-    }
-
-    void setVideoDimensions() {
-	if (mov.width == 0 || mov.height == 0) {
-	    System.out.println("video dimensions not readay");
-	    return;
-	}	
-	final double aspectRatio = (double)mov.width / mov.height;
-	System.out.println(mov.width + "x" + mov.height + " " + aspectRatio + ":1");
-
-	if (sizeMode == VideoSizing.NONE) {
-	    // contract the x-axis to get back to a 1:1 aspect ratio (since processing doesn't
-	    // know the video dimensions at launch and can't size the window appropriately)
-	    simple.dome.transform = simple.dome.transform.compoundTransform(new LayoutUtil.Transform() {
-		    public PVector2 transform(PVector2 p) {
-			return LayoutUtil.V(p.x / aspectRatio, p.y);
-		    }
-		});
-	} else if (sizeMode == VideoSizing.STRETCH_TO_FIT) {
-	    simple.dome.transform = simple.dome.stretchToViewport(width, height);
-	}
 	
-	initialized = true;
-	simple.transformChanged();
+        System.out.println("duration: " + mov.duration());
+
+	return mov;
     }
-    
+
     public void keyPressed() {
         int dir = 0;
         if (this.key == '.') {
