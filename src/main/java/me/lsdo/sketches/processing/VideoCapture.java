@@ -45,9 +45,9 @@ public class VideoCapture extends PApplet {
 	}
 	
         cam = new Capture(this, device);
-	// TODO make config
-        //this.sizeMode = VideoSizing.NONE;
-        this.sizeMode = VideoSizing.STRETCH_TO_FIT;
+
+	boolean preserveAspect = Config.getSketchProperty("no_stretch", false);
+	this.sizeMode = preserveAspect ? VideoSizing.NONE : VideoSizing.STRETCH_TO_FIT;
 
 	cam.start();
     }

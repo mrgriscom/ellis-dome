@@ -52,9 +52,9 @@ public class VideoPlayer extends PApplet {
 	boolean repeat = Config.getSketchProperty("repeat", true);
 	
         mov = new Movie(this, path);
-	// TODO make config
-        //this.sizeMode = VideoSizing.NONE;
-        this.sizeMode = VideoSizing.STRETCH_TO_FIT;
+
+	boolean preserveAspect = Config.getSketchProperty("no_stretch", false);
+	this.sizeMode = preserveAspect ? VideoSizing.NONE : VideoSizing.STRETCH_TO_FIT;
 
 	if (repeat) {
 	    mov.loop();

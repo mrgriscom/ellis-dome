@@ -249,7 +249,7 @@ public class Screencast extends XYAnimation {
 	if (x < 0 || x >= width || y < 0 || y >= height) {
 	    return 0;
 	} else {
-	    return grabber.getPixel((int)Math.floor(p.x), (int)Math.floor(p.y));
+	    return grabber.getPixel(x, y);
 	}
     }
     
