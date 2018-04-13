@@ -2,22 +2,65 @@
 
 [![Build Status](https://travis-ci.org/shen-tian/lsdome.svg?branch=master)](https://travis-ci.org/shen-tian/lsdome)
 
-Project for Afrika Burn 2016. A dome style gazebo with around 1500 - 2800
-WS2812B LEDs, controlled via [Fadecandies](http://www.misc.name/fadecandy/).
-See the [project](http://lsdo.me) page.
+Project for Afrika Burn 2016+. Visualizations for a 2D mesh of addressible LED pixels.
 
 This is a library of animations. It uses the associated `lsdome-processing`
-[lirary](https://github.com/shen-tian/lsdome-processing).
-
-### From project submission:
-
-The piece will be a net with 1500-2000 LEDs, about 3-4m in diameter suspended
-on a frame 2m off of the ground. Since the LEDs are fully addressable
-(NeoPixels!), they can be used to run various visualisations at night. It works
-really well with sound too, so I'd like to add some speakers (not a dance party
-level. More like ambient++). Its footprint should be around 5x5m.
+[library](https://github.com/shen-tian/lsdome-processing).
 
 ### Build
+
+1. Follow the build steps for [the parent library](https://github.com/shen-tian/lsdome-processing).
+
+2. Clone this repo and edit `build.gradle`; update `local_processing_install` and `local_processing_user_dir` to the relevant corrent paths. You may also use the published parent library by setting `use_local_lsdome_processing_lib = false`, but be warned this is often extremely out of date.
+
+3. Install Processing video support. At the time of writing, do not use the packaged Processing video library -- it uses a very old video plugin that is extremely hard to get working on current versions of Ubuntu.
+
+    ```
+    cd ~/processing-3.3.7/modes/java/libraries/
+    git clone https://github.com/processing/processing-video video
+    cd video
+    ````
+
+    Edit `build.properties`, replacing `../processing/` with `<home dir>/processing-3.3.7/`
+
+    `ant`
+
+
+
+run processing and install kinect library
+./processing-3.3.7/processing
+sketch -> import library -> add library
+“open kinect for processing” -> install
+
+opc clone
+make
+apt-get install build-essential + sudo apt-get install mesa-common-dev freeglut3-dev
+
+run lsdome binary
+
+
+commit diffs!
+fix pixel/grid test
+
+midi control
+pip install pygame zmq
+sudo apt-get install libzmq5 python-pypm
+sudo mv /usr/local/lib/python2.7/dist-packages/pygame/pypm.so /tmp/
+sudo ln -s /usr/lib/python2.7/dist-packages/pypm.x86_64-linux-gnu.so /usr/local/lib/python2.7/dist-packages/pygame/pypm.so
+python src/control/input.py
+loaded device
+f0fe308b:dj2go:jog_a:inc
+using mock device no
+
+
+screencast X not wayland
+
+sketch details:
+screencast
+video
+stream
+
+
 
 Work in progress: the project is split between two parts right now: 
 
