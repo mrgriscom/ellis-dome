@@ -63,8 +63,9 @@ public class Driver
     }
     
     public static void main(String[] args){
-	if (args.length > 0 && processingSketches.containsKey(args[0])) {
-	    Class<PApplet> sketch = processingSketches.get(args[0]);
+	String sketchName = (args.length > 0 ? args[0] : "");
+	if (processingSketches.containsKey(sketchName)) {
+	    Class<PApplet> sketch = processingSketches.get(sketchName);
 	    PApplet app;
 	    try {
 		app = sketch.newInstance();
@@ -75,38 +76,23 @@ public class Driver
 	    // if we modify the 'app' object, calling app.main() seems to reset it;
 	    // runSketch() still seems to do the trick, so use that unless a reason not to?
 	    //app.main(new String[] {sketch.getName()});
+	} else if (headlessSketches.containsKey(sketchName)) {
+	    RunAnimation(makeGeometry(), sketchName, 0);
 	} else {
-	    // Headless
-	    PixelMesh<? extends LedPixel> mesh = makeGeometry();
-	    if (args.length > 0) {
-		RunAnimation(mesh, args[0], 0);
-	    } else {
-		// TODO this should probably be replaced by last year's python launcher
-		// script, which can also shuffle parameters within each sketch, and
-		// avoid running the same sketch twice in a row.
-		System.out.println("shuffle mode");
-
-		Random random = new Random();
-		Set<String> excludeFromShuffle = new HashSet<String>(Arrays.asList(new String[] {
-			    "gridtest",
-			    "screencast"
-			}));
-		Set<String> sketches = headlessSketches.keySet();
-		sketches.removeAll(excludeFromShuffle);
-		List<String> animations = new ArrayList<String>(sketches);
-		while (true) {
-		    RunAnimation(mesh, animations.get(random.nextInt(animations.size())), 60);
-		}
+	    List<String> sketches = new ArrayList<String>();
+	    sketches.addAll(processingSketches.keySet());
+	    sketches.addAll(headlessSketches.keySet());
+	    Collections.sort(sketches);
+	    System.out.println("available sketches:");
+	    for (String s : sketches) {
+		System.out.println(s);
 	    }
+	    throw new RuntimeException("unrecognized sketch '" + sketchName + "'");
 	}
     }
 
     private static void RunAnimation(PixelMesh dome, String name, int duration)
     {
-	if (!headlessSketches.containsKey(name)) {
-	    throw new RuntimeException("animation [" + name + "] not recognized");
-	}
-
 	Class<DomeAnimation> sketch = headlessSketches.get(name);
         DomeAnimation animation;	
 	try {
