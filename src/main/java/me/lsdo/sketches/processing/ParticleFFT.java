@@ -32,10 +32,12 @@ public class ParticleFFT extends PApplet {
 
     CanvasSketch canvas;
 
+    public void settings() {
+        size(300, 300, P3D);
+    }
+    
     public void setup()
     {
-        size(300, 300, P3D);
-
 	canvas = Driver.makeCanvas(this);
 	
         minim = new Minim(this);
@@ -45,12 +47,8 @@ public class ParticleFFT extends PApplet {
         fft = new FFT(in.bufferSize(), in.sampleRate());
         fftFilter = new float[fft.specSize()];
 
-	// When not launching via processing, we must munge the sketch path so that
-	// processing can find the data files. This also presumes the binary is launched
-	// from the lsdome repo root dir.
-	sketchPath = "res/img";
-        dot = loadImage("dot.png");
-        colors = loadImage("colors.png");
+        dot = loadImage("../../../res/img/dot.png");
+        colors = loadImage("../../../res/img/colors.png");
     }
 
     public void draw()

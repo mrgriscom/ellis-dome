@@ -20,8 +20,11 @@ public class KinectDepth extends PApplet {
     
     Kinect kinect;
 
-    public void setup() {
+    public void settings() {
 	size(640, 640);
+    }
+    
+    public void setup() {
 	canvas = Driver.makeCanvas(this);
 
 	kinect = new Kinect(this);

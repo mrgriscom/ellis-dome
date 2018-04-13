@@ -11,12 +11,14 @@ public abstract class VideoBase extends PApplet {
     CanvasSketch simple;
     PImage media;
     boolean initialized = false;
-    
-    public void setup() {
+
+    public void settings() {
 	// ideally just want to match the video resolution, but that's not accessible
 	// until the first frame is drawn, and processing window resizing is really sketchy
         size(600, 600);
-
+    }
+    
+    public void setup() {
         simple = Driver.makeCanvas(this);
 	media = loadMedia();
 

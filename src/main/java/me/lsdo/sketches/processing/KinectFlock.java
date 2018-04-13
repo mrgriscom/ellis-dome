@@ -72,9 +72,11 @@ public class KinectFlock extends PApplet {
 	    }
 	};
 
-    public void setup() {
+    public void settings() {
         size(300, 300);
-
+    }
+    
+    public void setup() {
 	simple = Driver.makeCanvas(this);
 	
 	depthThresh = Config.getSketchProperty("maxdepth", 750);

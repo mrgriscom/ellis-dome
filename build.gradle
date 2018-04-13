@@ -4,7 +4,7 @@ apply plugin: 'application'
 mainClassName = "me.lsdo.Driver"
 
 def use_local_lsdome_processing_lib = true
-def local_processing_install = '/home/drew/processing-2.2.1'
+def local_processing_install = '/home/drew/processing-3.3.7'
 def local_processing_user_dir = '/home/drew/sketchbook'
 
 repositories {
@@ -34,9 +34,13 @@ dependencies {
     // for FFT
     compile "ddf.minim:ddf.minim:2.2.0"
     // for screen capture
-    compile group: 'org.bytedeco', name: 'javacv-platform', version: '1.3.1'
+    compile "org.bytedeco:javacv-platform:1.3.1"
     // for interactive input events
     compile "org.zeromq:jeromq:0.4.3"
+
+    // no processing deps! -- use local install to avoid version incompatibilities
+    //compile "org.processing:core:3.3.7"
+    //compile "org.processing:video:3.2.3"
 }
 
 // Pull all processing jars/dependencies from the local install, otherwise
@@ -46,14 +50,15 @@ repositories {
         dirs new File(local_processing_install, 'core/library')
         dirs new File(local_processing_install, 'java/lib')
         dirs new File(local_processing_install, 'lib')
-	dirs new File(local_processing_install, 'modes/java/libraries/video/library')
+        dirs new File(local_processing_install, 'modes/java/mode')
     }
 }
+// add jars from the processing install here as needed
 dependencies {
     compile name: 'ant'
     compile name: 'ant-launcher'
     compile name: 'antlr'
-    compile name: 'com.ibm.icu_4.4.2.v20110823'
+    compile name: 'com.ibm.icu'
     compile name: 'core'	
     compile name: 'gluegen-rt'
     compile name: 'gluegen-rt-natives-linux-amd64'
@@ -62,7 +67,6 @@ dependencies {
     compile name: 'gluegen-rt-natives-macosx-universal'
     compile name: 'gluegen-rt-natives-windows-amd64'
     compile name: 'gluegen-rt-natives-windows-i586'
-    compile name: 'gstreamer-java'
     compile name: 'jdi'
     compile name: 'jdimodel'
     compile name: 'jna'
@@ -73,21 +77,22 @@ dependencies {
     compile name: 'jogl-all-natives-macosx-universal'
     compile name: 'jogl-all-natives-windows-amd64'
     compile name: 'jogl-all-natives-windows-i586'
-    compile name: 'org-netbeans-swing-outline'
-    compile name: 'org.eclipse.osgi_3.8.1.v20120830-144521'
     compile name: 'pde'
     compile name: 'rt'
-    compile name: 'video'
 }
 
 // TODO try to find these in online repo (though risk of incompatibilities like seen with other processing deps still applies)
 repositories {
     flatDir {
         dirs new File(local_processing_user_dir, 'libraries/openkinect_processing/library')
+	dirs new File(local_processing_user_dir, 'libraries/video/library')
     }
 }
 dependencies {
     compile name: 'openkinect_processing'
+    compile name: 'video'
+    compile name: 'jna'
+    compile name: 'gst1-java-core-0.9.1'
 }
 
 sourceCompatibility = 1.6

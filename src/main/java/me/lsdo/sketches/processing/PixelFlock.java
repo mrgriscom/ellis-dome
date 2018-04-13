@@ -29,9 +29,11 @@ public class PixelFlock extends PApplet {
 
     CanvasSketch simple;
 
-    public void setup() {
+    public void settings() {
         size(300, 300);
-
+    }
+    
+    public void setup() {
 	simple = Driver.makeCanvas(this);
 	
         minim = new Minim(this);
