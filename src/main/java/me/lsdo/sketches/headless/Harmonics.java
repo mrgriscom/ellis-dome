@@ -19,6 +19,10 @@ public class Harmonics extends DomeAnimation<DomePixel> {
 	{2, 1, 0}
     };
     
+    public Harmonics(PixelMesh<? extends LedPixel> mesh) {
+	this((Dome)mesh);
+    }
+    
     public Harmonics(Dome dome) {
 	super(dome);
 

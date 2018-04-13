@@ -8,6 +8,10 @@ import me.lsdo.processing.*;
 
 public class GridTest extends DomeAnimation<DomePixel> {
 
+    public GridTest(PixelMesh<? extends LedPixel> mesh) {
+	this((Dome)mesh);
+    }
+    
     public GridTest(Dome dome) {
         super(dome);
     }

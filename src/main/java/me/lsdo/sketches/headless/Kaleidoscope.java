@@ -6,6 +6,10 @@ public class Kaleidoscope extends DomeAnimation<DomePixel> {
 
     private TriCoord basePanel;
 
+    public Kaleidoscope(PixelMesh<? extends LedPixel> mesh) {
+	this((Dome)mesh);
+    }
+    
     public Kaleidoscope(Dome dome) {
         super(dome);
         basePanel = new TriCoord(TriCoord.CoordType.PANEL, 0, 0, -1);

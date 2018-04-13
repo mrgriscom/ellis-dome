@@ -17,6 +17,10 @@ public class PixelTest extends DomeAnimation<DomePixel> {
     private int px_per_panel;
     private int total_arms;
 
+    public PixelTest(PixelMesh<? extends LedPixel> mesh) {
+	this((Dome)mesh);
+    }
+    
     public PixelTest(Dome dome) {
         super(dome);
         coordOrder = new HashMap<DomePixel, Integer>();
