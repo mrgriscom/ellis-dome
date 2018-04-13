@@ -23,34 +23,58 @@ This is a library of animations. It uses the associated `lsdome-processing`
 
     Edit `build.properties`, replacing `../processing/` with `<home dir>/processing-3.3.7/`
 
-    `ant`
+    Run `ant`
+
+4. Install Processing Kinect support. Install from the Processing IDE: 'Sketch' menu -> Import Library -> Add Library -> "Open Kinect for Processing"
+
+5. Build:
+
+   `./gradlew installDist`
+
+6. Install the OpenPixelControl simulator. This creates a model of the pixel layout in 3D space, allowing you to see what the visualization output will look like:
+
+   ```
+   git clone https://github.com/zestyping/openpixelcontrol.git
+   sudo apt-get install build-essential mesa-common-dev freeglut3-dev
+   make
+   ```
+   
+   Then to run:
+
+   `bin/gl_server -l <lsdome repo>/src/config/simulator_layouts/<relevant layout>.json -p 7890
+
+7. Launch visualizations:
+
+    ./build/install/lsdome/bin/lsdome <animation name>
+
+8. Set up interactive control. Some animations support on-the-fly configuration via MIDI input. To set up:
+
+    ```
+    pip install pygame zmq
+    sudo apt-get install libzmq5 python-pypm
+    ```
+
+    Unfortunately, pygame midi support is broken, so we must patch:
+
+    ```
+    sudo mv /usr/local/lib/python2.7/dist-packages/pygame/pypm.so /usr/local/lib/python2.7/dist-packages/pygame/pypm.so.broken
+    sudo ln -s /usr/lib/python2.7/dist-packages/pypm.x86_64-linux-gnu.so /usr/local/lib/python2.7/dist-packages/pygame/pypm.so
+    ```
+
+    To launch the input daemon:
+    
+    `python src/control/input.py`
+
+    Currently only the Numark DJ2Go controller is supported, but if it's connected and everything is working right, you should see something like:
+
+    ```
+    loaded device
+    f0fe308b:dj2go:jog_a:inc
+    ```
+
+    and not anything about 'mock device'
 
 
-
-run processing and install kinect library
-./processing-3.3.7/processing
-sketch -> import library -> add library
-“open kinect for processing” -> install
-
-opc clone
-make
-apt-get install build-essential + sudo apt-get install mesa-common-dev freeglut3-dev
-
-run lsdome binary
-
-
-commit diffs!
-fix pixel/grid test
-
-midi control
-pip install pygame zmq
-sudo apt-get install libzmq5 python-pypm
-sudo mv /usr/local/lib/python2.7/dist-packages/pygame/pypm.so /tmp/
-sudo ln -s /usr/lib/python2.7/dist-packages/pypm.x86_64-linux-gnu.so /usr/local/lib/python2.7/dist-packages/pygame/pypm.so
-python src/control/input.py
-loaded device
-f0fe308b:dj2go:jog_a:inc
-using mock device no
 
 
 screencast X not wayland
@@ -71,44 +95,4 @@ Work in progress: the project is split between two parts right now:
 
 The headless code is organised as a Java app. It's built by `gradle`.
 Before running `gradle`, set `local_processing_install` in `build.gradle`
-to the path of your processing installation.
-`gradle installDist` builds and places it in the `\build\install\lsdome` folder.
-Running the `./bin/lsdome` script launches it. It accepts these parameters:
-
-    lsdome [cloud|rings|kaleidoscope|twinkle|pixeltest]
     
-It's pretty self contained. Since these are headless, you do need an 
-OPC server that's connected to see what's going on though. Use a `config.properties`
-file to configure where the OPC serer is. Sample file:
-
-    opchostname=192.168.1.123
-    opcport=7890
-
-### Dependencies
-
-You must install Processing 2.2.1
-
-On ubuntu:
-
-    add-apt-repository ppa:mc3man/gstffmpeg-keep && apt-get update
-    apt-get install gstreamer0.10-plugins-base gstreamer0.10-plugins-good gstreamer0.10-ffmpeg gstreamer0.10-pulseaudio gstreamer0.10-alsa
-
-### Simulator
-
-Grab this: 
-
-    git clone https://github.com/zestyping/openpixelcontrol.git
-    
-And maybe some dependcies. on ubuntu:
-
-    sudo apt-get install mesa-common-dev freeglut3-dev
-
-Build the thing:
-   
-    make
-
-Then run:
-
-    bin/gl_server -l $LSDOME_REPO_PATH/src/config/simulator_layouts/opcsimulator_layout_24.json -p 7890
-    
-Use the layout file for the corresponding number of panels.
