@@ -51,6 +51,7 @@ repositories {
         dirs new File(local_processing_install, 'java/lib')
         dirs new File(local_processing_install, 'lib')
         dirs new File(local_processing_install, 'modes/java/mode')
+        dirs new File(local_processing_install, 'modes/java/libraries/video/library')
     }
 }
 // add jars from the processing install here as needed
@@ -67,6 +68,7 @@ dependencies {
     compile name: 'gluegen-rt-natives-macosx-universal'
     compile name: 'gluegen-rt-natives-windows-amd64'
     compile name: 'gluegen-rt-natives-windows-i586'
+    compile name: 'gst1-java-core-0.9.1'
     compile name: 'jdi'
     compile name: 'jdimodel'
     compile name: 'jna'
@@ -79,20 +81,17 @@ dependencies {
     compile name: 'jogl-all-natives-windows-i586'
     compile name: 'pde'
     compile name: 'rt'
+    compile name: 'video'
 }
 
 // TODO try to find these in online repo (though risk of incompatibilities like seen with other processing deps still applies)
 repositories {
     flatDir {
         dirs new File(local_processing_user_dir, 'libraries/openkinect_processing/library')
-	dirs new File(local_processing_user_dir, 'libraries/video/library')
     }
 }
 dependencies {
     compile name: 'openkinect_processing'
-    compile name: 'video'
-    compile name: 'jna'
-    compile name: 'gst1-java-core-0.9.1'
 }
 
 sourceCompatibility = 1.6
