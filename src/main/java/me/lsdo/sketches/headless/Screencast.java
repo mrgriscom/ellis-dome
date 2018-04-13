@@ -12,6 +12,8 @@ import static org.bytedeco.javacpp.opencv_imgcodecs.*;
 import java.nio.*;
 import java.io.*;
 
+// Note: on linux, as of Ubuntu 17, this requires the Xorg window system, *not* wayland
+
 public class Screencast extends WindowAnimation {
 
     static final int SUBSAMPLING = 8;
