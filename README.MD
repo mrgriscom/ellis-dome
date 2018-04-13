@@ -41,17 +41,17 @@ This is a library of animations. It uses the associated `lsdome-processing`
    
    Then to run:
 
-   `bin/gl_server -l <lsdome repo>/src/config/simulator_layouts/<relevant layout>.json -p 7890
+   `bin/gl_server -l <lsdome repo>/src/config/simulator_layouts/<relevant layout>.json -p 7890`
 
 7. Launch visualizations:
 
-    ./build/install/lsdome/bin/lsdome <animation name>
+    `./build/install/lsdome/bin/lsdome <animation name>`
 
 8. Set up interactive control. Some animations support on-the-fly configuration via MIDI input. To set up:
 
     ```
-    pip install pygame zmq
     sudo apt-get install libzmq5 python-pypm
+    pip install pygame zmq
     ```
 
     Unfortunately, pygame midi support is broken, so we must patch:
@@ -72,8 +72,16 @@ This is a library of animations. It uses the associated `lsdome-processing`
     f0fe308b:dj2go:jog_a:inc
     ```
 
-    and not anything about 'mock device'
+    If you see anything about 'mock device', it didn't work.
 
+### Useful sketches
+
+Some visualizations are generic front-ends for other functionality, and must be configured. Sketches can be configured in `sketch.properties`.
+
+- `video` -- Video playback.
+
+  - `path` -- path of video to play
+  - `repeat` -- `true`/`false` whether to loop the video
 
 
 
@@ -86,13 +94,5 @@ stream
 
 
 
-Work in progress: the project is split between two parts right now: 
-
-* Headless animations that can run without an X environment
-* Processing sketches that need a graphics environment to run.
-
-#### Headless java app
-
-The headless code is organised as a Java app. It's built by `gradle`.
-Before running `gradle`, set `local_processing_install` in `build.gradle`
-    
+subsampling
+no_stretch
