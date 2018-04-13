@@ -33,10 +33,6 @@ public class Screencast extends WindowAnimation {
 	int xo = Config.getSketchProperty("xoffset", 200);
 	int yo = Config.getSketchProperty("yoffset", 200);
 
-	// Align dome axis to horizontal or vertical axis of screen.
-	// TODO: this belongs in the higher-level dome transform
-	boolean alignHorizontal = Config.getSketchProperty("align_horiz", true);
-
 	// Force 1:1 pixels rather than stretching asymmetrically to fit viewport.
 	boolean preserveAspect = Config.getSketchProperty("no_stretch", false);
 
@@ -58,15 +54,6 @@ public class Screencast extends WindowAnimation {
 	    xo = (int)windowPlacement[0].x;
 	    yo = (int)windowPlacement[0].y;
 	    System.out.println(String.format("%dx%d+%d,%d", width, height, xo, yo));
-	}
-
-	if (!alignHorizontal) {
-	    // TODO does this belong here?
-	    dome.transform = dome.transform.compoundTransform(new LayoutUtil.Transform() {
-		    public PVector2 transform(PVector2 p) {
-			return LayoutUtil.Vrot(p, Math.PI / 2.);
-		    }
-		});
 	}
 
 	if (height <= 0) {
