@@ -78,21 +78,23 @@ This is a library of animations. It uses the associated `lsdome-processing`
 
 Some visualizations are generic front-ends for other functionality, and must be configured. Sketches can be configured in `sketch.properties`.
 
-- `video` -- Video playback.
+- `video` -- Video playback
 
-  - `path` -- path of video to play
+  - `path` -- file path of video to play
   - `repeat` -- `true`/`false` whether to loop the video
 
+- `stream` -- Stream from a video input device
 
+  - `camera` -- video device to stream
 
-screencast X not wayland
+- `screencast` -- Map a rectangle of the desktop screen. Anything displayed in this rectangle will be shown on the pixels, even if it is an overlapping window or lock screen or mouse pointer.
 
-sketch details:
-screencast
-video
-stream
+  - `title` -- window title; first matching window whose title starts with this prefix is capture and cast. If the window is later moved, the capture area does not change.
+  - `pid` -- process ID of window to capture. Either this or `title` should be used, depending on which is easier for the application in question.
 
+  Note that recent Ubuntu uses the 'Wayland' display system, which thwarts screen capture. You must start your login session with the 'Xorg' display system in order for screen capture to work.
 
+- Generic settings:
 
-subsampling
-no_stretch
+  - subsampling -- how many samples to take for each LED pixel; this will gives things a smoother appearance and will prevent aliasing.
+  - no_stretch -- if `false`, stretch the display window to fit as much as possible onto the LED mesh. If `true`, preserve a 1:1 aspect ratio rather than trying to squeeze in more content.
