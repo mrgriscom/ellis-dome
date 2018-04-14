@@ -20,6 +20,7 @@ public class Driver
 	processingSketches.put("video", VideoPlayer.class);
 	processingSketches.put("stream", VideoCapture.class);
 	processingSketches.put("syphon", Syphon.class);
+	processingSketches.put("spout", Spout.class);
 	processingSketches.put("kinectdepth", KinectDepth.class);
 	processingSketches.put("kinectflock", KinectFlock.class);
 

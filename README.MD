@@ -27,8 +27,9 @@ This is a library of animations. It uses the associated `lsdome-processing`
 
 4. Install additional Processing libraries from the Processing IDE: 'Sketch' menu -> Import Library... -> Add Library...:
 
-- _Open Kinect for Processing_
+- _Open Kinect_
 - _Syphon_
+- _Spout_
 
 5. Build:
 
@@ -101,3 +102,7 @@ Some visualizations are generic front-ends for other functionality, and must be 
 
   - subsampling -- how many samples to take for each LED pixel; this will gives things a smoother appearance and will prevent aliasing.
   - no_stretch -- if `false`, stretch the display window to fit as much as possible onto the LED mesh. If `true`, preserve a 1:1 aspect ratio rather than trying to squeeze in more content.
+
+### Running in the field
+
+See https://docs.google.com/document/d/1hHp4TiTqGZ-8Ikw_ZQ6Q-MDdQF0-5oHshonCKSjANCk/edit?usp=sharing for accumulated knowledge.
