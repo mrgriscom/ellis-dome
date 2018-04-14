@@ -109,13 +109,12 @@ public class Driver
 
     private static void RunAnimation(DomeAnimation animation, int duration)
     {
-        long start = System.currentTimeMillis();
         double t = 0;
         while (t < duration || duration == 0)
         {
-            t = (System.currentTimeMillis() - start) / 1000d;
+            t = Config.clock();
             animation.draw(t);
-            double s = (System.currentTimeMillis() - start) / 1000d;
+            double s = Config.clock();
             int ms = (int)((s - t) * 1000);
             try {
                 Thread.sleep(Math.max((int)(1000./FPS_CAP) - ms, 0));
