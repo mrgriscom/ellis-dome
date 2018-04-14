@@ -88,10 +88,13 @@ dependencies {
 repositories {
     flatDir {
         dirs new File(local_processing_user_dir, 'libraries/openkinect_processing/library')
+        dirs new File(local_processing_user_dir, 'libraries/Syphon/library')
     }
 }
 dependencies {
     compile name: 'openkinect_processing'
+    compile name: 'jsyphon'
+    compile name: 'Syphon'
 }
 
 sourceCompatibility = 1.6

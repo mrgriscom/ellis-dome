@@ -25,7 +25,10 @@ This is a library of animations. It uses the associated `lsdome-processing`
 
     Run `ant`
 
-4. Install Processing Kinect support. Install from the Processing IDE: 'Sketch' menu -> Import Library -> Add Library -> "Open Kinect for Processing"
+4. Install additional Processing libraries from the Processing IDE: 'Sketch' menu -> Import Library... -> Add Library...:
+
+- _Open Kinect for Processing_
+- _Syphon_
 
 5. Build:
 
