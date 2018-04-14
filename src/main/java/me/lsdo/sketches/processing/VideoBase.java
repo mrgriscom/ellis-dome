@@ -9,7 +9,6 @@ import java.util.Arrays;
 public abstract class VideoBase extends PApplet {
 
     CanvasSketch simple;
-    PImage media;
     boolean initialized = false;
 
     public void settings() {
@@ -20,23 +19,23 @@ public abstract class VideoBase extends PApplet {
     
     public void setup() {
         simple = Driver.makeCanvas(this);
-	media = loadMedia();
-
-        // TODO some event when playback has finished?
+	loadMedia();
     }
 
-    public abstract PImage loadMedia();
+    public abstract void loadMedia();
+    public abstract PImage nextFrame();
     
     public void draw() {
+	PImage frame = nextFrame();
 	if (!initialized) {
-	    setVideoDimensions();
+	    setVideoDimensions(frame);
 	}
-	image(media, 0, 0, width, height);
+	image(frame, 0, 0, width, height);
 	simple.draw();
     }
 
-    void setVideoDimensions() {
-	if (media.width == 0 || media.height == 0) {
+    void setVideoDimensions(PImage media) {
+	if (media == null || media.width == 0 || media.height == 0) {
 	    System.out.println("video dimensions not readay");
 	    return;
 	}	

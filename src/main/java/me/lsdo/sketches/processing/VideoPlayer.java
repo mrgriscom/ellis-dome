@@ -26,7 +26,7 @@ public class VideoPlayer extends VideoBase {
     Movie mov;
     boolean playing;
     
-    public PImage loadMedia() {
+    public void loadMedia() {
 	String path = Config.getSketchProperty("path", DEMO_VIDEO);
 	if (path.isEmpty()) {
 	    throw new RuntimeException("must specify video path in sketch.properties!");
@@ -43,7 +43,13 @@ public class VideoPlayer extends VideoBase {
         playing = true;
 	
         System.out.println("duration: " + mov.duration());
+        // TODO some event when playback has finished?
+    }
 
+    public PImage nextFrame() {
+	if (mov.available()) {
+	    mov.read();
+	}
 	return mov;
     }
 
@@ -68,10 +74,6 @@ public class VideoPlayer extends VideoBase {
             System.out.println(String.format("%.2f / %.2f", t, mov.duration()));
         }
     }
-
-    public void movieEvent(Movie m) {
-	m.read();
-    } 
 
 }
 

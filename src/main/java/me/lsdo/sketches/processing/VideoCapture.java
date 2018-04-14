@@ -12,7 +12,7 @@ public class VideoCapture extends VideoBase {
 
     Capture cam;
     
-    public PImage loadMedia() {
+    public void loadMedia() {
 	String device = Config.getSketchProperty("camera", "");
 	String[] availableDevices = Capture.list();
 	boolean found = false;
@@ -35,13 +35,14 @@ public class VideoCapture extends VideoBase {
 	
         cam = new Capture(this, device);
 	cam.start();
-
-	return cam;
     }
 
-    public void captureEvent(Capture c) {
-	c.read(); 
-    } 
+    public PImage nextFrame() {
+	if (cam.available()) {
+	    cam.read();
+	}
+	return cam;
+    }
     
 }
 
