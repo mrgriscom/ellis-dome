@@ -96,6 +96,8 @@ Some visualizations are generic front-ends for other functionality, and must be 
   - `title` -- window title; first matching window whose title starts with this prefix is capture and cast. If the window is later moved, the capture area does not change.
   - `pid` -- process ID of window to capture. Either this or `title` should be used, depending on which is easier for the application in question.
 
+  Grabbing by window title/ID only works on linux, and requires the `wmctrl` program to be installed.
+
   Note that recent Ubuntu uses the 'Wayland' display system, which thwarts screen capture. You must start your login session with the 'Xorg' display system in order for screen capture to work.
 
 - Generic settings:
