@@ -1,6 +1,5 @@
 package me.lsdo.sketches.headless;
 
-import me.lsdo.util.InputControl;
 import java.io.*;
 import me.lsdo.processing.*;
 
