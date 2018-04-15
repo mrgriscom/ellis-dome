@@ -32,6 +32,8 @@ public class VideoPlayer extends VideoBase {
 	    throw new RuntimeException("must specify video path in sketch.properties!");
 	}
 	boolean repeat = Config.getSketchProperty("repeat", true);
+	// Only affects the first play -- not looped plays.
+	double startAt = Config.getSketchProperty("skip", 0.);
 	
         mov = new Movie(this, path);
 
@@ -41,6 +43,10 @@ public class VideoPlayer extends VideoBase {
 	    mov.play();
 	}
         playing = true;
+
+	if (startAt > 0) {
+	    mov.jump((float)startAt);
+	}
 	
         System.out.println("duration: " + mov.duration());
         // TODO some event when playback has finished?
