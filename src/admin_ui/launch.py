@@ -1,9 +1,11 @@
 import os.path
 import subprocess as sp
+import contextlib
 import time
 import sys
 import math
 import psutil
+from pulsectl import Pulse
 
 src_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -63,6 +65,41 @@ def launch_screencast(cmd, params, timeout=15):
     return (window['wid'], processes)    
 # TODO: detect if content window terminates and report back
 
+def projectm_control(wid, command):
+    interaction = {
+        'next': 'key r',
+        'toggle-lock': 'key l',
+    }[command]
+    os.popen('xdotool windowactivate --sync %d && xdotool %s' % (wid, interaction))
+
+def get_audio_sources():
+    with contextlib.closing(Pulse('lsdome-admin')) as client:
+        return [s.name for s in client.source_list()]
+
+def get_one(matches, type_name):
+    if not matches:
+        raise RuntimeError('no matching %s!' % type_name)
+    if len(matches) > 1:
+        print 'more than one matching %s!' % type_name, matches
+    return matches[0]
+
+def get_pulse_client_for_pids(client, pids):
+    return get_one([l for l in client.source_output_list() if int(l.proplist.get('application.process.id', '0')) in pids], 'listener')
+
+def set_audio_source(pids, source):
+    with contextlib.closing(Pulse('lsdome-admin')) as client:
+        listener = get_pulse_client_for_pids(client, pids).index
+        source = get_one([s for s in client.source_list() if s.name == source], 'source').index
+
+    os.popen('pactl move-source-output %d %d' % (listener, source))
+
+def set_audio_source_volume(pids, vol):
+    # vol 1. = max hardware volume; can go higher
+    with contextlib.closing(Pulse('lsdome-admin')) as client:
+        listener = get_pulse_client_for_pids(client, pids).index
+ 
+    os.popen('pactl set-source-output-volume %d %d' % (listener, int(2**16 * vol)))
+    
 def terminate(procs):
     """Kill each process in procs"""
     for p in procs:
