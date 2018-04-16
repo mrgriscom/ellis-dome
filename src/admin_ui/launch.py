@@ -15,8 +15,15 @@ def launch_sketch(name, params):
     params - key-value set of sketch properties
     returns process object
     """
+    def valid_prop(v):
+        return v is not None and not hasattr(v, '__iter__')
+    def to_prop(v):
+        if type(v) == bool:
+            return 'true' if v else 'false'
+        return v
+
     with open(os.path.join(src_dir, 'sketch.properties'), 'w') as f:
-        f.write('\n'.join('%s=%s' % (k, v) for k, v in params.iteritems()))
+        f.write('\n'.join('%s=%s' % (k, to_prop(v)) for k, v in params.iteritems() if valid_prop(v)))
 
     p = sp.Popen([os.path.join(src_dir, 'build/install/lsdome/bin/lsdome'), name], cwd=src_dir)
     return p
@@ -64,7 +71,6 @@ def launch_screencast(cmd, params, timeout=5):
     
     return (window['wid'], processes)    
 # TODO: detect if content window terminates and report back
-# TODO: mouse cursor in view?
 
 def projectm_control(wid, command):
     interaction = {

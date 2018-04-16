@@ -33,9 +33,6 @@ public class VideoPlayer extends VideoBase {
 	}
 	boolean repeat = Config.getSketchProperty("repeat", true);
 	double startAt = Config.getSketchProperty("skip", 0.);
-	if (repeat) {
-	    System.out.println("note: skip only applies to the first play-through");
-	}
 	
         mov = new Movie(this, path);
 
@@ -47,6 +44,9 @@ public class VideoPlayer extends VideoBase {
         playing = true;
 
 	if (startAt > 0) {
+	    if (repeat) {
+		System.out.println("note: skip only applies to the first play-through");
+	    }
 	    mov.jump((float)startAt);
 	}
 	
