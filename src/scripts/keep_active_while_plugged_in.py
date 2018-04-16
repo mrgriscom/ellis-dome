@@ -32,6 +32,6 @@ def keep_active():
 
 if __name__ == "__main__":
 
-    battery_level = psutil.sensors_battery().percent
+    battery_level = psutil.sensors_battery().percent / 100.
     if battery_level > keep_active_battery_threshold:
         keep_active()
