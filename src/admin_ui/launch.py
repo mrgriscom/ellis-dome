@@ -21,7 +21,7 @@ def launch_sketch(name, params):
     p = sp.Popen([os.path.join(src_dir, 'build/install/lsdome/bin/lsdome'), name], cwd=src_dir)
     return p
 
-def launch_screencast(cmd, params, timeout=15):
+def launch_screencast(cmd, params, timeout=5):
     """Launch a GUI window and screencast it to the pixel mesh
     cmd - command to launch gui program
     params - sketch properties; notably, 'title' is used in detecting the GUI window

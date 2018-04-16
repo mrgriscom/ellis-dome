@@ -142,6 +142,7 @@ public class Screencast extends WindowAnimation {
 	    grabber.setFormat("x11grab");
 	    grabber.setImageWidth(width);
 	    grabber.setImageHeight(height);
+	    grabber.setOption("draw_mouse", "0");
 	    try {
 		grabber.start();
 	    } catch (Exception e) {
