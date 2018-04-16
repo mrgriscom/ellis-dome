@@ -23,7 +23,7 @@ def launch_sketch(name, params):
         return v
 
     with open(os.path.join(src_dir, 'sketch.properties'), 'w') as f:
-        f.write('\n'.join('%s=%s' % (k, to_prop(v)) for k, v in params.iteritems() if valid_prop(v)))
+        f.write('\n'.join('%s=%s' % (k, to_prop(v)) for k, v in params.iteritems() if valid_prop(v)) + '\n')
 
     p = sp.Popen([os.path.join(src_dir, 'build/install/lsdome/bin/lsdome'), name], cwd=src_dir)
     return p
@@ -72,6 +72,21 @@ def launch_screencast(cmd, params, timeout=5):
     return (window['wid'], processes)    
 # TODO: detect if content window terminates and report back
 
+def init_soundreactivity(pids, source, volume, timeout=2.):
+    retry_interval = .1
+    initialized = False
+    for i in xrange(int(math.ceil(timeout / retry_interval))):
+        try:
+            set_audio_source(pids, source)
+            set_audio_source_volume(pids, volume)
+            initialized = True
+            break
+        except RuntimeError:
+            pass
+        time.sleep(retry_interval)
+    if not initialized:
+        print 'could not initialize audio settings'
+        
 def projectm_control(wid, command):
     interaction = {
         'next': 'key r',

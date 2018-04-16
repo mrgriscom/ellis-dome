@@ -7,6 +7,8 @@ import random
 
 VIDEO_DIR = '/home/drew/lsdome-media/video'
 
+audio_source = 'alsa_input.pci-0000_00_1f.3.analog-stereo'
+
 def default_sketch_properties():
     return {
         'dynamic_subsampling': 1,
@@ -115,13 +117,24 @@ class PlayManager(threading.Thread):
 
         self.playlist = None
         self.default_duration = None
-        
+
+    # play content immediately, after which normal playlist will resume
     def play(self, content, duration):
         self.queue.put(lambda: self._play_content(content, duration))
 
+    # set playlist, which will start after current content finishes (or
+    # immediately if nothing playing)
     def set_playlist(self, playlist, duration):
         self.queue.put(lambda: self._set_playlist(playlist, duration))
-            
+
+    # terminate the current content; playlist will start something else, if loaded
+    def stop_current(self):
+        self.queue.put(lambda: self._stop_playback())
+
+    # terminate the current content and don't run anything new
+    def stop_all(self):
+        self.queue.put(lambda: self._stop_all())
+        
     def terminate(self):
         self.up = False
 
@@ -138,15 +151,13 @@ class PlayManager(threading.Thread):
 
             if self.running_content is None:
                 self._nothing_playing()
-
-        self.playlist = None
-        self._stop_playback()
+        self._stop_all()
             
     def _play_content(self, content, duration=None):
         if self.running_processes:
             self._stop_playback()
 
-        params = dict(default_sketch_properties)
+        params = dict(default_sketch_properties())
         params.update(content)
             
         if content['sketch'] == 'screencast':
@@ -162,8 +173,12 @@ class PlayManager(threading.Thread):
                 if content['shuffle']:
                     content['skip'] = random.uniform(0, max(content['duration'] - duration, 0))
             p = launch.launch_sketch(content['sketch'], params)
-            self.running_processes = [p]        
-        # sound reactivity
+            self.running_processes = [p]
+
+        if content.get('sound_reactive'):
+            launch.init_soundreactivity([p.pid for p in self.running_processes],
+                                        audio_source,
+                                        content.get('volume_adjust', 1.))
 
         self.running_content = content
         print 'content started'
@@ -184,6 +199,10 @@ class PlayManager(threading.Thread):
         print 'content stopped'
         self._nothing_playing()
 
+    def _stop_all(self):
+        self.playlist = None
+        self._stop_playback()
+        
     def _nothing_playing(self):
         if self.playlist:
             self._play_content(self.playlist.get_next(), self.default_duration)
