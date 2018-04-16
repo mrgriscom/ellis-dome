@@ -32,8 +32,10 @@ public class VideoPlayer extends VideoBase {
 	    throw new RuntimeException("must specify video path in sketch.properties!");
 	}
 	boolean repeat = Config.getSketchProperty("repeat", true);
-	// Only affects the first play -- not looped plays.
 	double startAt = Config.getSketchProperty("skip", 0.);
+	if (repeat) {
+	    System.out.println("note: skip only applies to the first play-through");
+	}
 	
         mov = new Movie(this, path);
 

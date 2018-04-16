@@ -147,8 +147,6 @@ def get_process_descendants(pid):
     return [root] + root.children(recursive=True)
 
 
-# audio control
-
 if __name__ == "__main__":
 
     test = sys.argv[1]
