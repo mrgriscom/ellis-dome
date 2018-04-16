@@ -64,6 +64,7 @@ def launch_screencast(cmd, params, timeout=15):
     
     return (window['wid'], processes)    
 # TODO: detect if content window terminates and report back
+# TODO: mouse cursor in view?
 
 def projectm_control(wid, command):
     interaction = {
@@ -76,28 +77,26 @@ def get_audio_sources():
     with contextlib.closing(Pulse('lsdome-admin')) as client:
         return [s.name for s in client.source_list()]
 
-def get_one(matches, type_name):
+def _get_one(matches, type_name):
     if not matches:
         raise RuntimeError('no matching %s!' % type_name)
     if len(matches) > 1:
         print 'more than one matching %s!' % type_name, matches
     return matches[0]
 
-def get_pulse_client_for_pids(client, pids):
-    return get_one([l for l in client.source_output_list() if int(l.proplist.get('application.process.id', '0')) in pids], 'listener')
+def _get_pulse_client_for_pids(client, pids):
+    return _get_one([l for l in client.source_output_list() if int(l.proplist.get('application.process.id', '0')) in pids], 'listener')
 
 def set_audio_source(pids, source):
     with contextlib.closing(Pulse('lsdome-admin')) as client:
-        listener = get_pulse_client_for_pids(client, pids).index
-        source = get_one([s for s in client.source_list() if s.name == source], 'source').index
-
+        listener = _get_pulse_client_for_pids(client, pids).index
+        source = _get_one([s for s in client.source_list() if s.name == source], 'source').index
     os.popen('pactl move-source-output %d %d' % (listener, source))
 
 def set_audio_source_volume(pids, vol):
-    # vol 1. = max hardware volume; can go higher
+    # vol 1. = max hardware volume w/o software scaling; >1 allowed
     with contextlib.closing(Pulse('lsdome-admin')) as client:
-        listener = get_pulse_client_for_pids(client, pids).index
- 
+        listener = _get_pulse_client_for_pids(client, pids).index
     os.popen('pactl set-source-output-volume %d %d' % (listener, int(2**16 * vol)))
     
 def terminate(procs):
@@ -109,9 +108,6 @@ def terminate(procs):
             pass
 
 
-# return the desktop windows belonging a process with any of pids. further
-# filter by window title (where 'title' is a case-insensitive prefix).
-# not all windows report pid (argh), in which case only title is used.
 def get_desktop_windows(pids, title=None):
     """Return an info record for each matching gui window
     pids - filter to gui windows belonging to any pid in 'pids'; if no windows match,
