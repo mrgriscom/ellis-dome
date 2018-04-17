@@ -169,9 +169,9 @@ class PlayManager(threading.Thread):
                 launch.projectm_control(gui_invocation[0], 'next')
         else:
             if content['sketch'] == 'video':
-                content['repeat'] = True
+                params['repeat'] = True
                 if content['shuffle']:
-                    content['skip'] = random.uniform(0, max(content['duration'] - duration, 0))
+                    params['skip'] = random.uniform(0, max(content['duration'] - duration, 0))
             p = launch.launch_sketch(content['sketch'], params)
             self.running_processes = [p]
 

@@ -1,0 +1,21 @@
+name,wing_trim,stretch,wing_mode,rot,xo,yo,scale
+single canvas,flat,y,unified,,,,
+mirror parallel,flat,y,mirror,,,,
+mirror tilt in,flat,y,mirror,-38,,,
+mirror tilt out,,y,mirror,27,,,
+mirror perpendicular,,y,mirror,90,,,
+mirror anamorphic,raised,y,mirror,109,,,
+flipped parallel some overlap,flat,y,flip,,-0.15,,
+flipped parallel full overlap,flat,y,flip,,-0.4,,
+flipped tilt in no overlap,flat,y,flip,-16,-0.05,,
+flipped tilt out some overlap,,y,flip,27,-0.12,,
+flipped tilt out full overlap,,y,flip,27,-0.32,,
+flipped perpendicular full overlap,,y,flip,90,0,,
+flipped anamorphic full overlap,raised,y,flip,109,0.21,,
+single canvas,flat,n,unified,,,,
+mirror centered,,n,mirror,10,-0.09,-0.11,1.494
+mirror max coverage,,n,mirror,-15.6,-0.55,0.16,1.668
+flipped parallel some overlap,flat,n,flip,,-0.16,-0.08,1.471
+flipped parallel full overlap,flat,n,flip,,-0.48,-0.08,1.471
+flipped tilted overlap top,flat,n,flip,38,-0.31,-0.28,1.359
+flipped tilted overlap bottom inverse,flat,n,flip,75,-0.3,-0.39,1.471

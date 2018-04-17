@@ -16,7 +16,6 @@ bin*
 
 # Logs
 *.log
-*.csv
 
 # Jetbrain stuff
 *.idea*
