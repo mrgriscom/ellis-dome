@@ -6,88 +6,12 @@ import Queue
 import random
 import csv
 
-VIDEO_DIR = '/home/drew/lsdome-media/video'
-
 audio_source = 'alsa_input.pci-0000_00_1f.3.analog-stereo'
 
 def default_sketch_properties():
     return {
         'dynamic_subsampling': 1,
     }
-
-# screencast: window title
-# all window-based: no_stretch (but mostly video/screencast)
-# all window-based: xscale/yscale
-
-def get_all_content():
-    yield {
-        'sketch': 'cloud',
-        'aspect': '1:1',
-    }
-    yield {
-        'sketch': 'dontknow',
-        'aspect': '1:1',
-    }
-    yield {
-        'sketch': 'moire',
-        'aspect': '1:1',
-    }
-    yield {
-        'sketch': 'rings',
-        'aspect': '1:1',
-    }
-    yield {
-        'sketch': 'tube',
-        'aspect': '1:1',
-        'interactive_params': {}
-    }
-    yield {
-        'sketch': 'twinkle',
-    }
-    yield {
-        'sketch': 'particlefft',
-        'aspect': '1:1',
-        'sound_reactive': True,
-    }
-    yield {
-        'sketch': 'pixelflock',
-        'aspect': '1:1',
-        'sound_reactive': True,
-    }
-    yield {
-        'name': 'projectm',
-        'sketch': 'screencast',
-        'cmd': 'projectM-pulseaudio',
-        'sound_reactive': True,
-        'volume_adjust': 1.5,
-    }
-    yield {
-        'name': 'hdmi-in',
-        'sketch': 'stream',
-        'aspect': 'stretch',
-        'camera': 'FHD Capture: FHD Capture',
-    }
-    for content in load_videos():
-        yield content
-
-def load_videos():
-    vids = [f.strip() for f in os.popen('find "%s" -type f' % VIDEO_DIR).readlines()]
-    for vid in vids:
-        try:
-            duration = int(os.popen('mediainfo --Inform="Video;%%Duration%%" "%s"' % vid).readlines()[0].strip())/1000.
-        except RuntimeError:
-            print 'could not read duration of %s' % vid
-            duration = 0
-
-        yield {
-            'name': 'video:%s' % os.path.relpath(vid, VIDEO_DIR),
-            'sketch': 'video',
-            'aspect': 'stretch',
-            'path': vid,
-            'duration': duration,
-            'shuffle': True,
-        }
-        # joan of arc require mirror mode
 
 def load_placements():
     placements_config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'placements.csv')
@@ -123,30 +47,6 @@ def apply_placement(params, placement):
         if k in placement:
             params[v] = placement[k]
     
-class Playlist(object):
-    def __init__(self, choices):
-        self.choices = list(choices)
-        self.last_played = None
-
-    def _all_choices_except_last_played(self):
-        for choice in self.choices:
-            if choice['content'] == self.last_played and len(self.choices) > 1:
-                continue
-            yield choice
-        
-    def get_next(self):
-        total_likelihood = sum(choice['likelihood'] for choice in self._all_choices_except_last_played())
-        rand = random.uniform(0, total_likelihood)
-        cumulative_likelihood = 0
-        choice = None
-        for ch in self._all_choices_except_last_played():
-            cumulative_likelihood += ch['likelihood']
-            if cumulative_likelihood > rand:
-                choice = ch['content']
-                break
-        self.last_played = choice
-        return choice
-
 class PlayManager(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
