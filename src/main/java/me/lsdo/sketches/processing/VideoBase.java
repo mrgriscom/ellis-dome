@@ -43,17 +43,7 @@ public abstract class VideoBase extends PApplet {
 	System.out.println(media.width + "x" + media.height + " " + aspectRatio + ":1");
 
 	boolean preserveAspect = Config.getSketchProperty("no_stretch", false);
-	simple.initViewport(width, height, preserveAspect);
-	if (preserveAspect) {
-	    // contract the x-axis to get back to a 1:1 aspect ratio (since processing doesn't
-	    // know the video dimensions at launch and can't size the window appropriately)
-	    simple.windowTransform = new LayoutUtil.Transform() {
-		    public PVector2 transform(PVector2 p) {
-			return LayoutUtil.V(p.x / aspectRatio, p.y);
-		    }
-		};
-	}
-	
+	simple.initViewport(width, height, preserveAspect, aspectRatio);
 	initialized = true;
 	simple.transformChanged();
     }

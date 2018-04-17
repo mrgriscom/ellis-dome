@@ -60,7 +60,7 @@ public class Screencast extends WindowAnimation {
 	    height = width;
 	    preserveAspect = true;
 	}
-	initViewport(width, height, preserveAspect, xscale, yscale);
+	initViewport(width, height, preserveAspect, 0., xscale, yscale);
 	initGrabber(width, height, xo, yo);
     }
 
