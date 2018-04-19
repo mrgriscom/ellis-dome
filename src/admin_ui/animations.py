@@ -151,7 +151,6 @@ class PlayManager(threading.Thread):
         self.running_processes = None
         self.content_timeout = None
         print 'content stopped'
-        self._nothing_playing()
 
     def _stop_all(self):
         self.playlist = None

@@ -19,8 +19,36 @@ $(document).ready({{ onload }});
   </script>
 </head>
 <body>
-      
-<div id="canvas"></div>
+
+  <div>
+    Minutes per visualization: <input id="mins" type="number" value="2.5"></input>
+  </div>
+
+  <div>
+    <button id="stopall">stop all playback</button>
+  </div>
+    
+  <div>
+    <button id="stopcurrent">next visualization in playlist</button>
+  </div>
+    
+  <h3>playlists</h3>
+
+  <div data-bind="foreach: playlists">
+    <div>
+      <button data-bind="click: play">play</button>
+      <span data-bind="text: name"></span>
+    </div>
+  </div>
+
+  <h3>visualizations</h3>
+
+  <div data-bind="foreach: contents">
+    <div>
+      <button data-bind="click: play">play</button>
+      <span data-bind="text: name"></span>
+    </div>
+  </div>
 
 </body>
 </html>

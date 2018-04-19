@@ -2,6 +2,7 @@ import sys
 import os.path
 
 import animations
+import playlist
 
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, project_root)
@@ -23,21 +24,32 @@ class MainHandler(web.RequestHandler):
         self.render('main.html', onload='init')
 
 class WebSocketTestHandler(websocket.WebSocketHandler):
-    def initialize(self, manager):
+    def initialize(self, manager, static_data):
         self.manager = manager
+        self.static_data = static_data
 
     def open(self):
-        pass
+        msg = {
+            'type': 'init',
+            'playlists': sorted([{'name': k} for k in self.static_data['playlists'].keys()], key=lambda e: e['name']),
+            'contents': sorted([{'name': playlist.content_name(c), 'config': c} for c in self.static_data['contents']], key=lambda e: e['name']),
+        }
+        self.write_message(json.dumps(msg))
         #self.manager.subscribe(self)
 
     def on_message(self, message):
         data = json.loads(message)
-        print 'got message', data
-        #self.manager.do_action(lambda o: func(o, data['note']))
-
-        import time
-        time.sleep(1.5)
-        self.write_message(json.dumps({'b': 56}))
+        print 'incoming message:', data
+        
+        action = data.get('action')
+        if action == 'stop_all':
+            manager.stop_all()
+        if action == 'stop_current':
+            manager.stop_current()
+        if action == 'play_content':
+            manager.play([c for c in self.static_data['contents'] if playlist.content_name(c) == data['name']][0], data['duration'])
+        if action == 'set_playlist':
+            manager.set_playlist(self.static_data['playlists'][data['name']], data['duration'])
         
     def on_close(self):
         pass
@@ -58,9 +70,14 @@ if __name__ == "__main__":
     manager = animations.PlayManager()
     manager.start()
 
+    static_data = {
+        'playlists': playlist.load_playlists(),
+        'contents': list(playlist.get_all_content()),
+    }
+    
     application = web.Application([
         (r'/', MainHandler),
-        (r'/socket', WebSocketTestHandler, {'manager': manager}),
+        (r'/socket', WebSocketTestHandler, {'manager': manager, 'static_data': static_data}),
         (r'/(.*)', web.StaticFileHandler, {'path': web_path('static')}),
     ], template_path=web_path('templates'))
     application.listen(port, ssl_options=ssl)
