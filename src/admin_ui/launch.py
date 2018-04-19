@@ -122,7 +122,7 @@ def set_audio_source_volume(pids, vol):
     
 def terminate(procs):
     """Kill each process in procs"""
-    for p in procs:
+    for p in (procs or []):
         try:
             p.kill()
         except psutil.NoSuchProcess:
