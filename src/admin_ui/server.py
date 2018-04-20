@@ -16,6 +16,9 @@ from optparse import OptionParser
 import logging
 import json
 import zmq
+import threading
+import Queue
+import time
 
 def web_path(*args):
     return os.path.join(project_root, *args)
@@ -57,6 +60,8 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
             self.manager.set_wing_trim(data['state'])
         if action == 'set_placement':
             self.set_placement(self.static_data['placements'][data['ix']])
+        if action == 'interactive':
+            self.interactive(data['id'], data['sess'], data['type'], data.get('val'))
             
     def on_close(self):
         pass
@@ -69,7 +74,61 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
         self.zmq_send('0:server:scale:~%s' % placement.get('scale', 1))
         self.zmq_send('0:server:wingmode:~%s' % placement['wing_mode'])
         self.zmq_send('0:server:stretch:~%s' % ('true' if placement['stretch'] else 'false'))
+
+    def interactive(self, id, session, control_type, val):
+        if control_type in ('button', 'button-keepalive'):
+            button_thread.handle(id, session, {True: 'press', False: 'release', None: 'keepalive'}[val])
+
+keepalive_timeout = 5.
+class ButtonPressManager(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.up = True
+        self.queue = Queue.Queue()
+
+        self.presses = {}
+        self.active = set()
         
+    def handle(self, id, session, val):
+        self.queue.put((id, session, val))
+        
+    def terminate(self):
+        self.up = False
+
+    def run(self):
+        while self.up:
+            try:
+                id, session, val = self.queue.get(True, .01)
+                if val in ('press', 'keepalive'):
+                    self.presses[(id, session)] = time.time()
+                elif val == 'release':
+                    try:
+                        del self.presses[(id, session)]
+                    except KeyError:
+                        pass
+            except Queue.Empty:
+                pass
+
+            expired = []
+            for k, v in self.presses.iteritems():
+                if time.time() > v + keepalive_timeout:
+                    expired.append(k)
+            for e in expired:
+                del self.presses[k]
+            pressed = set(k[0] for k in self.presses.keys())
+            for id in (pressed | self.active):
+                is_pressed = id in pressed
+                is_active = id in self.active
+                if is_pressed and not is_active:
+                    # send press
+                    print 'press', id
+                    zmq_send('0:server:%s:~%s' % (id, 'true'))
+                elif not is_pressed and is_active:
+                    # send release
+                    print 'release', id
+                    zmq_send('0:server:%s:~%s' % (id, 'false'))
+            self.active = pressed
+    
 if __name__ == "__main__":
 
     parser = OptionParser()
@@ -98,7 +157,10 @@ if __name__ == "__main__":
     # todo: move port to config.properties
     socket.bind("tcp://*:%s" % 5556)
     def zmq_send(msg):
-        socket.send(msg)
+        socket.send(msg.encode('utf8'))
+
+    button_thread = ButtonPressManager()
+    button_thread.start()
         
     application = web.Application([
         (r'/', MainHandler),
@@ -116,4 +178,5 @@ if __name__ == "__main__":
         raise
 
     manager.terminate()
+    button_thread.terminate()
     logging.info('shutting down...')

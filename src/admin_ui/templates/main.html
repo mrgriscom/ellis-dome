@@ -19,6 +19,13 @@ $(document).ready({{ onload }});
   </script>
 </head>
 <body>
+  <style>
+
+    button {
+    user-select: none;
+    }
+    
+  </style>
 
   <div>
     Minutes per visualization: <input id="mins" type="number" value="2.5"></input>
@@ -32,6 +39,12 @@ $(document).ready({{ onload }});
     <button id="stopcurrent">next visualization in playlist</button>
   </div>
 
+  <br />
+
+  <div>
+    <button id="flap">FLAP</button>
+  </div>
+  
   <h3>wings are&hellip;</h3>
 
   <div data-bind="foreach: wingTrims">

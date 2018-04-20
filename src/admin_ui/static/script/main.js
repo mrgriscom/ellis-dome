@@ -112,8 +112,43 @@ function init() {
     $('#stopcurrent').click(function() {
 	CONN.send(JSON.stringify({action: 'stop_current'}));
     });
+    bindButton('#flap', 'flap');
+}
+
+function bindButton(sel, id) {
+    $(sel).mousedown(function() {
+	buttonAction(id, true);
+    });
+    $(sel).on('touchstart', function() {
+	buttonAction(id, true);
+    });
+    $(sel).mouseup(function() {
+	buttonAction(id, false);
+    });
+    $(sel).on('touchend', function() {
+	buttonAction(id, false);
+    });
 }
 
 function connectionLost() {
     alert('connection to server lost; reload the page');
+}
+
+SESSION_ID = Math.floor(1000000000*Math.random());
+function sendEvent(id, type, val) {
+    CONN.send(JSON.stringify({action: 'interactive', sess: SESSION_ID, id: id, type: type, val: val}));
+}
+
+BUTTON_KEEPALIVES = {};
+function buttonAction(id, pressed) {
+    
+    if (pressed) {
+	sendEvent(id, 'button', true);
+	BUTTON_KEEPALIVES[id] = setInterval(function() {
+	    sendEvent(id, 'button-keepalive');
+	}, 1000);
+    } else {
+	sendEvent(id, 'button', false);
+	clearInterval(BUTTON_KEEPALIVES[id]);
+    }
 }
