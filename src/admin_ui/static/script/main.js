@@ -113,6 +113,50 @@ function init() {
 	CONN.send(JSON.stringify({action: 'stop_current'}));
     });
     bindButton('#flap', 'flap');
+    bindButton('#projectm-next', 'projectm-next');
+    
+    bindButton('#wingmode_unified', 'wingmode_unified');
+    bindButton('#wingmode_mirror', 'wingmode_mirror');
+    bindButton('#wingmode_flip', 'wingmode_flip');
+    bindButton('#wingmode_rotate', 'wingmode_rotate');
+    bindButton('#aspect_stretch', 'stretch_yes');
+    bindButton('#aspect_preserve', 'stretch_no');
+
+    bindSlider('#jog-xo', 'jog-xo', true);
+    bindSlider('#jog-yo', 'jog-yo', true);
+    bindSlider('#jog-rot', 'jog-rot', true);
+    bindSlider('#jog-scale', 'jog-scale', true);
+    bindSlider('#flap-angle', 'flap-angle', false);
+}
+
+function bindSlider(sel, id, relative) {
+    var min = -100;
+    var max = 100;
+    var mid = .5 * (min + max);
+    var $e = $(sel);
+    $e.slider({min: min, max: max});
+    $e.slider('value', mid);
+    $e.lastVal = $e.slider('value');
+    $e.on('slide', function(evt, ui) {
+	var cur = ui.value;
+	if (relative) {
+	    var diff = cur - $e.lastVal;
+	    for (var i = 0; i < Math.abs(diff); i++) {
+		sendEvent(id, 'jog', diff > 0 ? 1 : -1);
+	    }
+	} else {
+	    sendEvent(id, 'slider', (cur-min)/(max-min));
+	}
+	$e.lastVal = cur;
+    });
+    if (relative) {
+	$e.on('slidechange', function(evt, ui) {
+	    if (ui.value != mid) {
+		$e.slider('value', mid);
+		$e.lastVal = mid;
+	    }
+	});
+    }
 }
 
 function bindButton(sel, id) {

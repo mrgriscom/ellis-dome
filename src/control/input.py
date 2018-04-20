@@ -122,7 +122,7 @@ class DJ2GoDevice(MIDIDevice):
                 0x80: 'release',
             }[action]
         elif type == 'slider':
-            action = val
+            action = val / 127.
         elif type == 'jog':
             action = {
                 127: 'dec',

@@ -3,8 +3,10 @@
   <title>test</title>
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
   <link rel="stylesheet" href="style/style.css">
+  <link rel="stylesheet" href="script/jquery-ui-1.12.1/jquery-ui.css">
 
   <script src="script/jquery-3.3.1.js"></script>
+  <script src="script/jquery-ui-1.12.1/jquery-ui.js"></script>
   <script src="script/knockout-3.4.2.debug.js"></script>
   <script src="script/underscore-min-1.6.0.js"></script>
   <script src="script/main.js"></script>
@@ -21,6 +23,18 @@ $(document).ready({{ onload }});
 <body>
   <style>
 
+    // doesn't seem to work?
+    @viewport {
+    width: 300px;
+    min-zoom: 1.0;
+    max-zoom: 1.0;
+    zoom: 1.0;
+    }
+    
+    body {
+    width: 300px;
+    }
+    
     button {
     user-select: none;
     }
@@ -43,6 +57,12 @@ $(document).ready({{ onload }});
 
   <div>
     <button id="flap">FLAP</button>
+  </div>
+  
+  <br />
+
+  <div>
+    <button id="projectm-next">projectm next viz</button>
   </div>
   
   <h3>wings are&hellip;</h3>
@@ -81,5 +101,29 @@ $(document).ready({{ onload }});
     </div>
   </div>
 
+  <h3>custom placement</h3>
+
+  <div>wing #2 in relation to wing #1:
+    <button id="wingmode_unified">side-by-side (single canvas)</button>
+    <button id="wingmode_mirror">mirrored</button>
+    <button id="wingmode_flip">flip horizontally</button>
+    <button id="wingmode_rotate">rotate 180</button>
+  </div>
+    
+  <div>aspect ratio:
+    <button id="aspect_stretch">stretch to fit window</button>
+    <button id="aspect_preserve">preserve 1:1</button>
+  </div>
+
+  <div>x-offset: <div id="jog-xo"></div></div>
+  <div>y-offset: <div id="jog-yo"></div></div>
+  <div>rotation: <div id="jog-rot"></div></div>
+  <div>scale: <div id="jog-scale"></div></div>
+
+  <br/>
+  <div>flap angle: <div id="flap-angle"></div></div>
+
+  <div style="height: 200px;"></div>
+  
 </body>
 </html>

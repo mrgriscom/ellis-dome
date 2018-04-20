@@ -109,8 +109,8 @@ def content_name(c):
 def load_playlists():
     all_content = list(get_all_content())
     def _playlists():
-        yield ('everything', almost_everything_playlist(all_content))
-        yield ('no-sound', non_sound_reactive_playlist(all_content))
+        yield ('(almost) everything', almost_everything_playlist(all_content))
+        yield ('no sound-reactive', non_sound_reactive_playlist(all_content))
         
         for playlist in load_playlist_files(all_content):
             yield playlist

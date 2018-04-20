@@ -68,17 +68,21 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
         #self.manager.unsubscribe(self)
 
     def set_placement(self, placement):
-        self.zmq_send('0:server:xo:~%s' % placement.get('xo', 0))
-        self.zmq_send('0:server:yo:~%s' % placement.get('yo', 0))
-        self.zmq_send('0:server:rot:~%s' % placement.get('rot', 0))
-        self.zmq_send('0:server:scale:~%s' % placement.get('scale', 1))
-        self.zmq_send('0:server:wingmode:~%s' % placement['wing_mode'])
-        self.zmq_send('0:server:stretch:~%s' % ('true' if placement['stretch'] else 'false'))
+        broadcast_event('xo', '~%s' % placement.get('xo', 0))
+        broadcast_event('yo', '~%s' % placement.get('yo', 0))
+        broadcast_event('rot', '~%s' % placement.get('rot', 0))
+        broadcast_event('scale', '~%s' % placement.get('scale', 1))
+        broadcast_event('wingmode', '~%s' % placement['wing_mode'])
+        broadcast_event('stretch', '~%s' % ('true' if placement['stretch'] else 'false'))
 
     def interactive(self, id, session, control_type, val):
         if control_type in ('button', 'button-keepalive'):
             button_thread.handle(id, session, {True: 'press', False: 'release', None: 'keepalive'}[val])
-
+        if control_type == 'slider':
+            broadcast_event(id, val)
+        if control_type == 'jog':
+            broadcast_event(id, 'inc' if val > 0 else 'dec')
+            
 keepalive_timeout = 5.
 class ButtonPressManager(threading.Thread):
     def __init__(self):
@@ -122,13 +126,16 @@ class ButtonPressManager(threading.Thread):
                 if is_pressed and not is_active:
                     # send press
                     print 'press', id
-                    zmq_send('0:server:%s:~%s' % (id, 'true'))
+                    broadcast_event(id, '~true')
                 elif not is_pressed and is_active:
                     # send release
                     print 'release', id
-                    zmq_send('0:server:%s:~%s' % (id, 'false'))
+                    broadcast_event(id, '~false')
             self.active = pressed
-    
+
+def broadcast_event(id, val):
+    zmq_send('0:server:%s:%s' % (id, val))
+            
 if __name__ == "__main__":
 
     parser = OptionParser()
@@ -152,10 +159,11 @@ if __name__ == "__main__":
     for i, e in enumerate(static_data['placements']):
         e['ix'] = i
 
+    ZMQ_PORT = 5556
     context = zmq.Context()
     socket = context.socket(zmq.PUB)
     # todo: move port to config.properties
-    socket.bind("tcp://*:%s" % 5556)
+    socket.bind("tcp://*:%s" % ZMQ_PORT)
     def zmq_send(msg):
         socket.send(msg.encode('utf8'))
 
