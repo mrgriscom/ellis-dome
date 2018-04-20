@@ -57,7 +57,8 @@ class PlayManager(threading.Thread):
         self.running_content = None
         self.running_processes = None
         self.content_timeout = None
-
+        self.window_id = None
+        
         self.playlist = None
         self.default_duration = None
 
@@ -118,7 +119,8 @@ class PlayManager(threading.Thread):
         if content['sketch'] == 'screencast':
             gui_invocation = launch.launch_screencast(content['cmd'], params)
             self.running_processes = gui_invocation[1]
-
+            self.window_id = gui_invocation[0]
+            
             if content['name'] == 'projectm':
                 # get off the default pattern
                 launch.projectm_control(gui_invocation[0], 'next')
@@ -151,6 +153,7 @@ class PlayManager(threading.Thread):
         self.running_content = None
         self.running_processes = None
         self.content_timeout = None
+        self.window_id = None
         print 'content stopped'
 
     def _stop_all(self):

@@ -127,6 +127,7 @@ function init() {
     bindSlider('#jog-rot', 'jog-rot', true);
     bindSlider('#jog-scale', 'jog-scale', true);
     bindSlider('#flap-angle', 'flap-angle', false);
+    bindSlider('#audio-sens', 'audio-sens', false);
 }
 
 function bindSlider(sel, id, relative) {

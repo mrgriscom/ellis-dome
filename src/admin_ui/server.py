@@ -3,6 +3,7 @@ import os.path
 
 import animations
 import playlist
+import launch
 
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, project_root)
@@ -134,6 +135,18 @@ class ButtonPressManager(threading.Thread):
             self.active = pressed
 
 def broadcast_event(id, val):
+    # intercept some ourselves
+    if id == 'projectm-next' and val == '~true' and manager.window_id is not None:
+        launch.projectm_control(manager.window_id, 'next')
+    if id == 'audio-sens':
+        min_sens = .3
+        max_sens = 3.
+        sens = min_sens * (1-val) + max_sens * val
+        try:
+            launch.set_audio_source_volume([p.pid for p in manager.running_processes], sens)
+        except:
+            pass
+            
     zmq_send('0:server:%s:%s' % (id, val))
             
 if __name__ == "__main__":
