@@ -6,6 +6,7 @@ import Queue
 import random
 import csv
 
+# todo: move to config.properties
 audio_source = 'alsa_input.pci-0000_00_1f.3.analog-stereo'
 
 def default_sketch_properties():

@@ -59,5 +59,14 @@ $(document).ready({{ onload }});
     </div>
   </div>
 
+  <h3>placements</h3>
+
+  <div data-bind="foreach: placements">
+    <div>
+      <button data-bind="click: set">set</button>
+      <span data-bind="text: (stretch() ? 'stretch aspect' : 'preserve aspect')"></span>, <span data-bind="text: name"></span>
+    </div>
+  </div>
+
 </body>
 </html>

@@ -6,6 +6,7 @@ function clock() {
 function AdminUIModel() {
     this.playlists = ko.observableArray();
     this.contents = ko.observableArray();
+    this.placements = ko.observableArray();
     this.wingTrims = ko.observableArray(['raised', 'flat']);
     
     var model = this;
@@ -19,6 +20,11 @@ function AdminUIModel() {
 	    var c = new ContentModel();
 	    c.load(e);
 	    model.contents.push(c);
+	});
+	$.each(data.placements, function(i, e) {
+	    var p = new PlacementModel();
+	    p.load(e);
+	    model.placements.push(p);
 	});
     }
 
@@ -49,6 +55,22 @@ function ContentModel() {
 
     this.play = function() {
 	CONN.send(JSON.stringify({action: 'play_content', name: this.name(), duration: getDuration()}));
+    }
+}
+
+function PlacementModel() {
+    this.name = ko.observable();
+    this.stretch = ko.observable();
+    this.ix = ko.observable();
+    
+    this.load = function(data) {
+	this.name(data.name);
+	this.stretch(data.stretch);
+	this.ix(data.ix);
+    }
+
+    this.set = function() {
+	CONN.send(JSON.stringify({action: 'set_placement', ix: this.ix()}));
     }
 }
 
