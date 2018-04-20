@@ -31,7 +31,16 @@ $(document).ready({{ onload }});
   <div>
     <button id="stopcurrent">next visualization in playlist</button>
   </div>
-    
+
+  <h3>wings are&hellip;</h3>
+
+  <div data-bind="foreach: wingTrims">
+    <div>
+      <button data-bind="click: $root.setTrim">set</button>
+      <span data-bind="text: $data"></span>
+    </div>
+  </div>
+  
   <h3>playlists</h3>
 
   <div data-bind="foreach: playlists">

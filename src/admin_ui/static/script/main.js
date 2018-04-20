@@ -6,6 +6,7 @@ function clock() {
 function AdminUIModel() {
     this.playlists = ko.observableArray();
     this.contents = ko.observableArray();
+    this.wingTrims = ko.observableArray(['raised', 'flat']);
     
     var model = this;
     this.load = function(data) {
@@ -19,6 +20,10 @@ function AdminUIModel() {
 	    c.load(e);
 	    model.contents.push(c);
 	});
+    }
+
+    this.setTrim = function(e) {
+	CONN.send(JSON.stringify({action: 'set_trim', state: e}));
     }
 }
 
@@ -61,8 +66,12 @@ function init() {
     this.conn = new WebSocket('ws://' + window.location.host + '/socket');
     this.conn.onopen = function () {
     };
+    this.conn.onclose = function() {
+	connectionLost();
+    };
     this.conn.onerror = function (error) {
         console.log('websocket error ' + error);
+	connectionLost();	
     };
     this.conn.onmessage = function (e) {
 	console.log('receiving msg');
@@ -81,4 +90,8 @@ function init() {
     $('#stopcurrent').click(function() {
 	CONN.send(JSON.stringify({action: 'stop_current'}));
     });
+}
+
+function connectionLost() {
+    alert('connection to server lost; reload the page');
 }

@@ -50,7 +50,9 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
             manager.play([c for c in self.static_data['contents'] if playlist.content_name(c) == data['name']][0], data['duration'])
         if action == 'set_playlist':
             manager.set_playlist(self.static_data['playlists'][data['name']], data['duration'])
-        
+        if action == 'set_trim':
+            manager.set_wing_trim(data['state'])
+            
     def on_close(self):
         pass
         #self.manager.unsubscribe(self)
