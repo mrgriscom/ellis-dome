@@ -47,7 +47,8 @@ public class Tube extends XYAnimation {
     private void initControl() {
         ctrl = new InputControl();
 	ctrl.init();
-
+	
+	// speed, jog_a, jog
         ctrl.registerHandler("jog_a", new InputControl.InputHandler() {
 		@Override
                 public void jog(boolean pressed) {
@@ -63,6 +64,7 @@ public class Tube extends XYAnimation {
                     System.out.println("speed: " + speed);
                 }
             });
+	// # h-checks, browse, jog
         ctrl.registerHandler("browse", new InputControl.InputHandler() {
 		@Override
                 public void jog(boolean pressed) {
@@ -70,6 +72,7 @@ public class Tube extends XYAnimation {
                     System.out.println("h-checks: " + h_checks);
                 }
             });
+	// h-skew, jog_b, jog
         ctrl.registerHandler("jog_b", new InputControl.InputHandler() {
 		@Override
                 public void jog(boolean pressed) {
@@ -82,6 +85,7 @@ public class Tube extends XYAnimation {
                     System.out.println("h-skew: " + h_skew);
                 }
             });
+	// h-asym, pitch_a, slider
         ctrl.registerHandler("pitch_a", new InputControl.InputHandler() {
 		@Override
                 public void slider(double val) {
@@ -89,6 +93,7 @@ public class Tube extends XYAnimation {
 		    System.out.println("h-asym: " + h_asym);
                 }
             });
+	// v-asym, pitch_b, slider
         ctrl.registerHandler("pitch_b", new InputControl.InputHandler() {
 		@Override
                 public void slider(double val) {
@@ -96,6 +101,7 @@ public class Tube extends XYAnimation {
 		    System.out.println("v-asym: " + v_asym);		    
                 }
             });
+	// v-offset, pitch_inc/dec_a, slider (but should be jog)
         ctrl.registerHandler("pitch_inc_a", new InputControl.InputHandler() {
 		@Override
                 public void button(boolean pressed) {
@@ -114,6 +120,7 @@ public class Tube extends XYAnimation {
                     }
                 }
             });
+	// v-height, mixer, slider
         ctrl.registerHandler("mixer", new InputControl.InputHandler() {
 		@Override
                 public void slider(double val) {
@@ -134,6 +141,7 @@ public class Tube extends XYAnimation {
 		    System.out.println("v-height: " + v_height);
                 }
             });
+	// reverse, playpause_a, button (press)
         ctrl.registerHandler("playpause_a", new InputControl.InputHandler() {
 		@Override
                 public void button(boolean pressed) {
@@ -142,6 +150,7 @@ public class Tube extends XYAnimation {
                     }
                 }
             });
+	// speed sensitivity, headphone/sync_a, buttons (should be jog)
         ctrl.registerHandler("headphone_a", new InputControl.InputHandler() {
 		@Override
                 public void button(boolean pressed) {
@@ -160,6 +169,7 @@ public class Tube extends XYAnimation {
                     }
                 }
             });
+	// hskew sensitivity, headphone/sync_b, buttons (should be jog)
         ctrl.registerHandler("headphone_b", new InputControl.InputHandler() {
 		@Override
                 public void button(boolean pressed) {
@@ -178,12 +188,14 @@ public class Tube extends XYAnimation {
                     }
                 }
             });
+	// warp mode, playpause_b, button (hold -- need to be in tandem with v-height)
         ctrl.registerHandler("playpause_b", new InputControl.InputHandler() {
 		@Override
                 public void button(boolean pressed) {
 		    vheight_warp_mode = !pressed;
                 }
             });
+	// reset, back, button (press)
         ctrl.registerHandler("back", new InputControl.InputHandler() {
 		@Override
                 public void button(boolean pressed) {
