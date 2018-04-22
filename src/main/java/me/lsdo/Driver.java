@@ -29,6 +29,7 @@ public class Driver
 	headlessSketches.put("gridtest", GridTest.class);
 	headlessSketches.put("harmonics", Harmonics.class);
 	headlessSketches.put("kaleidoscope", Kaleidoscope.class);
+	headlessSketches.put("xykaleidoscope", XYKaleidoscope.class);
 	headlessSketches.put("moire", Moire.class);
 	headlessSketches.put("pixeltest", PixelTest.class);
 	headlessSketches.put("rings", Rings.class);

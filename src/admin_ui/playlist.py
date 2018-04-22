@@ -33,6 +33,10 @@ def get_all_content():
         'sketch': 'twinkle',
     }
     yield {
+        'sketch': 'xykaleidoscope',
+        'aspect': '1:1',
+    }
+    yield {
         'sketch': 'particlefft',
         'aspect': '1:1',
         'sound_reactive': True,
