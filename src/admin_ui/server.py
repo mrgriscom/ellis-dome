@@ -1,5 +1,6 @@
 import sys
 import os.path
+import os
 
 import animations
 import playlist
@@ -20,6 +21,7 @@ import zmq
 import threading
 import Queue
 import time
+import psutil
 
 def web_path(*args):
     return os.path.join(project_root, *args)
@@ -33,13 +35,25 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
         self.manager = manager
         self.static_data = static_data
         self.zmq_send = zmq_send
-        
+
     def open(self):
+        placements = self.static_data['placements']
+        PRESETS_DIR = '/home/shen/presets'
+        ix = len(placements)
+        for f in os.listdir(PRESETS_DIR):
+            try:
+                preset = animations.load_placements(os.path.join(PRESETS_DIR, f))[0]
+                preset['ix'] = ix
+                ix += 1
+                placements.append(preset)
+            except:
+                print 'error loading preset'
         msg = {
             'type': 'init',
             'playlists': sorted([{'name': k} for k in self.static_data['playlists'].keys()], key=lambda e: e['name']),
             'contents': sorted([{'name': playlist.content_name(c), 'config': c} for c in self.static_data['contents']], key=lambda e: e['name']),
-            'placements': self.static_data['placements'],
+            'placements': placements,
+            'ac_power': psutil.sensors_battery().power_plugged,
         }
         self.write_message(json.dumps(msg))
         #self.manager.subscribe(self)
@@ -47,7 +61,7 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
     def on_message(self, message):
         data = json.loads(message)
         print 'incoming message:', data
-        
+
         action = data.get('action')
         if action == 'stop_all':
             self.manager.stop_all()
@@ -63,7 +77,7 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
             self.set_placement(self.static_data['placements'][data['ix']])
         if action == 'interactive':
             self.interactive(data['id'], data['sess'], data['type'], data.get('val'))
-            
+
     def on_close(self):
         pass
         #self.manager.unsubscribe(self)
@@ -83,7 +97,12 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
             broadcast_event(id, val)
         if control_type == 'jog':
             broadcast_event(id, 'inc' if val > 0 else 'dec')
-            
+        if control_type == 'raw':
+            if id == 'saveplacement':
+                from datetime import datetime
+                val += ' ' + datetime.now().strftime('%m-%d %H%M')
+            broadcast_event(id, '~' + val)
+
 keepalive_timeout = 5.
 class ButtonPressManager(threading.Thread):
     def __init__(self):
@@ -93,10 +112,10 @@ class ButtonPressManager(threading.Thread):
 
         self.presses = {}
         self.active = set()
-        
+
     def handle(self, id, session, val):
         self.queue.put((id, session, val))
-        
+
     def terminate(self):
         self.up = False
 
@@ -146,9 +165,9 @@ def broadcast_event(id, val):
             launch.set_audio_source_volume([p.pid for p in manager.running_processes], sens)
         except:
             pass
-            
+
     zmq_send('0:server:%s:%s' % (id, val))
-            
+
 if __name__ == "__main__":
 
     parser = OptionParser()
@@ -182,7 +201,7 @@ if __name__ == "__main__":
 
     button_thread = ButtonPressManager()
     button_thread.start()
-        
+
     application = web.Application([
         (r'/', MainHandler),
         (r'/socket', WebSocketTestHandler, {'manager': manager, 'static_data': static_data, 'zmq_send': zmq_send}),

@@ -4,8 +4,8 @@ apply plugin: 'application'
 mainClassName = "me.lsdo.Driver"
 
 def use_local_lsdome_processing_lib = true
-def local_processing_install = '/home/drew/processing-3.3.7'
-def local_processing_user_dir = '/home/drew/sketchbook'
+def local_processing_install = '/home/shen/processing-3.3.7'
+def local_processing_user_dir = '/home/shen/sketchbook'
 
 repositories {
     jcenter()
@@ -60,7 +60,7 @@ dependencies {
     compile name: 'ant-launcher'
     compile name: 'antlr'
     compile name: 'com.ibm.icu'
-    compile name: 'core'	
+    compile name: 'core'
     compile name: 'gluegen-rt'
     compile name: 'gluegen-rt-natives-linux-amd64'
     compile name: 'gluegen-rt-natives-linux-armv6hf'
@@ -112,4 +112,3 @@ jar {
 task wrapper(type: Wrapper) {
     gradleVersion = '3.0'
 }
-

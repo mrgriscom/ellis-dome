@@ -7,16 +7,25 @@ import random
 import csv
 
 # todo: move to config.properties
-audio_source = 'alsa_input.pci-0000_00_1f.3.analog-stereo'
+# x1
+#audio_source = 'alsa_input.pci-0000_00_1f.3.analog-stereo'
+# x240
+audio_source = 'alsa_input.pci-0000_00_1b.0.analog-stereo'
+# usb soundcard
+#audio_source = 'alsa_input.usb-0d8c_C-Media_USB_Audio_Device-00.analog-mono'
 
 def default_sketch_properties():
     return {
         'dynamic_subsampling': 1,
     }
 
-def load_placements():
+def load_placements(path=None):
     placements_config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'placements.csv')
-    with open(placements_config_path) as f:
+
+    if path is None:
+        path = placements_config_path
+
+    with open(path) as f:
         r = csv.DictReader(f)
 
         def load_rec(rec):
@@ -32,9 +41,9 @@ def load_placements():
             to_float('rot')
             to_float('scale')
             return rec
-            
+
         return map(load_rec, r)
-        
+
 def apply_placement(params, placement):
     params['no_stretch'] = not placement['stretch']
     params['wing_mode'] = placement['wing_mode']
@@ -47,7 +56,7 @@ def apply_placement(params, placement):
     for k, v in fields.iteritems():
         if k in placement:
             params[v] = placement[k]
-    
+
 class PlayManager(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
@@ -58,7 +67,7 @@ class PlayManager(threading.Thread):
         self.running_processes = None
         self.content_timeout = None
         self.window_id = None
-        
+
         self.playlist = None
         self.default_duration = None
 
@@ -78,7 +87,7 @@ class PlayManager(threading.Thread):
         def set_trim():
             self.wing_trim = trim
         self.queue.put(set_trim)
-        
+
     # terminate the current content; playlist will start something else, if loaded
     def stop_current(self):
         self.queue.put(lambda: self._stop_playback())
@@ -86,7 +95,7 @@ class PlayManager(threading.Thread):
     # terminate the current content and don't run anything new
     def stop_all(self):
         self.queue.put(lambda: self._stop_all())
-        
+
     def terminate(self):
         self.up = False
 
@@ -94,7 +103,7 @@ class PlayManager(threading.Thread):
         while self.up:
             if self.content_timeout is not None and time.time() > self.content_timeout:
                 self._stop_playback()
-            
+
             try:
                 event = self.queue.get(True, .01)
                 event()
@@ -104,7 +113,7 @@ class PlayManager(threading.Thread):
             if self.running_content is None:
                 self._nothing_playing()
         self._stop_all()
-            
+
     def _play_content(self, content, duration=None):
         if self.running_processes:
             self._stop_playback()
@@ -115,12 +124,12 @@ class PlayManager(threading.Thread):
         placement = random.choice(list(self.get_available_placements(content)))
         print 'using placement %s' % placement['name']
         apply_placement(params, placement)
-        
+
         if content['sketch'] == 'screencast':
             gui_invocation = launch.launch_screencast(content['cmd'], params)
             self.running_processes = gui_invocation[1]
             self.window_id = gui_invocation[0]
-            
+
             if content['name'] == 'projectm':
                 # get off the default pattern
                 launch.projectm_control(gui_invocation[0], 'next')
@@ -147,7 +156,7 @@ class PlayManager(threading.Thread):
     def _set_playlist(self, playlist, duration):
         self.playlist = playlist
         self.default_duration = duration
-            
+
     def _stop_playback(self):
         launch.terminate(self.running_processes)
         self.running_content = None
@@ -159,7 +168,7 @@ class PlayManager(threading.Thread):
     def _stop_all(self):
         self.playlist = None
         self._stop_playback()
-        
+
     def _nothing_playing(self):
         if self.playlist:
             self._play_content(self.playlist.get_next(), self.default_duration)
@@ -173,7 +182,7 @@ class PlayManager(threading.Thread):
                 if stretch != pl['stretch']:
                     continue
             yield pl
-    
+
 
 
 #custom duration

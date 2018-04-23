@@ -10,12 +10,12 @@
   <script src="script/knockout-3.4.2.debug.js"></script>
   <script src="script/underscore-min-1.6.0.js"></script>
   <script src="script/main.js"></script>
-        
+
   <script>
 
 {% autoescape None %}
 DATA = null;
-          
+
 $(document).ready({{ onload }});
 
   </script>
@@ -30,16 +30,18 @@ $(document).ready({{ onload }});
     max-zoom: 1.0;
     zoom: 1.0;
     }
-    
+
     body {
     width: 300px;
     }
-    
+
     button {
     user-select: none;
     }
-    
+
   </style>
+
+<div style="color: red;" data-bind="text: ac_power"></div>
 
   <div>
     Minutes per visualization: <input id="mins" type="number" value="2.5"></input>
@@ -48,7 +50,7 @@ $(document).ready({{ onload }});
   <div>
     <button id="stopall">stop all playback</button>
   </div>
-    
+
   <div>
     <button id="stopcurrent">next visualization in playlist</button>
   </div>
@@ -58,13 +60,13 @@ $(document).ready({{ onload }});
   <div>
     <button id="flap">FLAP</button>
   </div>
-  
+
   <br />
 
   <div>
     <button id="projectm-next">projectm next viz</button>
   </div>
-  
+
   <h3>wings are&hellip;</h3>
 
   <div data-bind="foreach: wingTrims">
@@ -73,7 +75,7 @@ $(document).ready({{ onload }});
       <span data-bind="text: $data"></span>
     </div>
   </div>
-  
+
   <h3>playlists</h3>
 
   <div data-bind="foreach: playlists">
@@ -105,14 +107,14 @@ $(document).ready({{ onload }});
 
   <div><em>(slider positions may not represent current values!)</em></div>
   <br />
-  
+
   <div>wing #2 in relation to wing #1:
     <button id="wingmode_unified">side-by-side (single canvas)</button>
     <button id="wingmode_mirror">mirrored</button>
     <button id="wingmode_flip">flip horizontally</button>
     <button id="wingmode_rotate">rotate 180</button>
   </div>
-    
+
   <div>aspect ratio:
     <button id="aspect_stretch">stretch to fit window</button>
     <button id="aspect_preserve">preserve 1:1</button>
@@ -122,6 +124,8 @@ $(document).ready({{ onload }});
   <div>y-offset: <div id="jog-yo"></div></div>
   <div>rotation: <div id="jog-rot"></div></div>
   <div>scale: <div id="jog-scale"></div></div>
+
+  <div>save this placement preset as <input id="saveas" type="text" placeholder="name"></input> <button id="saveplacement">save</button></div>
 
   <br/>
   <div>flap angle: <div id="flap-angle"></div></div>
@@ -134,10 +138,10 @@ $(document).ready({{ onload }});
   <div id="tubecontrol" style="display: none;">
     <h3>Tube</h3>
 
-    
+
   </div>
-  
+
   <div style="height: 200px;"></div>
-  
+
 </body>
 </html>

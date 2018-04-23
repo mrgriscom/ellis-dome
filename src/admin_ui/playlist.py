@@ -1,7 +1,7 @@
 import os
 import random
 
-VIDEO_DIR = '/home/drew/lsdome-media/video'
+VIDEO_DIR = '/home/shen/lsdome-media/video'
 
 # screencast: window title
 # all window-based: no_stretch (but mostly video/screencast)
@@ -68,7 +68,7 @@ def load_videos():
     vids = [f.strip() for f in os.popen('find "%s" -type f' % VIDEO_DIR).readlines()]
     for vid in vids:
         try:
-            duration = int(os.popen('mediainfo --Inform="Video;%%Duration%%" "%s"' % vid).readlines()[0].strip())/1000.
+            duration = float(os.popen('mediainfo --Inform="Video;%%Duration%%" "%s"' % vid).readlines()[0].strip())/1000.
         except RuntimeError:
             print 'could not read duration of %s' % vid
             duration = 0
@@ -93,7 +93,7 @@ class Playlist(object):
             if choice['content'] == self.last_played and len(self.choices) > 1:
                 continue
             yield choice
-        
+
     def get_next(self):
         total_likelihood = sum(choice['likelihood'] for choice in self._all_choices_except_last_played())
         rand = random.uniform(0, total_likelihood)
@@ -115,7 +115,7 @@ def load_playlists():
     def _playlists():
         yield ('(almost) everything', almost_everything_playlist(all_content))
         yield ('no sound-reactive', non_sound_reactive_playlist(all_content))
-        
+
         for playlist in load_playlist_files(all_content):
             yield playlist
     return dict(_playlists())
@@ -131,7 +131,7 @@ def non_sound_reactive_playlist(all_content):
 
 def equal_opportunity_playlist(contents):
     return Playlist({'content': c, 'likelihood': 1} for c in contents)
-    
+
 def load_playlist_files(all_content):
     content_by_name = dict((content_name(c), c) for c in all_content)
     assert len(content_by_name) == len(all_content), 'content names not unique'
@@ -142,7 +142,7 @@ def load_playlist_files(all_content):
         name, ext = os.path.splitext(filename)
         if ext != '.playlist':
             continue
-        
+
         path = os.path.join(playlist_dir, filename)
         with open(path) as f:
             entries = filter(None, (ln.strip() for ln in f.readlines()))

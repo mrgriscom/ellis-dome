@@ -8,7 +8,8 @@ function AdminUIModel() {
     this.contents = ko.observableArray();
     this.placements = ko.observableArray();
     this.wingTrims = ko.observableArray(['raised', 'flat']);
-    
+    this.ac_power = ko.observable();
+
     var model = this;
     this.load = function(data) {
 	$.each(data.playlists, function(i, e) {
@@ -26,6 +27,7 @@ function AdminUIModel() {
 	    p.load(e);
 	    model.placements.push(p);
 	});
+      this.ac_power(data.ac_power ? '' : 'LAPTOP ON BATTERY POWER')
     }
 
     this.setTrim = function(e) {
@@ -62,7 +64,7 @@ function PlacementModel() {
     this.name = ko.observable();
     this.stretch = ko.observable();
     this.ix = ko.observable();
-    
+
     this.load = function(data) {
 	this.name(data.name);
 	this.stretch(data.stretch);
@@ -84,7 +86,7 @@ function init() {
 
     var model = new AdminUIModel();
     ko.applyBindings(model);
-    
+
     this.conn = new WebSocket('ws://' + window.location.host + '/socket');
     this.conn.onopen = function () {
     };
@@ -93,7 +95,7 @@ function init() {
     };
     this.conn.onerror = function (error) {
         console.log('websocket error ' + error);
-	connectionLost();	
+	connectionLost();
     };
     this.conn.onmessage = function (e) {
 	console.log('receiving msg');
@@ -105,7 +107,7 @@ function init() {
 	}
     };
     CONN = this.conn;
-    
+
     $('#stopall').click(function() {
 	CONN.send(JSON.stringify({action: 'stop_all'}));
     });
@@ -114,7 +116,7 @@ function init() {
     });
     bindButton('#flap', 'flap');
     bindButton('#projectm-next', 'projectm-next');
-    
+
     bindButton('#wingmode_unified', 'wingmode_unified');
     bindButton('#wingmode_mirror', 'wingmode_mirror');
     bindButton('#wingmode_flip', 'wingmode_flip');
@@ -130,6 +132,17 @@ function init() {
     bindSlider('#flap-depth', 'flap-depth', false);
     bindSlider('#flap-speed', 'flap-speed', false);
     bindSlider('#audio-sens', 'audio-sens', false);
+
+  $('#saveplacement').click(function() {
+    var name = $('#saveas').val();
+    if (name.length == 0) {
+      alert('name required');
+      return;
+    }
+
+    sendEvent('saveplacement', 'raw', name);
+    alert('reload the page');
+  });
 }
 
 function bindSlider(sel, id, relative) {
@@ -188,7 +201,7 @@ function sendEvent(id, type, val) {
 
 BUTTON_KEEPALIVES = {};
 function buttonAction(id, pressed) {
-    
+
     if (pressed) {
 	sendEvent(id, 'button', true);
 	BUTTON_KEEPALIVES[id] = setInterval(function() {
