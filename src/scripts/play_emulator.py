@@ -1,11 +1,13 @@
 import sys
 import os.path
-import os
-from subprocess import Popen
+import time
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '../admin_ui'))
+import launch
 
 #sudo apt-get install retroarch libretro-bsnes-mercury-performance libretro-gambatte libretro-nestopia libretro-genesisplusgx
 
-roms_path = '/home/shen/roms/'
+roms_path = '/home/drew/roms/'
 cores = {
     'gameboy': '/usr/lib/libretro/gambatte_libretro.so',
     'nes': '/usr/lib/libretro/nestopia_libretro.so',
@@ -23,7 +25,9 @@ for k, v in cores.iteritems():
 if not core:
     raise RuntimeError('don\'t recognize system')
 
-with open('/home/shen/prometheus/lsdome/sketch.properties', 'w') as f:
-    f.write('title=retroarch\n')
-Popen('./build/install/lsdome/bin/lsdome screencast', shell=True, cwd='/home/shen/prometheus/lsdome/')
-os.popen('retroarch -L %s "%s"' % (core, rom))
+_, procs = launch.launch_screencast('retroarch -L %s "%s"' % (core, rom), {'title': 'retroarch'})
+try:
+    while True:
+        time.sleep(.01)
+except KeyboardInterrupt:
+    launch.terminate(procs)
