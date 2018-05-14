@@ -23,6 +23,8 @@ import Queue
 import time
 import psutil
 
+placements_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'placements')
+
 def web_path(*args):
     return os.path.join(project_root, *args)
 
@@ -38,11 +40,12 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
 
     def open(self):
         placements = list(self.static_data['placements'])
-        PRESETS_DIR = '/home/shen/presets'
         ix = len(placements)
-        for f in os.listdir(PRESETS_DIR):
+        for f in os.listdir(placements_dir):
+            if f.startswith('.'):
+                continue
             try:
-                preset = animations.load_placements(os.path.join(PRESETS_DIR, f))[0]
+                preset = animations.load_placements(os.path.join(placements_dir, f))[0]
                 preset['ix'] = ix
                 ix += 1
                 placements.append(preset)

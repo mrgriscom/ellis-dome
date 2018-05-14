@@ -1,7 +1,10 @@
 import os
+import os.path
 import random
 
-VIDEO_DIR = '/home/shen/lsdome-media/video'
+VIDEO_DIR = '/home/drew/lsdome-media/video'
+if not os.path.exists(VIDEO_DIR):
+    assert False, 'media dir %s not found' % VIDEO_DIR
 
 # screencast: window title
 # all window-based: no_stretch (but mostly video/screencast)
@@ -9,7 +12,7 @@ VIDEO_DIR = '/home/shen/lsdome-media/video'
 
 def get_all_content():
     yield {
-        'sketch': 'black',
+        'sketch': 'black (note: keeps running and using cpu)',
         'manual': True,
     }
     yield {
