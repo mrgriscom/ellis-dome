@@ -37,7 +37,7 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
         self.zmq_send = zmq_send
 
     def open(self):
-        placements = self.static_data['placements']
+        placements = list(self.static_data['placements'])
         PRESETS_DIR = '/home/shen/presets'
         ix = len(placements)
         for f in os.listdir(PRESETS_DIR):

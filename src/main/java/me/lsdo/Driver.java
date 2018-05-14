@@ -24,6 +24,7 @@ public class Driver
 	processingSketches.put("kinectdepth", KinectDepth.class);
 	processingSketches.put("kinectflock", KinectFlock.class);
 
+	headlessSketches.put("black", Black.class);
 	headlessSketches.put("cloud", Cloud.class);
 	headlessSketches.put("dontknow", DontKnow.class);
 	headlessSketches.put("gridtest", GridTest.class);
@@ -41,7 +42,7 @@ public class Driver
     public static PixelMesh<DomePixel> makeDome() {
 	return new Dome(new OPC());
     }
-    
+
     public static PixelMesh<WingPixel> makePrometheus() {
 	OPC[] opcs = Config.getConfig().makeOPCs(2);
 	OPC opcLeft = opcs[0];
@@ -63,7 +64,7 @@ public class Driver
     public static CanvasSketch makeCanvas(PApplet app) {
         return new CanvasSketch(app, Driver.makeGeometry());
     }
-    
+
     public static void main(String[] args){
 	String sketchName = (args.length > 0 ? args[0] : "");
 	if (processingSketches.containsKey(sketchName)) {
@@ -96,12 +97,12 @@ public class Driver
     private static void RunAnimation(PixelMesh dome, String name, int duration)
     {
 	Class<DomeAnimation> sketch = headlessSketches.get(name);
-        DomeAnimation animation;	
+        DomeAnimation animation;
 	try {
 	    animation = sketch.getConstructor(PixelMesh.class).newInstance(new Object[] {dome});
 	} catch (Exception e) {
 	    throw new RuntimeException(e);
-	}	
+	}
 
 	System.out.println("Starting " + name);
         RunAnimation(animation, duration);

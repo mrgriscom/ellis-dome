@@ -9,6 +9,10 @@ VIDEO_DIR = '/home/shen/lsdome-media/video'
 
 def get_all_content():
     yield {
+        'sketch': 'black',
+        'manual': True,
+    }
+    yield {
         'sketch': 'cloud',
         'aspect': '1:1',
     }
