@@ -25,17 +25,23 @@ This is a library of animations. It uses the associated `lsdome-processing`
 
     Run `ant`
 
-4. Install additional Processing libraries from the Processing IDE: 'Sketch' menu -> Import Library... -> Add Library...:
+4. Install the full gamut of video plugins:
+
+    ```
+    sudo apt-get install gstreamer1.0-alsa gstreamer1.0-fluendo-mp3 gstreamer1.0-libav gstreamer1.0-plugins-bad gstreamer1.0-plugins-base gstreamer1.0-plugins-base-apps gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio gstreamer1.0-tools gstreamer1.0-x libgstreamer-plugins-bad1.0-0 libgstreamer-plugins-base1.0-0 libgstreamer-plugins-good1.0-0 libgstreamer1.0-0
+    ````
+
+5. Install additional Processing libraries from the Processing IDE: 'Sketch' menu -> Import Library... -> Add Library...:
 
 - _Open Kinect_
 - _Syphon_
 - _Spout_
 
-5. Build:
+6. Build:
 
    `./gradlew installDist`
 
-6. Install the OpenPixelControl simulator. This creates a model of the pixel layout in 3D space, allowing you to see what the visualization output will look like:
+7. Install the OpenPixelControl simulator. This creates a model of the pixel layout in 3D space, allowing you to see what the visualization output will look like:
 
    ```
    git clone https://github.com/zestyping/openpixelcontrol.git
@@ -47,11 +53,11 @@ This is a library of animations. It uses the associated `lsdome-processing`
 
    `bin/gl_server -l <lsdome repo>/src/config/simulator_layouts/<relevant layout>.json -p 7890`
 
-7. Launch visualizations:
+8. Launch visualizations:
 
     `./build/install/lsdome/bin/lsdome <animation name>`
 
-8. Set up interactive control. Some animations support on-the-fly configuration via MIDI input. To set up:
+9. (optional) Set up interactive control via MIDI input. To set up:
 
     ```
     sudo apt-get install libzmq5 python-pypm
@@ -86,12 +92,13 @@ Some visualizations are generic front-ends for other functionality, and must be 
 
   - `path` -- file path of video to play
   - `repeat` -- `true`/`false` whether to loop the video
+  - `skip` -- begin playback this many seconds in
 
 - `stream` -- Stream from a video input device
 
   - `camera` -- video device to stream
 
-- `screencast` -- Map a rectangle of the desktop screen. Anything displayed in this rectangle will be shown on the pixels, even if it is an overlapping window or lock screen or mouse pointer.
+- `screencast` -- Map a rectangle of the desktop screen. Anything displayed in this rectangle will be shown on the pixels, even if it is an overlapping window or lock screen (mouse pointer should be ignored, though).
 
   - `title` -- window title; first matching window whose title starts with this prefix is capture and cast. If the window is later moved, the capture area does not change.
   - `pid` -- process ID of window to capture. Either this or `title` should be used, depending on which is easier for the application in question.
