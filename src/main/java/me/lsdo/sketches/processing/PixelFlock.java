@@ -27,14 +27,14 @@ public class PixelFlock extends PApplet {
     int time;
     int wait = 100;
 
-    CanvasSketch simple;
+    ProcessingAnimation canvas;
 
     public void settings() {
         size(300, 300);
     }
     
     public void setup() {
-	simple = Driver.makeCanvas(this);
+	canvas = Driver.makeCanvas(this);
 	
         minim = new Minim(this);
         in = minim.getLineIn();
@@ -87,7 +87,7 @@ public class PixelFlock extends PApplet {
             }
         }
 
-        simple.draw();
+        canvas.draw();
     }
 
     void render(Boid b) {

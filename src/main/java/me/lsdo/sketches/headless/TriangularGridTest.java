@@ -6,13 +6,13 @@ package me.lsdo.sketches.headless;
 
 import me.lsdo.processing.*;
 
-public class GridTest extends DomeAnimation<DomePixel> {
+public class TriangularGridTest extends PixelMeshAnimation<DomePixel> {
 
-    public GridTest(PixelMesh<? extends LedPixel> mesh) {
+    public TriangularGridTest(PixelMesh<? extends LedPixel> mesh) {
 	this((Dome)mesh);
     }
     
-    public GridTest(Dome dome) {
+    public TriangularGridTest(Dome dome) {
         super(dome);
     }
 

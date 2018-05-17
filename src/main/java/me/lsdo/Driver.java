@@ -7,6 +7,8 @@ import processing.core.*;
 
 import java.util.*;
 
+// Launch point for all the supported animations
+
 public class Driver
 {
     public static final int FPS_CAP = 60;
@@ -27,9 +29,9 @@ public class Driver
 	headlessSketches.put("black", Black.class);
 	headlessSketches.put("cloud", Cloud.class);
 	headlessSketches.put("dontknow", DontKnow.class);
-	headlessSketches.put("gridtest", GridTest.class);
+	headlessSketches.put("gridtest", TriangularGridTest.class);
 	headlessSketches.put("harmonics", Harmonics.class);
-	headlessSketches.put("kaleidoscope", Kaleidoscope.class);
+	headlessSketches.put("kaleidoscope", DomeKaleidoscope.class);
 	headlessSketches.put("xykaleidoscope", XYKaleidoscope.class);
 	headlessSketches.put("moire", Moire.class);
 	headlessSketches.put("pixeltest", PixelTest.class);
@@ -61,8 +63,8 @@ public class Driver
 	}
     }
 
-    public static CanvasSketch makeCanvas(PApplet app) {
-        return new CanvasSketch(app, Driver.makeGeometry());
+    public static ProcessingAnimation makeCanvas(PApplet app) {
+        return new ProcessingAnimation(app, Driver.makeGeometry());
     }
 
     public static void main(String[] args){
@@ -80,7 +82,7 @@ public class Driver
 	    // runSketch() still seems to do the trick, so use that unless a reason not to?
 	    //app.main(new String[] {sketch.getName()});
 	} else if (headlessSketches.containsKey(sketchName)) {
-	    RunAnimation(makeGeometry(), sketchName, 0);
+	    RunAnimation(makeGeometry(), sketchName);
 	} else {
 	    List<String> sketches = new ArrayList<String>();
 	    sketches.addAll(processingSketches.keySet());
@@ -94,33 +96,17 @@ public class Driver
 	}
     }
 
-    private static void RunAnimation(PixelMesh dome, String name, int duration)
+    private static void RunAnimation(PixelMesh mesh, String name)
     {
-	Class<DomeAnimation> sketch = headlessSketches.get(name);
-        DomeAnimation animation;
+	Class<PixelMeshAnimation> sketch = headlessSketches.get(name);
+        PixelMeshAnimation animation;
 	try {
-	    animation = sketch.getConstructor(PixelMesh.class).newInstance(new Object[] {dome});
+	    animation = sketch.getConstructor(PixelMesh.class).newInstance(new Object[] {mesh});
 	} catch (Exception e) {
 	    throw new RuntimeException(e);
 	}
 
 	System.out.println("Starting " + name);
-        RunAnimation(animation, duration);
-    }
-
-    private static void RunAnimation(DomeAnimation animation, int duration)
-    {
-        double t = 0;
-        while (t < duration || duration == 0)
-        {
-            t = Config.clock();
-            animation.draw(t);
-            double s = Config.clock();
-            int ms = (int)((s - t) * 1000);
-            try {
-                Thread.sleep(Math.max((int)(1000./FPS_CAP) - ms, 0));
-            } catch (InterruptedException ie) {
-            }
-        }
+	animation.run(FPS_CAP);
     }
 }

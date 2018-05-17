@@ -30,7 +30,7 @@ public class ParticleFFT extends PApplet {
     float minSize = 0.1f;
     float sizeScale = 0.2f;
 
-    CanvasSketch canvas;
+    ProcessingAnimation canvas;
 
     public void settings() {
         size(300, 300, P3D);

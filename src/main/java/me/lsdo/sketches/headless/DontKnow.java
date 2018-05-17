@@ -15,8 +15,8 @@ public class DontKnow extends XYAnimation {
 
     Perlin perlin;
 
-    public DontKnow(PixelMesh<? extends LedPixel> dome) {
-        super(dome);
+    public DontKnow(PixelMesh<? extends LedPixel> mesh) {
+        super(mesh);
 
         dx = dy = 0;
 

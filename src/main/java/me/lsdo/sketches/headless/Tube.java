@@ -34,12 +34,12 @@ public class Tube extends XYAnimation {
     
     InputControl ctrl;
     
-    public Tube(PixelMesh<? extends LedPixel> dome) {
-        this(dome, DEFAULT_SUBSAMPLING, DEFAULT_FOV);
+    public Tube(PixelMesh<? extends LedPixel> mesh) {
+        this(mesh, DEFAULT_SUBSAMPLING, DEFAULT_FOV);
     }
 
-    public Tube(PixelMesh<? extends LedPixel> dome, int base_subsampling, double fov) {
-        super(dome, base_subsampling);
+    public Tube(PixelMesh<? extends LedPixel> mesh, int base_subsampling, double fov) {
+        super(mesh, base_subsampling);
 	this.fov = fov;
 	initControl();
     }
@@ -220,7 +220,7 @@ public class Tube extends XYAnimation {
     // Map xy position to uv coordinates on a cylinder.
     @Override
     protected PVector2 toIntermediateRepresentation(PVector2 p) {
-        // This uses a planar projection, although the dome itself will be slightly curved.
+        // This uses a planar projection, although the mesh itself is likely not totally flat.
         PVector2 polar = LayoutUtil.xyToPolar(p);
         return LayoutUtil.V(polar.y, 1. / Math.tan(Math.toRadians(.5*fov)) / polar.x);
     }

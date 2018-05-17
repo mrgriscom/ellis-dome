@@ -3,7 +3,7 @@ package me.lsdo.sketches.headless;
 import me.lsdo.processing.*;
 import java.util.*;
 
-public class Harmonics extends DomeAnimation<DomePixel> {
+public class Harmonics extends PixelMeshAnimation<DomePixel> {
 
     public static final double BASELINE_CYCLE_LENGTH = 30. / 9;  // sec/panel
     

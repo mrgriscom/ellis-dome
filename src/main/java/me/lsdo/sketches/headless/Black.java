@@ -3,10 +3,13 @@ package me.lsdo.sketches.headless;
 import java.util.*;
 import me.lsdo.processing.*;
 
-public class Black extends DomeAnimation<LedPixel> {
+// Note: although this sets the mesh to black, it keeps doing so furiously every frame, just
+// like any other animation.
 
-    public Black(PixelMesh<? extends LedPixel> dome) {
-        super(dome);
+public class Black extends PixelMeshAnimation<LedPixel> {
+
+    public Black(PixelMesh<? extends LedPixel> mesh) {
+        super(mesh);
     }
 
     @Override

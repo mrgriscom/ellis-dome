@@ -20,12 +20,12 @@ public class Screencast extends WindowAnimation {
     
     ScreenGrabber grabber;
     
-    public Screencast(PixelMesh<? extends LedPixel> dome) {
-	super(dome, Config.getSketchProperty("subsampling", SUBSAMPLING));
+    public Screencast(PixelMesh<? extends LedPixel> mesh) {
+	super(mesh, Config.getSketchProperty("subsampling", SUBSAMPLING));
 
 	int width = Config.getSketchProperty("width", 512);
 	// If height omitted, set equal to width and force no_stretch. Otherwise,
-	// x- and y-axes will independently stretch to match the dome viewport
+	// x- and y-axes will independently stretch to match the mesh viewport
 	// bounding box.
 	int height = Config.getSketchProperty("height", -1);
 
@@ -37,7 +37,7 @@ public class Screencast extends WindowAnimation {
 	boolean preserveAspect = Config.getSketchProperty("no_stretch", false);
 
 	// Further shrink the screencap window by these factors, in order to get more
-	// of the window corners to fall within the dome's renderable area.
+	// of the window corners to fall within the mesh's renderable area.
 	double xscale = Config.getSketchProperty("xscale", 1.);
 	double yscale = Config.getSketchProperty("yscale", 1.);
 

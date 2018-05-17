@@ -30,7 +30,7 @@ public class KinectFlock extends PApplet {
     int time;
     int wait = 100;
 
-    CanvasSketch simple;
+    ProcessingAnimation canvas;
 
     Kinect kinect;
 
@@ -77,7 +77,7 @@ public class KinectFlock extends PApplet {
     }
     
     public void setup() {
-	simple = Driver.makeCanvas(this);
+	canvas = Driver.makeCanvas(this);
 	
 	depthThresh = Config.getSketchProperty("maxdepth", 750);
 	
@@ -217,7 +217,7 @@ public class KinectFlock extends PApplet {
             }
         }
 
-        simple.draw();
+        canvas.draw();
     }
 
     void render(Boid b) {

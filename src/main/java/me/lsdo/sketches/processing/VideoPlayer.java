@@ -14,7 +14,7 @@ import java.util.Arrays;
 // .: ff 5 sec
 // ,: rewind 5 sec
 
-// TODO support contrast stretch
+// TODO support contrast stretch?
 
 public class VideoPlayer extends VideoBase {
 

@@ -2,15 +2,17 @@ package me.lsdo.sketches.headless;
 
 import me.lsdo.processing.*;
 
-public class Kaleidoscope extends DomeAnimation<DomePixel> {
+// Note: see XYKaleidoscope
+
+public class DomeKaleidoscope extends PixelMeshAnimation<DomePixel> {
 
     private TriCoord basePanel;
 
-    public Kaleidoscope(PixelMesh<? extends LedPixel> mesh) {
+    public DomeKaleidoscope(PixelMesh<? extends LedPixel> mesh) {
 	this((Dome)mesh);
     }
     
-    public Kaleidoscope(Dome dome) {
+    public DomeKaleidoscope(Dome dome) {
         super(dome);
         basePanel = new TriCoord(TriCoord.CoordType.PANEL, 0, 0, -1);
     }
@@ -32,9 +34,9 @@ public class Kaleidoscope extends DomeAnimation<DomePixel> {
     // other panel, the base panel pixels can be computed only once per frame and re-used.
     @Override
     public void preFrame(double t, double deltaT) {
-	for (DomePixel c : dome.coords) {
+	for (DomePixel c : mesh.coords) {
             if (c.panel.equals(basePanel)) {
-                dome.setColor(c, getBasePixel(c, t));
+                mesh.setColor(c, getBasePixel(c, t));
             }
         }
     }
@@ -51,7 +53,7 @@ public class Kaleidoscope extends DomeAnimation<DomePixel> {
             basePx = basePx.flip(TriCoord.Axis.U);
         }
 
-        return dome.getColor(new DomePixel(basePanel, basePx));
+        return mesh.getColor(new DomePixel(basePanel, basePx));
     }
 }
 

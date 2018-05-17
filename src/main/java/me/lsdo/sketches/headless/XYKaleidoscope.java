@@ -2,6 +2,11 @@ package me.lsdo.sketches.headless;
 
 import me.lsdo.processing.*;
 
+// A kaleidoscope that is not dependent on the triangular geometry of the dome; computed in
+// abstract XY space so works on any mesh.
+
+// TODO: make this a generic wrapper that can consume any XYAnimation and add a kaleidoscope effect on top
+
 public class XYKaleidoscope extends XYAnimation {
 
     public XYKaleidoscope(PixelMesh<? extends LedPixel> mesh) {
@@ -10,15 +15,20 @@ public class XYKaleidoscope extends XYAnimation {
     
     @Override
     protected int samplePoint(PVector2 p, double t) {
+	return sampleBaseAnimation(p, t);
+    }
+
+    // future: make this abstract
+    private int sampleBaseAnimation(PVector2 p, double t) {
         p = LayoutUtil.Vrot(p, t * (.5 + 3*.5*(Math.cos(.1213*t)+1)));
         p = LayoutUtil.Vmult(p, 1/(1 + 5*.5*(Math.cos(.3025*t)+1)));
         p = LayoutUtil.Vadd(p, LayoutUtil.V(2*Math.cos(.2*t), 0));
         return OpcColor.getHsbColor(
-                MathUtil.fmod(p.x + .4081*t, 1.),
-                .6,
+		MathUtil.fmod(p.x + .4081*t, 1.),
+		.6,
                 .5 * (Math.cos(40*p.x)+1));
     }
-
+    
     @Override
     protected PVector2 toIntermediateRepresentation(PVector2 p) {
 	p = LayoutUtil.Vmult(p, 3.2);

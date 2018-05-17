@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 public abstract class VideoBase extends PApplet {
 
-    CanvasSketch simple;
+    ProcessingAnimation canvas;
     boolean initialized = false;
 
     public void settings() {
@@ -18,7 +18,7 @@ public abstract class VideoBase extends PApplet {
     }
     
     public void setup() {
-        simple = Driver.makeCanvas(this);
+        canvas = Driver.makeCanvas(this);
 	loadMedia();
     }
 
@@ -31,7 +31,7 @@ public abstract class VideoBase extends PApplet {
 	    setVideoDimensions(frame);
 	}
 	image(frame, 0, 0, width, height);
-	simple.draw();
+	canvas.draw();
     }
 
     void setVideoDimensions(PImage media) {
@@ -43,9 +43,9 @@ public abstract class VideoBase extends PApplet {
 	System.out.println(media.width + "x" + media.height + " " + aspectRatio + ":1");
 
 	boolean preserveAspect = Config.getSketchProperty("no_stretch", false);
-	simple.initViewport(width, height, preserveAspect, aspectRatio);
+	canvas.initViewport(width, height, preserveAspect, aspectRatio);
 	initialized = true;
-	simple.transformChanged();
+	canvas.transformChanged();
     }
 
 }

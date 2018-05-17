@@ -7,10 +7,12 @@ package me.lsdo.sketches.headless;
  * individual pixels progress in a marching ants pattern.
  */
 
+// TODO: this is generally useful; should extend to support all geometries -- requires reading fadecandy config
+
 import me.lsdo.processing.*;
 import java.util.*;
 
-public class PixelTest extends DomeAnimation<DomePixel> {
+public class PixelTest extends PixelMeshAnimation<DomePixel> {
 
     private HashMap<DomePixel, Integer> coordOrder;
     private static final int ARM_LENGTH = 4;

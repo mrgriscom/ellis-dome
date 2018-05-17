@@ -7,8 +7,8 @@ import me.lsdo.processing.*;
  */
 public class Moire extends XYAnimation {
 
-    public Moire(PixelMesh<? extends LedPixel> dome) {
-        super(dome);
+    public Moire(PixelMesh<? extends LedPixel> mesh) {
+        super(mesh);
     }
 
     @Override

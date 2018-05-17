@@ -16,7 +16,7 @@ import me.lsdo.processing.*;
 
 public class KinectDepth extends PApplet {
 
-    CanvasSketch canvas;
+    ProcessingAnimation canvas;
     
     Kinect kinect;
 
