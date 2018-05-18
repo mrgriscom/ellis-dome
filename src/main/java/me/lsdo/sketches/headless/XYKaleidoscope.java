@@ -1,6 +1,8 @@
 package me.lsdo.sketches.headless;
 
 import me.lsdo.processing.*;
+import me.lsdo.processing.util.*;
+import me.lsdo.processing.geometry.dome.DomeLayoutUtil;
 
 // A kaleidoscope that is not dependent on the triangular geometry of the dome; computed in
 // abstract XY space so works on any mesh.

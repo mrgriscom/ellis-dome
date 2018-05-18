@@ -2,6 +2,7 @@ package me.lsdo.sketches.headless;
 
 import java.util.*;
 import me.lsdo.processing.*;
+import me.lsdo.processing.util.*;
 
 public class Twinkle extends PixelMeshAnimation<LedPixel> {
 

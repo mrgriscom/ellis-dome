@@ -3,6 +3,9 @@ package me.lsdo;
 import me.lsdo.sketches.headless.*;
 import me.lsdo.sketches.processing.*;
 import me.lsdo.processing.*;
+import me.lsdo.processing.util.*;
+import me.lsdo.processing.geometry.dome.*;
+import me.lsdo.processing.geometry.prometheus.*;
 import processing.core.*;
 
 import java.util.*;

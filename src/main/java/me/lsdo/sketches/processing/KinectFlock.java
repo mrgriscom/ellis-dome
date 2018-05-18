@@ -7,6 +7,7 @@ import ddf.minim.analysis.*;
 import ddf.minim.*;
 import me.lsdo.Driver;
 import me.lsdo.processing.*;
+import me.lsdo.processing.util.*;
 import org.openkinect.freenect.*;
 import org.openkinect.processing.*;
 

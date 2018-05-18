@@ -10,6 +10,8 @@ package me.lsdo.sketches.headless;
 // TODO: this is generally useful; should extend to support all geometries -- requires reading fadecandy config
 
 import me.lsdo.processing.*;
+import me.lsdo.processing.geometry.dome.*;
+import me.lsdo.processing.util.*;
 import java.util.*;
 
 public class PixelTest extends PixelMeshAnimation<DomePixel> {

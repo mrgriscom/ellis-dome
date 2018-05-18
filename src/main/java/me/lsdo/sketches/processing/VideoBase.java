@@ -4,6 +4,7 @@ import processing.core.*;
 import processing.video.*;
 import me.lsdo.Driver;
 import me.lsdo.processing.*;
+import me.lsdo.processing.util.*;
 import java.util.Arrays;
 
 public abstract class VideoBase extends PApplet {

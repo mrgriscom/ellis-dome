@@ -2,6 +2,7 @@ package me.lsdo.sketches.headless;
 
 import processing.core.*;
 import me.lsdo.processing.*;
+import me.lsdo.processing.util.*;
 import java.awt.*;
 import java.awt.image.*;
 import org.bytedeco.javacv.*;

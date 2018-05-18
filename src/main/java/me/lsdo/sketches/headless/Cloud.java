@@ -7,6 +7,7 @@ package me.lsdo.sketches.headless;
 
 import me.lsdo.sketches.util.*;
 import me.lsdo.processing.*;
+import me.lsdo.processing.util.*;
 
 public class Cloud extends XYAnimation {
 

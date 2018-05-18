@@ -1,6 +1,8 @@
 package me.lsdo.sketches.headless;
 
 import me.lsdo.processing.*;
+import me.lsdo.processing.util.*;
+import me.lsdo.processing.geometry.dome.*;
 import java.util.*;
 
 public class Harmonics extends PixelMeshAnimation<DomePixel> {

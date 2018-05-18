@@ -5,6 +5,8 @@ package me.lsdo.sketches.headless;
  */
 
 import me.lsdo.processing.*;
+import me.lsdo.processing.util.*;
+import me.lsdo.processing.geometry.dome.*;
 
 public class TriangularGridTest extends PixelMeshAnimation<DomePixel> {
 

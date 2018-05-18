@@ -8,6 +8,7 @@ package me.lsdo.sketches.headless;
 import me.lsdo.sketches.util.*;
 import processing.core.*;
 import me.lsdo.processing.*;
+import me.lsdo.processing.util.*;
 
 public class Rings extends XYAnimation {
 
