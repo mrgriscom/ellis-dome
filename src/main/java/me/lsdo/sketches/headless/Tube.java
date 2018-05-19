@@ -33,8 +33,6 @@ public class Tube extends XYAnimation {
 
     boolean vheight_warp_mode = true;
     
-    InputControl ctrl;
-    
     public Tube(PixelMesh<? extends LedPixel> mesh) {
         this(mesh, DEFAULT_SUBSAMPLING, DEFAULT_FOV);
     }
@@ -42,13 +40,11 @@ public class Tube extends XYAnimation {
     public Tube(PixelMesh<? extends LedPixel> mesh, int base_subsampling, double fov) {
         super(mesh, base_subsampling);
 	this.fov = fov;
-	initControl();
     }
 
-    private void initControl() {
-        ctrl = new InputControl();
-	ctrl.init();
-	
+    public void registerHandlers(InputControl ctrl) {
+	super.registerHandlers(ctrl);
+
 	// speed, jog_a, jog
         ctrl.registerHandler("jog_a", new InputControl.InputHandler() {
 		@Override
@@ -228,8 +224,6 @@ public class Tube extends XYAnimation {
 
     @Override
     protected void preFrame(double t, double deltaT){
-	ctrl.processInput();
-	
         pos += speed * deltaT;
     }
 

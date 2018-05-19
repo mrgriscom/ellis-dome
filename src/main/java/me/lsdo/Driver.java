@@ -73,17 +73,7 @@ public class Driver
     public static void main(String[] args){
 	String sketchName = (args.length > 0 ? args[0] : "");
 	if (processingSketches.containsKey(sketchName)) {
-	    Class<PApplet> sketch = processingSketches.get(sketchName);
-	    PApplet app;
-	    try {
-		app = sketch.newInstance();
-	    } catch (Exception e) {
-		throw new RuntimeException(e);
-	    }
-	    app.runSketch(new String[] {sketch.getName()}, app);
-	    // if we modify the 'app' object, calling app.main() seems to reset it;
-	    // runSketch() still seems to do the trick, so use that unless a reason not to?
-	    //app.main(new String[] {sketch.getName()});
+	    RunProcessing(sketchName);
 	} else if (headlessSketches.containsKey(sketchName)) {
 	    RunAnimation(makeGeometry(), sketchName);
 	} else {
@@ -99,8 +89,21 @@ public class Driver
 	}
     }
 
-    private static void RunAnimation(PixelMesh mesh, String name)
-    {
+    private static void RunProcessing(String name) {
+	Class<PApplet> sketch = processingSketches.get(name);
+	PApplet app;
+	try {
+	    app = sketch.newInstance();
+	} catch (Exception e) {
+	    throw new RuntimeException(e);
+	}
+	app.runSketch(new String[] {sketch.getName()}, app);
+	// if we modify the 'app' object, calling app.main() seems to reset it;
+	// runSketch() still seems to do the trick, so use that unless a reason not to?
+	//app.main(new String[] {sketch.getName()});
+    }
+    
+    private static void RunAnimation(PixelMesh mesh, String name) {
 	Class<PixelMeshAnimation> sketch = headlessSketches.get(name);
         PixelMeshAnimation animation;
 	try {
