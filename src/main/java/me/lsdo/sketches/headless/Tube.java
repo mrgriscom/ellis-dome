@@ -11,23 +11,60 @@ public class Tube extends XYAnimation {
 
     double fov;  // Aperture from opposite ends of the display area, in degrees.
 
+    // State variables for motion through the tube
+    double pos = 0;
+    NumericParameter speed = new NumericParameter() {
+	    @Override
+	    public void step(boolean forward) {
+		if (Math.abs(value) > .02) {
+		    stepLog(forward == value > 0, sensitivity);
+		} else {
+		    stepLinear(forward, .1 * sensitivity);
+		}
+	    }
+
+	    @Override
+	    public void onChange(double prev) {
+		System.out.println("speed: " + value);
+	    }
+	};
+    NumericParameter speedSensitivity = new NumericParameter() {
+	    @Override
+	    public void onChange(double prev) {
+		speed.setSensitivity(value);
+		System.out.println("speed sensitivity: " + value);
+	    }
+	};
+
     // State variables for appearance of checker pattern
-    double v_height = 1.; // Height of an on-off cycle
+    // Height of an on-off cycle
+    class VertHeightParameter extends NumericParameter {
+	    double baseline = 0;
+	    
+	    @Override
+	    public void onChange(double prev) {
+		final double REL_BASELINE = 1.;
+		if (!vheight_warp_mode) {
+		    // This is actually the correct formula, however:
+		    baseline += (pos + REL_BASELINE - baseline) * (1 - value / prev);
+		} else {
+		    // this typo creates the cool hypnosis/warp effect.
+		    baseline += (pos + REL_BASELINE - baseline) * (value / prev);
+		}
+
+		System.out.println("v-height: " + value);
+	    }
+	};
+    VertHeightParameter vHeight = new VertHeightParameter();
+    
     int v_offset = 0;
     int h_checks = 4;
     double h_skew = 0;
     double v_asym = .5;
     double h_asym = .5;
 
-    // State variables for motion through the tube
-    double speed = 1.;
-    double pos = 0;
-
-    double v_height_baseline = 0;
     double h_skew_baseline = 0;
 
-    double speed_sensitivity = 1.;
-    double speed_sensitivity_incr = 2.;
     double hskew_sensitivity = 1.;
     double hskew_sensitivity_incr = 2.;
 
@@ -40,6 +77,18 @@ public class Tube extends XYAnimation {
     public Tube(PixelMesh<? extends LedPixel> mesh, int base_subsampling, double fov) {
         super(mesh, base_subsampling);
 	this.fov = fov;
+
+	speed.init(1.);
+	
+	speedSensitivity.scale = NumericParameter.Scale.LOG;
+	speedSensitivity.init(.01);
+	speedSensitivity.setSensitivity(.05);
+
+	vHeight.min = .2;
+	vHeight.max = 8.;
+	vHeight.scale = NumericParameter.Scale.LOG;
+	vHeight.init(1.);
+	
     }
 
     public void registerHandlers(InputControl ctrl) {
@@ -49,16 +98,7 @@ public class Tube extends XYAnimation {
         ctrl.registerHandler("jog_a", new InputControl.InputHandler() {
 		@Override
                 public void jog(boolean pressed) {
-                    boolean forward = pressed;
-
-                    if (Math.abs(speed) > .02) {
-                        final double SPEED_INC = 1. + (.01 * speed_sensitivity);
-                        speed *= (forward == speed > 0 ? SPEED_INC : 1./SPEED_INC);
-                    } else {
-                        final double SPEED_STEP = .001 * speed_sensitivity;
-                        speed += (forward ? 1 : -1) * SPEED_STEP;
-                    }
-                    System.out.println("speed: " + speed);
+		    speed.step(pressed);
                 }
             });
 	// # h-checks, browse, jog
@@ -121,21 +161,7 @@ public class Tube extends XYAnimation {
         ctrl.registerHandler("mixer", new InputControl.InputHandler() {
 		@Override
                 public void slider(double val) {
-                    double HMIN = .2;
-                    double HMAX = 8.;
-		    double v_height_prev = v_height;
-                    v_height = HMIN * Math.pow(HMAX / HMIN, val);
-
-		    final double REL_BASELINE = 1.;
-		    if (!vheight_warp_mode) {
-		      // This is actually the correct formula, however:
-		      v_height_baseline += (pos + REL_BASELINE - v_height_baseline) * (1 - v_height / v_height_prev);
-		    } else {
-  		      // this typo creates the cool hypnosis/warp effect.
-		      v_height_baseline += (pos + REL_BASELINE - v_height_baseline) * (v_height / v_height_prev);
-		    }
-
-		    System.out.println("v-height: " + v_height);
+		    vHeight.setSlider(val);
                 }
             });
 	// reverse, playpause_a, button (press)
@@ -143,7 +169,7 @@ public class Tube extends XYAnimation {
 		@Override
                 public void button(boolean pressed) {
                     if (pressed) {
-			speed = -speed;
+			speed.set(-speed.get());
                     }
                 }
             });
@@ -152,8 +178,7 @@ public class Tube extends XYAnimation {
 		@Override
                 public void button(boolean pressed) {
                     if (pressed) {
-			speed_sensitivity *= speed_sensitivity_incr;
-			System.out.println("speed sensitivity: " + speed_sensitivity);
+			speedSensitivity.increment(10);
                     }
                 }
             });
@@ -161,8 +186,7 @@ public class Tube extends XYAnimation {
 		@Override
                 public void button(boolean pressed) {
                     if (pressed) {
-			speed_sensitivity /= speed_sensitivity_incr;
-			System.out.println("speed sensitivity: " + speed_sensitivity);
+			speedSensitivity.increment(-10);
                     }
                 }
             });
@@ -198,11 +222,11 @@ public class Tube extends XYAnimation {
                 public void button(boolean pressed) {
 		    if (pressed) {
 			// reset
-			speed = 1.;
+			speed.reset();
+			speedSensitivity.reset();
 			v_offset = 0;
 			h_checks = 4;
 			h_skew = 0;
-			speed_sensitivity = 1;
 			hskew_sensitivity = 1;
 		    }
                 }
@@ -224,12 +248,12 @@ public class Tube extends XYAnimation {
 
     @Override
     protected void preFrame(double t, double deltaT){
-        pos += speed * deltaT;
+        pos += speed.get() * deltaT;
     }
 
     @Override
     protected int samplePointWithMotionBlur(PVector2 uv, double t, double jitterT) {
-        double samplePos = this.pos + speed * jitterT;
+        double samplePos = this.pos + speed.get() * jitterT;
 
         double u_unit = MathUtil.fmod(uv.x / (2*Math.PI), 1.);
         double dist = uv.y + samplePos;
@@ -238,7 +262,7 @@ public class Tube extends XYAnimation {
     }
 
     int checker(double dist, double u_unit) {
-        boolean v_on = (v_height > 0 ? MathUtil.fmod((dist - v_height_baseline) / v_height - v_offset * u_unit, 1.) < v_asym : false);
+        boolean v_on = (vHeight.get() > 0 ? MathUtil.fmod((dist - vHeight.baseline) / vHeight.get() - v_offset * u_unit, 1.) < v_asym : false);
         boolean u_on = (MathUtil.fmod((u_unit + h_skew_baseline + h_skew * dist) * h_checks, 1.) < h_asym);
         boolean chk = u_on ^ v_on;
         return OpcColor.getHsbColor(MathUtil.fmod(u_unit + dist/10., 1.), .5, chk ? 1 : .05);
