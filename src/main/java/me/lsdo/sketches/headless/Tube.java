@@ -56,17 +56,59 @@ public class Tube extends XYAnimation {
 	    }
 	};
     VertHeightParameter vHeight = new VertHeightParameter();
-    
-    int v_offset = 0;
-    int h_checks = 4;
-    double h_skew = 0;
-    double v_asym = .5;
-    double h_asym = .5;
-
-    double h_skew_baseline = 0;
-
-    double hskew_sensitivity = 1.;
-    double hskew_sensitivity_incr = 2.;
+    NumericParameter vOffset = new NumericParameter() {
+	    @Override
+	    public double toInternal(double value) {
+		return Math.round(value);
+	    }
+	    
+	    @Override
+	    public void onChange(double prev) {
+		System.out.println("v-offset: " + getInternal());
+	    }
+	};
+    NumericParameter hChecks = new NumericParameter() {
+	    @Override
+	    public double toInternal(double value) {
+		return Math.round(value);
+	    }
+	    
+	    @Override
+	    public void onChange(double prev) {
+		System.out.println("h-checks: " + getInternal());
+	    }
+	};
+    class HorizSkewParameter extends NumericParameter {
+	    double baseline = 0;
+	    
+	    @Override
+	    public void onChange(double prev) {
+		final double REL_BASELINE = 1;
+		baseline += (pos + REL_BASELINE) * (prev - value);
+		
+		System.out.println("h-skew: " + value);
+	    }
+	};
+    HorizSkewParameter hSkew = new HorizSkewParameter();
+    NumericParameter hSkewSensitivity = new NumericParameter() {
+	    @Override
+	    public void onChange(double prev) {
+		hSkew.setSensitivity(value);
+		System.out.println("h-skew sensitivity: " + value);
+	    }
+	};
+    NumericParameter vAsym = new NumericParameter() {
+	    @Override
+	    public void onChange(double prev) {
+		System.out.println("v-asym: " + value);
+	    }
+	};
+    NumericParameter hAsym = new NumericParameter() {
+	    @Override
+	    public void onChange(double prev) {
+		System.out.println("h-asym: " + value);
+	    }
+	};
 
     boolean vheight_warp_mode = true;
     
@@ -78,8 +120,7 @@ public class Tube extends XYAnimation {
         super(mesh, base_subsampling);
 	this.fov = fov;
 
-	speed.init(1.);
-	
+	speed.init(1.);	
 	speedSensitivity.scale = NumericParameter.Scale.LOG;
 	speedSensitivity.init(.01);
 	speedSensitivity.setSensitivity(.05);
@@ -88,7 +129,24 @@ public class Tube extends XYAnimation {
 	vHeight.max = 8.;
 	vHeight.scale = NumericParameter.Scale.LOG;
 	vHeight.init(1.);
-	
+
+	vOffset.init(0);
+	vOffset.setSensitivity(1);
+
+	hChecks.init(4);
+	hChecks.setSensitivity(1);
+
+	hSkew.init(0.);
+	hSkewSensitivity.scale = NumericParameter.Scale.LOG;
+	hSkewSensitivity.init(.001);
+	hSkewSensitivity.setSensitivity(.05);
+
+	vAsym.min = 0.;
+	vAsym.max = 1.;
+	vAsym.init(.5);
+	hAsym.min = 0.;
+	hAsym.max = 1.;
+	hAsym.init(.5);
     }
 
     public void registerHandlers(InputControl ctrl) {
@@ -105,37 +163,28 @@ public class Tube extends XYAnimation {
         ctrl.registerHandler("browse", new InputControl.InputHandler() {
 		@Override
                 public void jog(boolean pressed) {
-                    h_checks += (pressed ? 1 : -1);
-                    System.out.println("h-checks: " + h_checks);
+		    hChecks.step(pressed);
                 }
             });
 	// h-skew, jog_b, jog
         ctrl.registerHandler("jog_b", new InputControl.InputHandler() {
 		@Override
                 public void jog(boolean pressed) {
-                    boolean forward = pressed;
-		    double h_skew_prev = h_skew;
-		    final double SKEW_STEP = .001 * hskew_sensitivity;
-		    h_skew += (forward ? 1 : -1) * SKEW_STEP;
-		    final double REL_BASELINE = 1;
-		    h_skew_baseline += (pos + REL_BASELINE) * (h_skew_prev - h_skew);
-                    System.out.println("h-skew: " + h_skew);
+		    hSkew.step(pressed);
                 }
             });
 	// h-asym, pitch_a, slider
         ctrl.registerHandler("pitch_a", new InputControl.InputHandler() {
 		@Override
                 public void slider(double val) {
-                    h_asym = val;
-		    System.out.println("h-asym: " + h_asym);
+		    hAsym.setSlider(val);
                 }
             });
 	// v-asym, pitch_b, slider
         ctrl.registerHandler("pitch_b", new InputControl.InputHandler() {
 		@Override
                 public void slider(double val) {
-                    v_asym = val;
-		    System.out.println("v-asym: " + v_asym);		    
+		    vAsym.setSlider(val);
                 }
             });
 	// v-offset, pitch_inc/dec_a, slider (but should be jog)
@@ -143,8 +192,7 @@ public class Tube extends XYAnimation {
 		@Override
                 public void button(boolean pressed) {
                     if (pressed) {
-                        v_offset += 1;
-			System.out.println("v-offset: " + v_offset);
+			vOffset.step(true);
                     }
                 }
             });
@@ -152,8 +200,7 @@ public class Tube extends XYAnimation {
 		@Override
                 public void button(boolean pressed) {
                     if (pressed) {
-                        v_offset -= 1;
-			System.out.println("v-offset: " + v_offset);
+			vOffset.step(false);
                     }
                 }
             });
@@ -195,8 +242,7 @@ public class Tube extends XYAnimation {
 		@Override
                 public void button(boolean pressed) {
                     if (pressed) {
-			hskew_sensitivity *= hskew_sensitivity_incr;
-			System.out.println("h-skew sensitivity: " + hskew_sensitivity);
+			hSkewSensitivity.increment(10);
                     }
                 }
             });
@@ -204,8 +250,7 @@ public class Tube extends XYAnimation {
 		@Override
                 public void button(boolean pressed) {
                     if (pressed) {
-			hskew_sensitivity /= hskew_sensitivity_incr;
-			System.out.println("h-skew sensitivity: " + hskew_sensitivity);
+			hSkewSensitivity.increment(-10);
                     }
                 }
             });
@@ -224,10 +269,10 @@ public class Tube extends XYAnimation {
 			// reset
 			speed.reset();
 			speedSensitivity.reset();
-			v_offset = 0;
-			h_checks = 4;
-			h_skew = 0;
-			hskew_sensitivity = 1;
+			vOffset.reset();
+			hChecks.reset();
+			hSkew.reset();
+			hSkewSensitivity.reset();
 		    }
                 }
             });
@@ -262,8 +307,8 @@ public class Tube extends XYAnimation {
     }
 
     int checker(double dist, double u_unit) {
-        boolean v_on = (vHeight.get() > 0 ? MathUtil.fmod((dist - vHeight.baseline) / vHeight.get() - v_offset * u_unit, 1.) < v_asym : false);
-        boolean u_on = (MathUtil.fmod((u_unit + h_skew_baseline + h_skew * dist) * h_checks, 1.) < h_asym);
+        boolean v_on = (vHeight.get() > 0 ? MathUtil.fmod((dist - vHeight.baseline) / vHeight.get() - vOffset.getInternal() * u_unit, 1.) < vAsym.get() : false);
+        boolean u_on = (MathUtil.fmod((u_unit + hSkew.baseline + hSkew.get() * dist) * hChecks.getInternal(), 1.) < hAsym.get());
         boolean chk = u_on ^ v_on;
         return OpcColor.getHsbColor(MathUtil.fmod(u_unit + dist/10., 1.), .5, chk ? 1 : .05);
     }
