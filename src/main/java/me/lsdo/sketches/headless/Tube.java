@@ -22,16 +22,24 @@ public class Tube extends XYAnimation {
 	}
 
 	@Override
-	public void onChange(double prev) {
+	public void onSet() {
 	    param.setSensitivity(get());
 	}
     }    
-    class RelativeChangeNumericParameter extends NumericParameter {
+    abstract class RelativeChangeNumericParameter extends NumericParameter {
+	final double REL_BASELINE = 1;
 	double baseline = 0;
 
 	public RelativeChangeNumericParameter(String name) {
 	    super(name);
 	}
+
+	@Override
+	public void onChange(Double prev) {
+	    baseline += baselineAdjustment(prev);
+	}
+
+	abstract double baselineAdjustment(double prev);
     }    
     
     // State variables for motion through the tube
@@ -49,7 +57,9 @@ public class Tube extends XYAnimation {
     NumericParameter vAsym;
     NumericParameter hAsym;
 
-    boolean vheight_warp_mode = true;
+    BooleanParameter vHeightWarpMode;
+    BooleanParameter reverseAction;
+    BooleanParameter resetAction;
     
     public Tube(PixelMesh<? extends LedPixel> mesh) {
         this(mesh, DEFAULT_SUBSAMPLING, DEFAULT_FOV);
@@ -78,14 +88,13 @@ public class Tube extends XYAnimation {
 	
 	vHeight = new RelativeChangeNumericParameter("v-height") {
 	    @Override
-	    public void onChange(double prev) {
-		final double REL_BASELINE = 1.;
-		if (!vheight_warp_mode) {
+	    double baselineAdjustment(double prev) {
+		if (!vHeightWarpMode.get()) {
 		    // This is actually the correct formula, however:
-		    baseline += (pos + REL_BASELINE - baseline) * (1 - get() / prev);
+		    return (pos + REL_BASELINE - baseline) * (1 - get() / prev);
 		} else {
 		    // this typo creates the cool hypnosis/warp effect.
-		    baseline += (pos + REL_BASELINE - baseline) * (get() / prev);
+		    return (pos + REL_BASELINE - baseline) * (get() / prev);
 		}
 	    }
 	};
@@ -105,9 +114,8 @@ public class Tube extends XYAnimation {
 	
 	hSkew = new RelativeChangeNumericParameter("h-skew") {
 	    @Override
-	    public void onChange(double prev) {
-		final double REL_BASELINE = 1;
-		baseline += (pos + REL_BASELINE) * (prev - get());
+	    double baselineAdjustment(double prev) {
+		return (pos + REL_BASELINE) * (prev - get());
 	    }
 	};
 	hSkew.verbose = true;
@@ -127,47 +135,66 @@ public class Tube extends XYAnimation {
 	hAsym.min = 0.;
 	hAsym.max = 1.;
 	hAsym.init(.5);
+
+	vHeightWarpMode = new BooleanParameter("v-height warp");
+	vHeightWarpMode.verbose = true;
+	vHeightWarpMode.init(true);
+
+	reverseAction = new BooleanParameter("reverse") {
+		@Override
+		public void onTrue() {
+		    speed.set(-speed.get());
+		}
+	    };
+	reverseAction.init(false);
+
+	resetAction = new BooleanParameter("reset") {
+		@Override
+		public void onTrue() {
+		    speed.reset();
+		    speedSensitivity.reset();
+		    vOffset.reset();
+		    hChecks.reset();
+		    hSkew.reset();
+		    hSkewSensitivity.reset();
+		}
+	    };
+	resetAction.init(false);
     }
 
     public void registerHandlers(InputControl ctrl) {
 	super.registerHandlers(ctrl);
 
-	// speed, jog_a, jog
         ctrl.registerHandler("jog_a", new InputControl.InputHandler() {
 		@Override
                 public void jog(boolean pressed) {
 		    speed.step(pressed);
                 }
             });
-	// # h-checks, browse, jog
         ctrl.registerHandler("browse", new InputControl.InputHandler() {
 		@Override
                 public void jog(boolean pressed) {
 		    hChecks.step(pressed);
                 }
             });
-	// h-skew, jog_b, jog
         ctrl.registerHandler("jog_b", new InputControl.InputHandler() {
 		@Override
                 public void jog(boolean pressed) {
 		    hSkew.step(pressed);
                 }
             });
-	// h-asym, pitch_a, slider
         ctrl.registerHandler("pitch_a", new InputControl.InputHandler() {
 		@Override
                 public void slider(double val) {
 		    hAsym.setSlider(val);
                 }
             });
-	// v-asym, pitch_b, slider
         ctrl.registerHandler("pitch_b", new InputControl.InputHandler() {
 		@Override
                 public void slider(double val) {
 		    vAsym.setSlider(val);
                 }
             });
-	// v-offset, pitch_inc/dec_a, slider (but should be jog)
         ctrl.registerHandler("pitch_inc_a", new InputControl.InputHandler() {
 		@Override
                 public void button(boolean pressed) {
@@ -184,23 +211,18 @@ public class Tube extends XYAnimation {
                     }
                 }
             });
-	// v-height, mixer, slider
         ctrl.registerHandler("mixer", new InputControl.InputHandler() {
 		@Override
                 public void slider(double val) {
 		    vHeight.setSlider(val);
                 }
             });
-	// reverse, playpause_a, button (press)
         ctrl.registerHandler("playpause_a", new InputControl.InputHandler() {
 		@Override
                 public void button(boolean pressed) {
-                    if (pressed) {
-			speed.set(-speed.get());
-                    }
+		    reverseAction.set(pressed);
                 }
             });
-	// speed sensitivity, headphone/sync_a, buttons (should be jog)
         ctrl.registerHandler("headphone_a", new InputControl.InputHandler() {
 		@Override
                 public void button(boolean pressed) {
@@ -217,7 +239,6 @@ public class Tube extends XYAnimation {
                     }
                 }
             });
-	// hskew sensitivity, headphone/sync_b, buttons (should be jog)
         ctrl.registerHandler("headphone_b", new InputControl.InputHandler() {
 		@Override
                 public void button(boolean pressed) {
@@ -234,26 +255,16 @@ public class Tube extends XYAnimation {
                     }
                 }
             });
-	// warp mode, playpause_b, button (hold -- need to be in tandem with v-height)
         ctrl.registerHandler("playpause_b", new InputControl.InputHandler() {
 		@Override
                 public void button(boolean pressed) {
-		    vheight_warp_mode = !pressed;
+		    vHeightWarpMode.set(!pressed);
                 }
             });
-	// reset, back, button (press)
         ctrl.registerHandler("back", new InputControl.InputHandler() {
 		@Override
                 public void button(boolean pressed) {
-		    if (pressed) {
-			// reset
-			speed.reset();
-			speedSensitivity.reset();
-			vOffset.reset();
-			hChecks.reset();
-			hSkew.reset();
-			hSkewSensitivity.reset();
-		    }
+		    resetAction.set(pressed);
                 }
             });
     }
