@@ -120,7 +120,7 @@ function init() {
     bindButton('#wingmode_unified', 'wingmode_unified');
     bindButton('#wingmode_mirror', 'wingmode_mirror');
     bindButton('#wingmode_flip', 'wingmode_flip');
-    bindButton('#wingmode_rotate', 'wingmode_rotate');
+    bindButton('#wingmode_rotate', 'wingmode_opposite');
     bindButton('#aspect_stretch', 'stretch_yes');
     bindButton('#aspect_preserve', 'stretch_no');
 

@@ -71,11 +71,11 @@ public class Tube extends XYAnimation {
 
 	speed = new NumericParameter("speed") {
 		@Override
-		public void step(boolean forward) {
+		public void _step(boolean forward, double sens) {
 		    if (Math.abs(get()) > .02) {
-			stepLog(forward == get() > 0, sensitivity);
+			stepLog(forward == get() > 0, sens);
 		    } else {
-			stepLinear(forward, .1 * sensitivity);
+			stepLinear(forward, .1 * sens);
 		    }
 		}
 	    };
@@ -164,109 +164,19 @@ public class Tube extends XYAnimation {
 
     public void registerHandlers(InputControl ctrl) {
 	super.registerHandlers(ctrl);
-
-        ctrl.registerHandler("jog_a", new InputControl.InputHandler() {
-		@Override
-                public void jog(boolean pressed) {
-		    speed.step(pressed);
-                }
-            });
-        ctrl.registerHandler("browse", new InputControl.InputHandler() {
-		@Override
-                public void jog(boolean pressed) {
-		    hChecks.step(pressed);
-                }
-            });
-        ctrl.registerHandler("jog_b", new InputControl.InputHandler() {
-		@Override
-                public void jog(boolean pressed) {
-		    hSkew.step(pressed);
-                }
-            });
-        ctrl.registerHandler("pitch_a", new InputControl.InputHandler() {
-		@Override
-                public void slider(double val) {
-		    hAsym.setSlider(val);
-                }
-            });
-        ctrl.registerHandler("pitch_b", new InputControl.InputHandler() {
-		@Override
-                public void slider(double val) {
-		    vAsym.setSlider(val);
-                }
-            });
-        ctrl.registerHandler("pitch_inc_a", new InputControl.InputHandler() {
-		@Override
-                public void button(boolean pressed) {
-                    if (pressed) {
-			vOffset.step(true);
-                    }
-                }
-            });
-        ctrl.registerHandler("pitch_dec_a", new InputControl.InputHandler() {
-		@Override
-                public void button(boolean pressed) {
-                    if (pressed) {
-			vOffset.step(false);
-                    }
-                }
-            });
-        ctrl.registerHandler("mixer", new InputControl.InputHandler() {
-		@Override
-                public void slider(double val) {
-		    vHeight.setSlider(val);
-                }
-            });
-        ctrl.registerHandler("playpause_a", new InputControl.InputHandler() {
-		@Override
-                public void button(boolean pressed) {
-		    reverseAction.set(pressed);
-                }
-            });
-        ctrl.registerHandler("headphone_a", new InputControl.InputHandler() {
-		@Override
-                public void button(boolean pressed) {
-                    if (pressed) {
-			speedSensitivity.increment(10);
-                    }
-                }
-            });
-        ctrl.registerHandler("sync_a", new InputControl.InputHandler() {
-		@Override
-                public void button(boolean pressed) {
-                    if (pressed) {
-			speedSensitivity.increment(-10);
-                    }
-                }
-            });
-        ctrl.registerHandler("headphone_b", new InputControl.InputHandler() {
-		@Override
-                public void button(boolean pressed) {
-                    if (pressed) {
-			hSkewSensitivity.increment(10);
-                    }
-                }
-            });
-        ctrl.registerHandler("sync_b", new InputControl.InputHandler() {
-		@Override
-                public void button(boolean pressed) {
-                    if (pressed) {
-			hSkewSensitivity.increment(-10);
-                    }
-                }
-            });
-        ctrl.registerHandler("playpause_b", new InputControl.InputHandler() {
-		@Override
-                public void button(boolean pressed) {
-		    vHeightWarpMode.set(!pressed);
-                }
-            });
-        ctrl.registerHandler("back", new InputControl.InputHandler() {
-		@Override
-                public void button(boolean pressed) {
-		    resetAction.set(pressed);
-                }
-            });
+	
+	speed.bindJog(ctrl, new String[] {"jog_a"});
+        hChecks.bindJog(ctrl, new String[] {"browse"});
+	hSkew.bindJog(ctrl, new String[] {"jog_b"});
+	hAsym.bindSlider(ctrl, new String[] {"pitch_a"});
+	vAsym.bindSlider(ctrl, new String[] {"pitch_b"});
+	vOffset.bindIncDecButtons(ctrl, 1, new String[] {"pitch_inc_a"}, new String[] {"pitch_dec_a"});
+	vHeight.bindSlider(ctrl, new String[] {"mixer"});
+	reverseAction.bindAction(ctrl, new String[] {"playpause_a"});
+	speedSensitivity.bindIncDecButtons(ctrl, 10, new String[] {"headphone_a"}, new String[] {"sync_a"});
+	hSkewSensitivity.bindIncDecButtons(ctrl, 10, new String[] {"headphone_b"}, new String[] {"sync_b"});
+        vHeightWarpMode.bindFalseWhilePressed(ctrl, new String[] {"playpause_b"});
+	resetAction.bindAction(ctrl, new String[] {"back"});
     }
 
     @Override

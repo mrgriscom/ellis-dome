@@ -91,7 +91,7 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
         broadcast_event('rot', '~%s' % placement.get('rot', 0))
         broadcast_event('scale', '~%s' % placement.get('scale', 1))
         broadcast_event('wingmode', '~%s' % placement['wing_mode'])
-        broadcast_event('stretch', '~%s' % ('true' if placement['stretch'] else 'false'))
+        broadcast_event('stretch', '~%s' % ('yes' if placement['stretch'] else 'no'))
 
     def interactive(self, id, session, control_type, val):
         if control_type in ('button', 'button-keepalive'):
@@ -149,16 +149,16 @@ class ButtonPressManager(threading.Thread):
                 if is_pressed and not is_active:
                     # send press
                     print 'press', id
-                    broadcast_event(id, '~true')
+                    broadcast_event(id, 'press')
                 elif not is_pressed and is_active:
                     # send release
                     print 'release', id
-                    broadcast_event(id, '~false')
+                    broadcast_event(id, 'release')
             self.active = pressed
 
 def broadcast_event(id, val):
     # intercept some ourselves
-    if id == 'projectm-next' and val == '~true' and manager.window_id is not None:
+    if id == 'projectm-next' and val == 'press' and manager.window_id is not None:
         launch.projectm_control(manager.window_id, 'next')
     if id == 'audio-sens':
         min_sens = .3
