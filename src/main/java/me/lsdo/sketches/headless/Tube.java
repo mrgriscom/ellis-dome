@@ -2,6 +2,7 @@ package me.lsdo.sketches.headless;
 
 import java.io.*;
 import me.lsdo.processing.*;
+import me.lsdo.processing.interactivity.*;
 import me.lsdo.processing.util.*;
 
 public class Tube extends XYAnimation {
@@ -11,104 +12,42 @@ public class Tube extends XYAnimation {
 
     double fov;  // Aperture from opposite ends of the display area, in degrees.
 
+    class SensitivityParameter extends NumericParameter {
+	NumericParameter param;
+	
+	public SensitivityParameter(String name, NumericParameter param) {
+	    super(name);
+	    this.param = param;
+	    this.scale = NumericParameter.Scale.LOG;
+	}
+
+	@Override
+	public void onChange(double prev) {
+	    param.setSensitivity(get());
+	}
+    }    
+    class RelativeChangeNumericParameter extends NumericParameter {
+	double baseline = 0;
+
+	public RelativeChangeNumericParameter(String name) {
+	    super(name);
+	}
+    }    
+    
     // State variables for motion through the tube
     double pos = 0;
-    NumericParameter speed = new NumericParameter() {
-	    @Override
-	    public void step(boolean forward) {
-		if (Math.abs(value) > .02) {
-		    stepLog(forward == value > 0, sensitivity);
-		} else {
-		    stepLinear(forward, .1 * sensitivity);
-		}
-	    }
-
-	    @Override
-	    public void onChange(double prev) {
-		System.out.println("speed: " + value);
-	    }
-	};
-    NumericParameter speedSensitivity = new NumericParameter() {
-	    @Override
-	    public void onChange(double prev) {
-		speed.setSensitivity(value);
-		System.out.println("speed sensitivity: " + value);
-	    }
-	};
+    NumericParameter speed;
+    SensitivityParameter speedSensitivity;
 
     // State variables for appearance of checker pattern
     // Height of an on-off cycle
-    class VertHeightParameter extends NumericParameter {
-	    double baseline = 0;
-	    
-	    @Override
-	    public void onChange(double prev) {
-		final double REL_BASELINE = 1.;
-		if (!vheight_warp_mode) {
-		    // This is actually the correct formula, however:
-		    baseline += (pos + REL_BASELINE - baseline) * (1 - value / prev);
-		} else {
-		    // this typo creates the cool hypnosis/warp effect.
-		    baseline += (pos + REL_BASELINE - baseline) * (value / prev);
-		}
-
-		System.out.println("v-height: " + value);
-	    }
-	};
-    VertHeightParameter vHeight = new VertHeightParameter();
-    NumericParameter vOffset = new NumericParameter() {
-	    @Override
-	    public double toInternal(double value) {
-		return Math.round(value);
-	    }
-	    
-	    @Override
-	    public void onChange(double prev) {
-		System.out.println("v-offset: " + getInternal());
-	    }
-	};
-    NumericParameter hChecks = new NumericParameter() {
-	    @Override
-	    public double toInternal(double value) {
-		return Math.round(value);
-	    }
-	    
-	    @Override
-	    public void onChange(double prev) {
-		System.out.println("h-checks: " + getInternal());
-	    }
-	};
-    class HorizSkewParameter extends NumericParameter {
-	    double baseline = 0;
-	    
-	    @Override
-	    public void onChange(double prev) {
-		final double REL_BASELINE = 1;
-		baseline += (pos + REL_BASELINE) * (prev - value);
-		
-		System.out.println("h-skew: " + value);
-	    }
-	};
-    HorizSkewParameter hSkew = new HorizSkewParameter();
-    NumericParameter hSkewSensitivity = new NumericParameter() {
-	    @Override
-	    public void onChange(double prev) {
-		hSkew.setSensitivity(value);
-		System.out.println("h-skew sensitivity: " + value);
-	    }
-	};
-    NumericParameter vAsym = new NumericParameter() {
-	    @Override
-	    public void onChange(double prev) {
-		System.out.println("v-asym: " + value);
-	    }
-	};
-    NumericParameter hAsym = new NumericParameter() {
-	    @Override
-	    public void onChange(double prev) {
-		System.out.println("h-asym: " + value);
-	    }
-	};
+    RelativeChangeNumericParameter vHeight;
+    IntegerParameter vOffset;
+    IntegerParameter hChecks;
+    RelativeChangeNumericParameter hSkew;
+    SensitivityParameter hSkewSensitivity;
+    NumericParameter vAsym;
+    NumericParameter hAsym;
 
     boolean vheight_warp_mode = true;
     
@@ -120,30 +59,71 @@ public class Tube extends XYAnimation {
         super(mesh, base_subsampling);
 	this.fov = fov;
 
-	speed.init(1.);	
-	speedSensitivity.scale = NumericParameter.Scale.LOG;
-	speedSensitivity.init(.01);
+	speed = new NumericParameter("speed") {
+		@Override
+		public void step(boolean forward) {
+		    if (Math.abs(get()) > .02) {
+			stepLog(forward == get() > 0, sensitivity);
+		    } else {
+			stepLinear(forward, .1 * sensitivity);
+		    }
+		}
+	    };
+	speed.verbose = true;
+	speedSensitivity = new SensitivityParameter("speed sensitivity", speed);
+	speedSensitivity.verbose = true;
 	speedSensitivity.setSensitivity(.05);
-
+	speed.init(1.);
+	speedSensitivity.init(.01);
+	
+	vHeight = new RelativeChangeNumericParameter("v-height") {
+	    @Override
+	    public void onChange(double prev) {
+		final double REL_BASELINE = 1.;
+		if (!vheight_warp_mode) {
+		    // This is actually the correct formula, however:
+		    baseline += (pos + REL_BASELINE - baseline) * (1 - get() / prev);
+		} else {
+		    // this typo creates the cool hypnosis/warp effect.
+		    baseline += (pos + REL_BASELINE - baseline) * (get() / prev);
+		}
+	    }
+	};
+	vHeight.verbose = true;
 	vHeight.min = .2;
 	vHeight.max = 8.;
 	vHeight.scale = NumericParameter.Scale.LOG;
 	vHeight.init(1.);
 
+	vOffset = new IntegerParameter("v-offset");
+	vOffset.verbose = true;
 	vOffset.init(0);
-	vOffset.setSensitivity(1);
 
+	hChecks = new IntegerParameter("h-checks");
+	hChecks.verbose = true;
 	hChecks.init(4);
-	hChecks.setSensitivity(1);
-
-	hSkew.init(0.);
-	hSkewSensitivity.scale = NumericParameter.Scale.LOG;
-	hSkewSensitivity.init(.001);
+	
+	hSkew = new RelativeChangeNumericParameter("h-skew") {
+	    @Override
+	    public void onChange(double prev) {
+		final double REL_BASELINE = 1;
+		baseline += (pos + REL_BASELINE) * (prev - get());
+	    }
+	};
+	hSkew.verbose = true;
+	hSkewSensitivity = new SensitivityParameter("h-skew sensitivity", hSkew);
+	hSkewSensitivity.verbose = true;
 	hSkewSensitivity.setSensitivity(.05);
+	hSkew.init(0.);
+	hSkewSensitivity.init(.001);
 
+	vAsym = new NumericParameter("v-asym");
+	vAsym.verbose = true;
 	vAsym.min = 0.;
 	vAsym.max = 1.;
 	vAsym.init(.5);
+	hAsym = new NumericParameter("h-asym");
+	hAsym.verbose = true;
 	hAsym.min = 0.;
 	hAsym.max = 1.;
 	hAsym.init(.5);
