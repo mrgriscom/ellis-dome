@@ -123,15 +123,20 @@ function init() {
     bindButton('#wingmode_rotate', 'wingmode_opposite');
     bindButton('#aspect_stretch', 'stretch_yes');
     bindButton('#aspect_preserve', 'stretch_no');
+    bindButton('#playing_yes', 'playing_yes');
+    bindButton('#playing_no', 'playing_no');
 
     bindSlider('#jog-xo', 'jog-xo', true);
     bindSlider('#jog-yo', 'jog-yo', true);
     bindSlider('#jog-rot', 'jog-rot', true);
     bindSlider('#jog-scale', 'jog-scale', true);
+    bindSlider('#xscale', 'xscale', false);
+    bindSlider('#yscale', 'yscale', false);
     bindSlider('#flap-angle', 'flap-angle', false);
     bindSlider('#flap-depth', 'flap-depth', false);
     bindSlider('#flap-speed', 'flap-speed', false);
     bindSlider('#audio-sens', 'audio-sens', false);
+    bindSlider('#timeline', 'timeline', false);
 
   $('#saveplacement').click(function() {
     var name = $('#saveas').val();

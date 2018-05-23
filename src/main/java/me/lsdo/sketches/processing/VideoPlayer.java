@@ -4,11 +4,9 @@ import processing.core.*;
 import processing.video.*;
 import me.lsdo.Driver;
 import me.lsdo.processing.*;
+import me.lsdo.processing.interactivity.*;
 import me.lsdo.processing.util.*;
 import java.util.Arrays;
-
-// Play video from file. Will size the projection area to the smallest bounding rectangle for the pixels.
-// Aspect ratio is not preserved (support for such is a TODO). Dynamic contrast stretch is supported.
 
 // Keyboard controls:
 // p: play/plause
@@ -22,35 +20,73 @@ public class VideoPlayer extends VideoBase {
     //final String DEMO_VIDEO = "res/mov/bm2014_mushroom_cloud.mp4";
     final String DEMO_VIDEO = "res/mov/trexes_thunderdome.mp4";
     
-    static final double[] skips = {5};
+    static final double[] skips = {5, 60};
 
     Movie mov;
-    boolean playing;
+    boolean repeat;
+    BooleanParameter playing;
+    BooleanParameter[] skipActions;
+    NumericParameter timeline;
     
     public void loadMedia() {
 	String path = Config.getSketchProperty("path", DEMO_VIDEO);
 	if (path.isEmpty()) {
 	    throw new RuntimeException("must specify video path in sketch.properties!");
 	}
-	boolean repeat = Config.getSketchProperty("repeat", true);
+	repeat = Config.getSketchProperty("repeat", true);
 	double startAt = Config.getSketchProperty("skip", 0.);
 	
         mov = new Movie(this, path);
+	// begin playback so we have access to duration
+	mov.play();
 
+	playing = new BooleanParameter("playing") {
+		@Override
+		public void onTrue() {
+		    mov.play();
+		}
+
+		@Override
+		public void onFalse() {
+		    mov.pause();
+		}
+	    };
+	playing.trueCaption = "play";
+	playing.falseCaption = "pause";
+
+	skipActions = new BooleanParameter[2*skips.length];
+	int i = 0;
+	for (final double skip : skips) {
+	    for (final boolean forward : new boolean[] {true, false}) {
+		BooleanParameter skipAction = new BooleanParameter((forward ? "forward" : "back") + " " + skip + "s") {
+			@Override
+			public void onTrue() {
+			    relJump((forward ? 1 : -1) * skip);
+			}
+		    };
+		skipAction.init(false);
+		skipActions[i] = skipAction;
+		i++;
+	    }
+	}
+
+	timeline = new NumericParameter("timeline") {
+		@Override
+		public void onSet() {
+		    jump(get());
+		}
+	    };
+	timeline.min = 0;
+	timeline.max = mov.duration();
+	
 	if (repeat) {
 	    mov.loop();
-	} else {
-	    mov.play();
 	}
-        playing = true;
+	playing.init(true);
+	timeline.init(startAt);
 
-	if (startAt > 0) {
-	    if (repeat) {
-		System.out.println("note: skip only applies to the first play-through");
-	    }
-	    mov.jump((float)startAt);
-	}
-	
+	registerHandlers(canvas.ctrl);
+
         System.out.println("duration: " + mov.duration());
         // TODO some event when playback has finished?
     }
@@ -62,25 +98,32 @@ public class VideoPlayer extends VideoBase {
 	return mov;
     }
 
-    public void keyPressed() {
-        int dir = 0;
-        if (this.key == '.') {
-            dir = 1;
-        } else if (this.key == ',') {
-            dir = -1;
-        } else if (this.key == 'p') {
-            if (playing) {
-                mov.pause();
-            } else {
-                mov.play();
-            }
-            playing = !playing;
-        }
+    public void relJump(double t) {
+	jump(mov.time() + t);
+    }
+    
+    public void jump(double t) {
+	if (repeat) {
+	    t = MathUtil.fmod(t, mov.duration());
+	} else {
+            t = Math.max(0, Math.min(mov.duration(), t));
+	}
+	mov.jump((float)t);
+	System.out.println(String.format("%.2f / %.2f", t, mov.duration()));
+    }
+    
+    public void registerHandlers(InputControl ctrl) {
+	playing.bindRadioButtons(ctrl, "playing");
+	timeline.bindSlider(ctrl, new String[] {"timeline"});
+    }
 
-        if (dir != 0) {
-            double t = Math.max(0, Math.min(mov.duration(), mov.time() + dir * skips[0]));
-            mov.jump((float)t);
-            System.out.println(String.format("%.2f / %.2f", t, mov.duration()));
+    public void keyPressed() {
+        if (this.key == '.') {
+	    skipActions[0].trigger();
+        } else if (this.key == ',') {
+	    skipActions[1].trigger();
+        } else if (this.key == 'p') {
+	    playing.toggle();
         }
     }
 
