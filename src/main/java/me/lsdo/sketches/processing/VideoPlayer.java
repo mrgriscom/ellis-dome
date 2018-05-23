@@ -27,6 +27,7 @@ public class VideoPlayer extends VideoBase {
     BooleanParameter playing;
     BooleanParameter[] skipActions;
     NumericParameter timeline;
+    boolean updateFreezeFrame = false;
     
     public void loadMedia() {
 	String path = Config.getSketchProperty("path", DEMO_VIDEO);
@@ -44,6 +45,7 @@ public class VideoPlayer extends VideoBase {
 		@Override
 		public void onTrue() {
 		    mov.play();
+		    updateFreezeFrame = false;
 		}
 
 		@Override
@@ -94,6 +96,11 @@ public class VideoPlayer extends VideoBase {
     public PImage nextFrame() {
 	if (mov.available()) {
 	    mov.read();
+
+	    if (updateFreezeFrame) {
+		mov.pause();
+		updateFreezeFrame = false;
+	    }
 	}
 	return mov;
     }
@@ -109,6 +116,12 @@ public class VideoPlayer extends VideoBase {
             t = Math.max(0, Math.min(mov.duration(), t));
 	}
 	mov.jump((float)t);
+
+	if (!playing.get()) {
+	    updateFreezeFrame = true;
+	    mov.play();
+	}
+	
 	System.out.println(String.format("%.2f / %.2f", t, mov.duration()));
     }
     
