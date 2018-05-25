@@ -1,4 +1,4 @@
-package me.lsdo.sketches.processing;
+package me.lsdo.sketches.processing.video;
 
 import gifAnimation.*;
 import processing.core.*;

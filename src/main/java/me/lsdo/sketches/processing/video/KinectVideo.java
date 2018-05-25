@@ -4,7 +4,7 @@
 // https://github.com/shiffman/OpenKinect-for-Processing
 // http://shiffman.net/p5/kinect/
 
-package me.lsdo.sketches.processing;
+package me.lsdo.sketches.processing.video;
 
 import org.openkinect.freenect.*;
 import org.openkinect.processing.*;
@@ -13,6 +13,7 @@ import me.lsdo.Driver;
 import me.lsdo.processing.*;
 import me.lsdo.processing.util.*;
 
+// Play various video streams directly from Kinect.
 // This sketch is mostly for debugging.
 
 public class KinectVideo extends VideoBase {

@@ -1,4 +1,4 @@
-package me.lsdo.sketches.processing;
+package me.lsdo.sketches.processing.video;
 
 import processing.core.*;
 import processing.video.*;
@@ -8,10 +8,13 @@ import me.lsdo.processing.interactivity.*;
 import me.lsdo.processing.util.*;
 import java.util.Arrays;
 
+// Play video from a file.
+
 // Keyboard controls:
 // p: play/plause
 // .: ff 5 sec
 // ,: rewind 5 sec
+// Also controllable from web UI.
 
 // TODO support contrast stretch?
 

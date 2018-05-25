@@ -2,6 +2,7 @@ package me.lsdo;
 
 import me.lsdo.sketches.headless.*;
 import me.lsdo.sketches.processing.*;
+import me.lsdo.sketches.processing.video.*;
 import me.lsdo.processing.*;
 import me.lsdo.processing.util.*;
 import me.lsdo.processing.geometry.dome.*;
