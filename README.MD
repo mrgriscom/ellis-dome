@@ -31,17 +31,25 @@ This is a library of animations. It uses the associated `lsdome-processing`
     sudo apt-get install gstreamer1.0-alsa gstreamer1.0-fluendo-mp3 gstreamer1.0-libav gstreamer1.0-plugins-bad gstreamer1.0-plugins-base gstreamer1.0-plugins-base-apps gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio gstreamer1.0-tools gstreamer1.0-x libgstreamer-plugins-bad1.0-0 libgstreamer-plugins-base1.0-0 libgstreamer-plugins-good1.0-0 libgstreamer1.0-0
     ````
 
-5. Install additional Processing libraries from the Processing IDE: 'Sketch' menu -> Import Library... -> Add Library...:
+5. Install Processing Gif support (do not use the version from the Processing IDE, as it does not support Processing 3.x):
+
+    ```
+    PROCESSING_WD=~/sketchbook  # linux
+    PROCESSING_WD=~\Documents\Processing  # mac
+    git clone https://github.com/01010101/GifAnimation.git $PROCESSING_WD/libraries/GifAnimation
+    ```
+
+6. Install additional Processing libraries from the Processing IDE: 'Sketch' menu -> Import Library... -> Add Library...:
 
 - _Open Kinect_
 - _Syphon_
 - _Spout_
 
-6. Build:
+7. Build:
 
    `./gradlew installDist`
 
-7. Install the OpenPixelControl simulator. This creates a model of the pixel layout in 3D space, allowing you to see what the visualization output will look like:
+8. Install the OpenPixelControl simulator. This creates a model of the pixel layout in 3D space, allowing you to see what the visualization output will look like:
 
    ```
    git clone https://github.com/zestyping/openpixelcontrol.git
@@ -53,11 +61,11 @@ This is a library of animations. It uses the associated `lsdome-processing`
 
    `bin/gl_server -l <lsdome repo>/src/config/simulator_layouts/<relevant layout>.json -p 7890`
 
-8. Launch visualizations:
+9. Launch visualizations:
 
     `./build/install/lsdome/bin/lsdome <animation name>`
 
-9. (optional) Set up interactive control via MIDI input. To set up:
+10. (optional) Set up interactive control via MIDI input. To set up:
 
     ```
     sudo apt-get install libzmq5 python-pypm

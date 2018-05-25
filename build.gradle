@@ -90,6 +90,7 @@ repositories {
         dirs new File(local_processing_user_dir, 'libraries/openkinect_processing/library')
         dirs new File(local_processing_user_dir, 'libraries/spout/library')
         dirs new File(local_processing_user_dir, 'libraries/Syphon/library')
+        dirs new File(local_processing_user_dir, 'libraries/GifAnimation/library')
     }
 }
 dependencies {
@@ -97,6 +98,7 @@ dependencies {
     compile name: 'jsyphon'
     compile name: 'Syphon'
     compile name: 'spout'
+    compile name: 'GifAnimation'
 }
 
 sourceCompatibility = 1.6

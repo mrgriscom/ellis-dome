@@ -44,7 +44,7 @@ def launch_screencast(cmd, params, timeout=5):
     window_search_total_time = timeout
     window = None
     for i in xrange(int(math.ceil(window_search_total_time / window_search_retry_interval))):
-        # actually gui process may be a child process, which continue to spawn over time
+        # the actual gui process may be among child processes, which continue to spawn over time
         processes = get_process_descendants(content.pid)
         windows = get_desktop_windows(set(p.pid for p in processes), params.get('title'))
         if windows:
@@ -105,7 +105,8 @@ def init_soundreactivity(pids, source, volume, timeout=2.):
         time.sleep(retry_interval)
     if not initialized:
         print 'could not initialize audio settings'
-        
+
+# todo: move these settings into sketch config
 def projectm_control(wid, command):
     interaction = {
         'next': 'key r',

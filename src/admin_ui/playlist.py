@@ -34,7 +34,6 @@ def get_all_content():
     yield {
         'sketch': 'tube',
         'aspect': '1:1',
-        'interactive_params': {}
     }
     yield {
         'sketch': 'twinkle',
