@@ -65,7 +65,9 @@ def get_all_content():
         'name': 'hdmi-in',
         'sketch': 'stream',
         'aspect': 'stretch',
-        'camera': 'FHD Capture: FHD Capture',
+        'params': {
+            'camera': 'FHD Capture: FHD Capture',
+        },
         'manual': True,
     }
     for content in load_videos():
@@ -84,9 +86,11 @@ def load_videos():
             'name': 'video:%s' % os.path.relpath(vid, VIDEO_DIR),
             'sketch': 'video',
             'aspect': 'stretch',
-            'path': vid,
+            'params': {
+                'path': vid,
+            },
             'duration': duration,
-            'shuffle': True,
+            'playmode': 'shuffle',
         }
         # joan of arc require mirror mode
 

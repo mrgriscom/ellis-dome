@@ -5,6 +5,7 @@ import threading
 import Queue
 import random
 import csv
+import psutil
 import settings
 
 def default_sketch_properties():
@@ -60,6 +61,7 @@ class PlayManager(threading.Thread):
         self.running_processes = None
         self.content_timeout = None
         self.window_id = None
+        self.background_audio_running = True
 
         self.playlist = None
         self.default_duration = None
@@ -105,6 +107,8 @@ class PlayManager(threading.Thread):
 
             if self.running_content is None:
                 self._nothing_playing()
+
+            self.update_background_audio()
         self._stop_all()
 
     def _play_content(self, content, duration=None):
@@ -112,7 +116,7 @@ class PlayManager(threading.Thread):
             self._stop_playback()
 
         params = dict(default_sketch_properties())
-        params.update(content)
+        params.update(content.get('params', {}))
 
         placement = random.choice(list(self.get_available_placements(content)))
         print 'using placement %s' % placement['name']
@@ -128,9 +132,15 @@ class PlayManager(threading.Thread):
                 launch.projectm_control(gui_invocation[0], 'next')
         else:
             if content['sketch'] == 'video':
-                params['repeat'] = True
-                if content['shuffle']:
+                if content['playmode'] == 'shuffle':
+                    params['repeat'] = True
                     params['skip'] = random.uniform(0, max(content['duration'] - duration, 0))
+                elif content['playmode'] == 'full':
+                    params['repeat'] = False
+                    startup_buffer = 1.5 # s
+                    # todo: instead use a signal that playback has completed? otherwise this
+                    # won't be aware of pausing
+                    duration = content['duration'] + startup_buffer
             p = launch.launch_sketch(content['sketch'], params)
             self.running_processes = [p]
 
@@ -139,6 +149,9 @@ class PlayManager(threading.Thread):
                                         settings.audio_source,
                                         content.get('volume_adjust', 1.))
 
+        # update with current params but don't modify original
+        content = dict(content)
+        content['params'] = params
         self.running_content = content
         print 'content started'
 
@@ -176,6 +189,24 @@ class PlayManager(threading.Thread):
                     continue
             yield pl
 
+    def update_background_audio(self):
+        play_background_audio = not (self.running_content or {}).get('has_audio', False)
+        if play_background_audio != self.background_audio_running:
+            background_audio(play_background_audio)
+        self.background_audio_running = play_background_audio
+            
+def background_audio(enable):
+    try:
+        audio_player_instance = [p for p in psutil.process_iter() if p.name() == 'audacious'][0]
+    except IndexError:
+        audio_player_instance = None
 
-
+    # do nothing if media player not already running, otherwise we may unintentionally launch it
+    if not audio_player_instance:
+        return
+    
+    command = 'play' if enable else 'pause'
+    os.popen('audacious --%s &' % command)
+    
+            
 #custom duration
