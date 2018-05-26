@@ -71,24 +71,27 @@ def launch_screencast(cmd, params, timeout=5):
     return (window['wid'], processes)    
 # TODO: detect if content window terminates and report back
 
-ROMS_PATH = '/home/drew/roms/'
 ROM_CORES = {
     'gameboy': '/usr/lib/libretro/gambatte_libretro.so',
     'nes': '/usr/lib/libretro/nestopia_libretro.so',
     'snes': '/usr/lib/libretro/bsnes_mercury_performance_libretro.so',
     'genesis': '/usr/lib/libretro/genesis_plus_gx_libretro.so',
 }
+# returns args to pass to launch_screencast
 def launch_emulator(rom):
     rompath = os.path.abspath(rom)
     core = None
     for k, v in ROM_CORES.iteritems():
-        if rompath.startswith(os.path.join(ROMS_PATH, k)):
+        if rompath.startswith(os.path.join(settings.roms_path, k)):
             core = v
             break
     if not core:
         raise RuntimeError('don\'t recognize system')
 
-    return launch_screencast('retroarch -L %s "%s"' % (core, rom), {'title': 'retroarch'})
+    return {
+        'cmd': 'retroarch -L %s "%s"' % (core, rom),
+        'params': {'title': 'retroarch'},
+    }
 
 def init_soundreactivity(pids, source, volume, timeout=2.):
     retry_interval = .1
