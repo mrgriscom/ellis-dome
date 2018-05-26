@@ -6,8 +6,7 @@ import sys
 import math
 import psutil
 from pulsectl import Pulse
-
-src_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import settings
 
 def launch_sketch(name, params):
     """Launch a built-in sketch
@@ -22,10 +21,10 @@ def launch_sketch(name, params):
             return 'true' if v else 'false'
         return v
 
-    with open(os.path.join(src_dir, 'sketch.properties'), 'w') as f:
+    with open(os.path.join(settings.repo_root, 'sketch.properties'), 'w') as f:
         f.write('\n'.join('%s=%s' % (k, to_prop(v)) for k, v in params.iteritems() if valid_prop(v)) + '\n')
 
-    p = sp.Popen([os.path.join(src_dir, 'build/install/lsdome/bin/lsdome'), name], cwd=src_dir)
+    p = sp.Popen([os.path.join(settings.repo_root, 'build/install/lsdome/bin/lsdome'), name], cwd=settings.repo_root)
     return p
 
 def launch_screencast(cmd, params, timeout=5):

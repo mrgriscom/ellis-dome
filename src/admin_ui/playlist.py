@@ -1,6 +1,7 @@
 import os
 import os.path
 import random
+import settings
 
 VIDEO_DIR = '/home/drew/lsdome-media/video'
 if not os.path.exists(VIDEO_DIR):
@@ -142,14 +143,13 @@ def load_playlist_files(all_content):
     content_by_name = dict((content_name(c), c) for c in all_content)
     assert len(content_by_name) == len(all_content), 'content names not unique'
 
-    playlist_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'playlists')
-    playlist_files = os.listdir(playlist_dir)
+    playlist_files = os.listdir(settings.playlists_dir)
     for filename in playlist_files:
         name, ext = os.path.splitext(filename)
         if ext != '.playlist':
             continue
 
-        path = os.path.join(playlist_dir, filename)
+        path = os.path.join(settings.playlists_dir, filename)
         with open(path) as f:
             entries = filter(None, (ln.strip() for ln in f.readlines()))
 

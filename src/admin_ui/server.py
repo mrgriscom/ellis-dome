@@ -2,12 +2,10 @@ import sys
 import os.path
 import os
 
+import settings
 import animations
 import playlist
 import launch
-
-project_root = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, project_root)
 
 from tornado.ioloop import IOLoop
 import tornado.web as web
@@ -23,10 +21,8 @@ import Queue
 import time
 import psutil
 
-placements_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'placements')
-
 def web_path(*args):
-    return os.path.join(project_root, *args)
+    return os.path.join(settings.py_root, *args)
 
 class MainHandler(web.RequestHandler):
     def get(self):
@@ -41,11 +37,11 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
     def open(self):
         placements = list(self.static_data['placements'])
         ix = len(placements)
-        for f in os.listdir(placements_dir):
+        for f in os.listdir(settings.placements_dir):
             if f.startswith('.'):
                 continue
             try:
-                preset = animations.load_placements(os.path.join(placements_dir, f))[0]
+                preset = animations.load_placements(os.path.join(settings.placements_dir, f))[0]
                 preset['ix'] = ix
                 ix += 1
                 placements.append(preset)

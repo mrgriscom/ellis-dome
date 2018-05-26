@@ -5,14 +5,7 @@ import threading
 import Queue
 import random
 import csv
-
-# todo: move to config.properties
-# x1
-#audio_source = 'alsa_input.pci-0000_00_1f.3.analog-stereo'
-# x240
-audio_source = 'alsa_input.pci-0000_00_1b.0.analog-stereo'
-# usb soundcard
-#audio_source = 'alsa_input.usb-0d8c_C-Media_USB_Audio_Device-00.analog-mono'
+import settings
 
 def default_sketch_properties():
     return {
@@ -20,7 +13,7 @@ def default_sketch_properties():
     }
 
 def load_placements(path=None):
-    placements_config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'placements.csv')
+    placements_config_path = os.path.join(settings.py_root, 'placements.csv')
 
     if path is None:
         path = placements_config_path
@@ -143,7 +136,7 @@ class PlayManager(threading.Thread):
 
         if content.get('sound_reactive'):
             launch.init_soundreactivity([p.pid for p in self.running_processes],
-                                        audio_source,
+                                        settings.audio_source,
                                         content.get('volume_adjust', 1.))
 
         self.running_content = content
