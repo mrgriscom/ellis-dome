@@ -55,7 +55,7 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
             'ac_power': psutil.sensors_battery().power_plugged,
         }
         self.write_message(json.dumps(msg))
-        #self.manager.subscribe(self)
+        self.manager.subscribe(self)
 
     def on_message(self, message):
         data = json.loads(message)
@@ -78,8 +78,7 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
             self.interactive(data['id'], data['sess'], data['type'], data.get('val'))
 
     def on_close(self):
-        pass
-        #self.manager.unsubscribe(self)
+        self.manager.unsubscribe(self)
 
     def set_placement(self, placement):
         broadcast_event('xo', '~%s' % placement.get('xo', 0))
@@ -102,6 +101,14 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
                 val += ' ' + datetime.now().strftime('%m-%d %H%M')
             broadcast_event(id, '~' + val)
 
+    def notify(self, msg):
+        if 'content' in msg:
+            self.write_message(json.dumps({'type': 'content', 'content': msg['content']}))
+        if 'playlist' in msg:
+            self.write_message(json.dumps({'type': 'playlist', 'playlist': msg['playlist']}))
+        if 'duration' in msg:
+            self.write_message(json.dumps({'type': 'duration', 'duration': msg['duration']}))
+            
 keepalive_timeout = 5.
 class ButtonPressManager(threading.Thread):
     def __init__(self):
@@ -179,8 +186,13 @@ if __name__ == "__main__":
         port = 8000
     ssl = None
 
+    threads = []
+    def add_thread(th):
+        th.start()
+        threads.append(th)
+    
     manager = animations.PlayManager()
-    manager.start()
+    add_thread(manager)
 
     static_data = {
         'playlists': playlist.load_playlists(),
@@ -190,16 +202,14 @@ if __name__ == "__main__":
     for i, e in enumerate(static_data['placements']):
         e['ix'] = i
 
-    ZMQ_PORT = 5556
     context = zmq.Context()
     socket = context.socket(zmq.PUB)
-    # todo: move port to config.properties
-    socket.bind("tcp://*:%s" % ZMQ_PORT)
+    socket.bind("tcp://*:%s" % settings.zmq_port_inbound)
     def zmq_send(msg):
         socket.send(msg.encode('utf8'))
 
     button_thread = ButtonPressManager()
-    button_thread.start()
+    add_thread(button_thread)
 
     application = web.Application([
         (r'/', MainHandler),
@@ -216,6 +226,6 @@ if __name__ == "__main__":
         print e
         raise
 
-    manager.terminate()
-    button_thread.terminate()
+    for th in threads:
+        th.terminate()
     logging.info('shutting down...')

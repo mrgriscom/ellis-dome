@@ -9,7 +9,10 @@ function AdminUIModel() {
     this.placements = ko.observableArray();
     this.wingTrims = ko.observableArray(['raised', 'flat']);
     this.ac_power = ko.observable();
-
+    this.current_playlist = ko.observable();
+    this.current_content = ko.observable();
+    this.current_timeout = ko.observable();
+    
     var model = this;
     this.load = function(data) {
 	$.each(data.playlists, function(i, e) {
@@ -104,6 +107,12 @@ function init() {
 
 	if (data.type == "init") {
 	    model.load(data);
+	} else if (data.type == "content") {
+	    model.current_content(JSON.stringify(data.content));
+	} else if (data.type == "playlist") {
+	    model.current_playlist(data.playlist);
+	} else if (data.type == "duration") {
+	    model.current_timeout(data.duration);
 	}
     };
     CONN = this.conn;

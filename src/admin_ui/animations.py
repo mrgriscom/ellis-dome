@@ -56,6 +56,8 @@ class PlayManager(threading.Thread):
         threading.Thread.__init__(self)
         self.up = True
         self.queue = Queue.Queue()
+        self.subscribers = []
+        self.lock = threading.Lock()
 
         self.running_content = None
         self.running_processes = None
@@ -69,6 +71,23 @@ class PlayManager(threading.Thread):
         self.placements = load_placements()
         self.wing_trim = 'flat'
 
+    def subscribe(self, s):
+        with self.lock:
+            self.subscribers.append(s)
+        s.notify({'content': self.running_content})
+        s.notify({'playlist': repr(self.playlist)})
+        s.notify({'duration': self.content_timeout})
+            
+    def unsubscribe(self, s):
+        with self.lock:
+            self.subscribers.remove(s)
+
+    def notify(self, msg):
+        with self.lock:
+            subs = list(self.subscribers)
+        for s in subs:
+            s.notify(msg)
+            
     # play content immediately, after which normal playlist will resume
     def play(self, content, duration):
         self.queue.put(lambda: self._play_content(content, duration))
@@ -153,14 +172,17 @@ class PlayManager(threading.Thread):
         content = dict(content)
         content['params'] = params
         self.running_content = content
+        self.notify({'content': self.running_content})
         print 'content started'
 
         if duration:
             self.content_timeout = time.time() + duration
+            self.notify({'duration': self.content_timeout})
             print 'until', self.content_timeout
 
     def _set_playlist(self, playlist, duration):
         self.playlist = playlist
+        self.notify({'playlist': repr(playlist)})
         self.default_duration = duration
 
     def _stop_playback(self):
@@ -169,10 +191,13 @@ class PlayManager(threading.Thread):
         self.running_processes = None
         self.content_timeout = None
         self.window_id = None
+        self.notify({'content': self.running_content})
+        self.notify({'duration': self.content_timeout})
         print 'content stopped'
 
     def _stop_all(self):
         self.playlist = None
+        self.notify({'playlist': repr(self.playlist)})
         self._stop_playback()
 
     def _nothing_playing(self):

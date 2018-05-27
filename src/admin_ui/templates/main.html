@@ -72,6 +72,8 @@ $(document).ready({{ onload }});
 
   <h3>playlists</h3>
 
+  <div data-bind="text: current_playlist"></div>
+
   <div data-bind="foreach: playlists">
     <div>
       <button data-bind="click: play">play</button>
@@ -81,6 +83,9 @@ $(document).ready({{ onload }});
 
   <h3>visualizations</h3>
 
+  <div data-bind="text: current_content"></div>
+  <div>until <span data-bind="text: current_timeout"></span></div>
+  
   <div data-bind="foreach: contents">
     <div>
       <button data-bind="click: play">play</button>
