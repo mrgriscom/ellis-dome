@@ -16,3 +16,7 @@ def load_java_settings(path):
     config.readfp(StringIO(content))
     globals().update(config.items(mock_section))
 load_java_settings(os.path.join(repo_root, 'config.properties'))
+
+# when the sketch controls its own duration, if it sets a duration of
+# 'indefinite', use this instead
+sketch_controls_duration_failsafe_timeout = 300

@@ -97,8 +97,8 @@ class PlayManager(threading.Thread):
     def set_playlist(self, playlist, duration):
         self.queue.put(lambda: self._set_playlist(playlist, duration))
 
-    def extend_duration(self, duration):
-        self.queue.put(lambda: self._extend_duration(duration))
+    def extend_duration(self, duration, relnow=False):
+        self.queue.put(lambda: self._extend_duration(duration, relnow))
         
     def set_wing_trim(self, trim):
         def set_trim():
@@ -137,8 +137,11 @@ class PlayManager(threading.Thread):
         if self.running_processes:
             self._stop_playback()
 
+        # allow modification to content w/o modifying original
+        content = dict(content)
         params = dict(default_sketch_properties())
         params.update(content.get('params', {}))
+        content['params'] = params
 
         placement = random.choice(list(self.get_available_placements(content)))
         print 'using placement %s' % placement['name']
@@ -154,15 +157,13 @@ class PlayManager(threading.Thread):
                 launch.projectm_control(gui_invocation[0], 'next')
         else:
             if content['sketch'] == 'video':
+                params['repeat'] = True
                 if content['playmode'] == 'shuffle':
-                    params['repeat'] = True
                     params['skip'] = random.uniform(0, max(content['duration'] - duration, 0))
                 elif content['playmode'] == 'full':
                     params['repeat'] = False
-                    startup_buffer = 1.5 # s
-                    # todo: instead use a signal that playback has completed? otherwise this
-                    # won't be aware of pausing
-                    duration = content['duration'] + startup_buffer
+                    content['sketch_controls_duration'] = True
+                    duration = settings.sketch_controls_duration_failsafe_timeout
             p = launch.launch_sketch(content['sketch'], params)
             self.running_processes = [p]
 
@@ -171,9 +172,7 @@ class PlayManager(threading.Thread):
                                         settings.audio_source,
                                         content.get('volume_adjust', 1.))
 
-        # update with current params but don't modify original
-        content = dict(content)
-        content['params'] = params
+        content['launched_at'] = time.time()
         self.running_content = content
         self.notify({'content': self.running_content})
         print 'content started'
@@ -188,9 +187,12 @@ class PlayManager(threading.Thread):
         self.notify({'playlist': repr(playlist)})
         self.default_duration = duration
 
-    def _extend_duration(self, duration):
+    def _extend_duration(self, duration, relnow):
         if self.content_timeout:
-            self.content_timeout += duration
+            if relnow:
+                self.content_timeout = time.time() + duration
+            else:
+                self.content_timeout += duration
             self.notify({'duration': self.content_timeout})
             print 'until', self.content_timeout
 

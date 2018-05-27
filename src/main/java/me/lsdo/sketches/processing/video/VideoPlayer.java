@@ -49,11 +49,13 @@ public class VideoPlayer extends VideoBase {
 		public void onTrue() {
 		    mov.play();
 		    updateFreezeFrame = false;
+		    updateRemainingTime();
 		}
 
 		@Override
 		public void onFalse() {
 		    mov.pause();
+		    updateRemainingTime();
 		}
 	    };
 	playing.trueCaption = "play";
@@ -119,13 +121,21 @@ public class VideoPlayer extends VideoBase {
             t = Math.max(0, Math.min(mov.duration(), t));
 	}
 	mov.jump((float)t);
-
+	updateRemainingTime();
+	
 	if (!playing.get()) {
 	    updateFreezeFrame = true;
 	    mov.play();
 	}
 	
 	System.out.println(String.format("%.2f / %.2f", t, mov.duration()));
+    }
+
+    public void updateRemainingTime() {
+	if (!repeat) {
+	    double remaining = (playing.get() ? mov.duration() - mov.time() : -1);
+	    canvas.ctrl.broadcast("videoremain:" + remaining);
+	}
     }
     
     public void registerHandlers(InputControl ctrl) {

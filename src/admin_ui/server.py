@@ -176,6 +176,35 @@ def broadcast_event(id, val):
 
     zmq_send('0:server:%s:%s' % (id, val))
 
+class ZMQListener(threading.Thread):
+    def __init__(self, context, manager):
+        threading.Thread.__init__(self)
+        self.up = True
+
+        self.socket = context.socket(zmq.SUB)
+        self.socket.connect("tcp://localhost:%s" % settings.zmq_port_outbound)
+        self.socket.setsockopt(zmq.SUBSCRIBE, '')
+        
+        self.manager = manager
+
+    def handle(self, msg):
+        if msg.startswith('videoremain:'):
+            amt = float(msg.split(':')[1])
+            if (manager.running_content or {}).get('sketch_controls_duration', False):
+                manager.extend_duration(amt if amt > 0 else settings.sketch_controls_duration_failsafe_timeout, True)
+            
+    def terminate(self):
+        self.up = False
+
+    def run(self):
+        while self.up:
+            try:
+                msg = self.socket.recv(flags=zmq.NOBLOCK)
+                self.handle(msg)
+            except zmq.Again as e:
+                time.sleep(.01)
+
+
 if __name__ == "__main__":
 
     parser = OptionParser()
@@ -210,6 +239,9 @@ if __name__ == "__main__":
     def zmq_send(msg):
         socket.send(msg.encode('utf8'))
 
+    zmqlisten = ZMQListener(context, manager)
+    add_thread(zmqlisten)
+        
     button_thread = ButtonPressManager()
     add_thread(button_thread)
 
