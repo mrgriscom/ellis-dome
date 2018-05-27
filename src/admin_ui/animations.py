@@ -97,6 +97,9 @@ class PlayManager(threading.Thread):
     def set_playlist(self, playlist, duration):
         self.queue.put(lambda: self._set_playlist(playlist, duration))
 
+    def extend_duration(self, duration):
+        self.queue.put(lambda: self._extend_duration(duration))
+        
     def set_wing_trim(self, trim):
         def set_trim():
             self.wing_trim = trim
@@ -184,6 +187,12 @@ class PlayManager(threading.Thread):
         self.playlist = playlist
         self.notify({'playlist': repr(playlist)})
         self.default_duration = duration
+
+    def _extend_duration(self, duration):
+        if self.content_timeout:
+            self.content_timeout += duration
+            self.notify({'duration': self.content_timeout})
+            print 'until', self.content_timeout
 
     def _stop_playback(self):
         launch.terminate(self.running_processes)

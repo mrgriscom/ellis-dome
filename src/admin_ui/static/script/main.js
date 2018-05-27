@@ -123,6 +123,9 @@ function init() {
     $('#stopcurrent').click(function() {
 	CONN.send(JSON.stringify({action: 'stop_current'}));
     });
+    $('#extend').click(function() {
+	CONN.send(JSON.stringify({action: 'extend_duration', duration: getDuration()}));
+    });
     bindButton('#flap', 'flap');
     bindButton('#projectm-next', 'projectm-next');
 

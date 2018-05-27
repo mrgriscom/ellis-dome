@@ -76,6 +76,8 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
             self.set_placement(self.static_data['placements'][data['ix']])
         if action == 'interactive':
             self.interactive(data['id'], data['sess'], data['type'], data.get('val'))
+        if action == 'extend_duration':
+            self.manager.extend_duration(data['duration'])
 
     def on_close(self):
         self.manager.unsubscribe(self)
