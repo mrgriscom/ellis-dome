@@ -14,7 +14,12 @@ def load_java_settings(path):
         content = '[%s]\n' % mock_section + f.read()
     config = ConfigParser.ConfigParser()
     config.readfp(StringIO(content))
-    globals().update(config.items(mock_section))
+    for k, v in config.items(mock_section):
+        if v == 'true':
+            v = True
+        elif v == 'false':
+            v = False
+        globals()[k] = v
 load_java_settings(os.path.join(repo_root, 'config.properties'))
 
 # when the sketch controls its own duration, if it sets a duration of

@@ -147,6 +147,21 @@ class PlayManager(threading.Thread):
         print 'using placement %s' % placement['name']
         apply_placement(params, placement)
 
+        audio_config = {}
+        if not content.get('has_audio', False) and settings.audio_out:
+            # if we have speakers, mute the content unless told otherwise, so it doesn't
+            # play over the background playlist. (if no speakers, it doesn't really
+            # matter, so don't)
+            audio_config['output_volume'] = 0.
+            # if possible, have the sketch mute itself too upon boot to avoid any transients
+            params['mute'] = True
+        else:
+            # setting seems sticky, so we need to explicitly say we want audio back
+            audio_config['output_volume'] = 1.
+        if content.get('sound_reactive'):
+            audio_config['input_volume'] = content.get('volume_adjust', 1.)
+            audio_config['audio_input'] = default_audio_input()
+        
         if content['sketch'] == 'screencast':
             gui_invocation = launch.launch_screencast(content['cmd'], params)
             self.running_processes = gui_invocation[1]
@@ -166,11 +181,7 @@ class PlayManager(threading.Thread):
                     duration = settings.sketch_controls_duration_failsafe_timeout
             p = launch.launch_sketch(content['sketch'], params)
             self.running_processes = [p]
-
-        if content.get('sound_reactive'):
-            launch.init_soundreactivity([p.pid for p in self.running_processes],
-                                        settings.audio_source,
-                                        content.get('volume_adjust', 1.))
+        launch.AudioConfigThread([p.pid for p in self.running_processes], **audio_config).start()
 
         content['launched_at'] = time.time()
         self.running_content = content
@@ -226,11 +237,21 @@ class PlayManager(threading.Thread):
             yield pl
 
     def update_background_audio(self):
+        if not settings.audio_out:
+            return
+        
         play_background_audio = not (self.running_content or {}).get('has_audio', False)
         if play_background_audio != self.background_audio_running:
             background_audio(play_background_audio)
         self.background_audio_running = play_background_audio
-            
+
+# todo: make this selectable in UI
+def default_audio_input():
+    sources = launch.get_audio_sources()
+    monitors = [s for s in sources if 'monitor' in s]
+    mics = [s for s in sources if s not in monitors]
+    return (monitors if settings.audio_out else mics)[0]
+    
 def background_audio(enable):
     try:
         audio_player_instance = [p for p in psutil.process_iter() if p.name() == 'audacious'][0]
@@ -243,6 +264,3 @@ def background_audio(enable):
     
     command = 'play' if enable else 'pause'
     os.popen('audacious --%s &' % command)
-    
-            
-#custom duration

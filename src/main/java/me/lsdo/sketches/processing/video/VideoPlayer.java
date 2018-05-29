@@ -43,7 +43,8 @@ public class VideoPlayer extends VideoBase {
         mov = new Movie(this, path);
 	// begin playback so we have access to duration
 	mov.play();
-
+	mov.volume(Config.getSketchProperty("mute", false) ? 0 : 1);
+	
 	playing = new BooleanParameter("playing") {
 		@Override
 		public void onTrue() {

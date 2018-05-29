@@ -6,7 +6,9 @@ import sys
 import math
 import psutil
 from pulsectl import Pulse
+import uuid
 import settings
+import threading
 
 def launch_sketch(name, params):
     """Launch a built-in sketch
@@ -93,21 +95,6 @@ def launch_emulator(rom):
         'params': {'title': 'retroarch'},
     }
 
-def init_soundreactivity(pids, source, volume, timeout=2.):
-    retry_interval = .1
-    initialized = False
-    for i in xrange(int(math.ceil(timeout / retry_interval))):
-        try:
-            set_audio_source(pids, source)
-            set_audio_source_volume(pids, volume)
-            initialized = True
-            break
-        except RuntimeError:
-            pass
-        time.sleep(retry_interval)
-    if not initialized:
-        print 'could not initialize audio settings'
-
 # todo: move these settings into sketch config
 def projectm_control(wid, command):
     interaction = {
@@ -116,32 +103,96 @@ def projectm_control(wid, command):
     }[command]
     os.popen('xdotool windowactivate --sync %d && xdotool %s' % (wid, interaction))
 
+def pulse_ctx():
+    return contextlib.closing(Pulse('lsdome-admin:%s' % uuid.uuid4().hex))
+
 def get_audio_sources():
-    with contextlib.closing(Pulse('lsdome-admin')) as client:
+    with pulse_ctx() as client:
         return [s.name for s in client.source_list()]
 
-def _get_one(matches, type_name):
-    if not matches:
-        raise RuntimeError('no matching %s!' % type_name)
-    if len(matches) > 1:
-        print 'more than one matching %s!' % type_name, matches
-    return matches[0]
+# configure the audio settings of the launched content. do this in a thread so as to
+# not block launching -- audio config is not on the critical path so can be done async.
+# the thread attempts configuration for a short timeout then gives up and dies.
+class AudioConfigThread(threading.Thread):
+    def __init__(self, pids, audio_input=None, input_volume=None, output_volume=None, timeout=2.):
+        threading.Thread.__init__(self)
+        self.pids = pids
+        self.timeout = timeout
 
-def _get_pulse_client_for_pids(client, pids):
-    return _get_one([l for l in client.source_output_list() if int(l.proplist.get('application.process.id', '0')) in pids], 'listener')
+        self.audio_input = audio_input
+        self.input_volume = input_volume
+        self.output_volume = output_volume
 
-def set_audio_source(pids, source):
-    with contextlib.closing(Pulse('lsdome-admin')) as client:
-        listener = _get_pulse_client_for_pids(client, pids).index
-        source = _get_one([s for s in client.source_list() if s.name == source], 'source').index
-    os.popen('pactl move-source-output %d %d' % (listener, source))
+    def proc_input_id(self, client):
+        return self.get_pulse_id(client.source_output_list(), self.pids_predicate())
 
-def set_audio_source_volume(pids, vol):
-    # vol 1. = max hardware volume w/o software scaling; >1 allowed
-    with contextlib.closing(Pulse('lsdome-admin')) as client:
-        listener = _get_pulse_client_for_pids(client, pids).index
-    os.popen('pactl set-source-output-volume %d %d' % (listener, int(2**16 * vol)))
+    def proc_output_id(self, client):
+        return self.get_pulse_id(client.sink_input_list(), self.pids_predicate())
+
+    def audio_input_id(self, client):
+        return self.get_pulse_id(client.source_list(), lambda e: e.name == self.audio_input)
     
+    def set_audio_input(self, client, source_id):
+        proc = self.proc_input_id(client)
+        if proc is None:
+            return False
+        os.popen('pactl move-source-output %d %d' % (proc, source_id))
+        return True
+    
+    def set_input_volume(self, client, vol):
+        # vol 1. = max hardware volume w/o software scaling; >1 allowed
+        proc = self.proc_input_id(client)
+        if proc is None:
+            return False
+        os.popen('pactl set-source-output-volume %d %d' % (proc, int(2**16 * vol)))
+        return True
+
+    def set_output_volume(self, client, vol):
+        # vol 1. = max hardware volume w/o software scaling; >1 allowed
+        proc = self.proc_output_id(client)
+        if proc is None:
+            return False
+        os.popen('pactl set-sink-input-volume %d %d' % (proc, int(2**16 * vol)))
+        return True
+
+    def run(self):
+        with pulse_ctx() as client:
+            tasks = {}
+            if self.input_volume is not None:
+                tasks['input_volume'] = lambda: self.set_input_volume(client, self.input_volume)
+            if self.output_volume is not None:
+                tasks['output_volume'] = lambda: self.set_output_volume(client, self.output_volume)
+            if self.audio_input:
+                source_id = self.audio_input_id(client)
+                if source_id is None:
+                    print 'unknown input %s' % self.audio_input
+                else:
+                    tasks['input_device'] = lambda: self.set_audio_input(client, source_id)
+
+            start = time.time()
+            while tasks and time.time() < start + self.timeout:
+                for name, task in dict(tasks).iteritems():
+                    if task():
+                        del tasks[name]
+                time.sleep(.01)
+
+            if 'input_volume' in tasks:
+                print 'failed to set input volume'
+            if 'input_device' in tasks:
+                print 'failed to set input to %s' % self.audio_input
+            # failure to set output volume not an error because we don't reliably know which content
+            # produces audio (we only know audio that we care about)
+            
+    @staticmethod
+    def get_pulse_id(items, pred):
+        matches = filter(pred, items)
+        if len(matches) > 1:
+            print 'more than one matching %s!' % type(matches[0]), matches
+        return matches[0].index if matches else None
+
+    def pids_predicate(self):
+        return lambda e: int(e.proplist.get('application.process.id', '0')) in self.pids
+        
 def terminate(procs):
     """Kill each process in procs"""
     for p in (procs or []):
