@@ -90,8 +90,8 @@ def load_videos():
                 'path': vid,
             },
             'duration': duration,
-            'playmode': 'shuffle',
-            'has_audio': 'knife' in vid, # play audio for the knife music vid; useful for testing
+            'playmode': 'full' if 'knife' in vid else 'shuffle',
+            'has_audio': any(k in vid for k in ('knife', 'flood')),
         }
         # joan of arc require mirror mode
 
