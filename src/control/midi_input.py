@@ -5,6 +5,35 @@ movements, etc.) to a zero-mq pub/sub socket to be read by the processing proces
 
 # Note: pygame.pypm may be unreliable. Might have to patch pygame.midi to use system pypm instead (apt package python-portmidi) (and remove broken pypm.so)
 
+# TODO this does not work with the new input framework
+
+# tube bindings:
+# speed jog_a
+# hChecks browse
+# hSkew jog_b
+# hAsym pitch_a
+# vAsym pitch_b
+# vOffset pitch_inc/dec_a as discrete jog
+# vHeight mixer
+# reverse playpause_a
+# speed sens headphone/sync_a as discrete jog (10)
+# hShew sens headphone/sync_b as discrete jog (10)
+# vHeightWarpMode playpause_b
+# reset back
+
+# layout bindings:
+# xo jog_a
+# yo jog_b
+# rot pitch_a
+# scale pitch_b
+# stretch load_a toggle
+# flap playpause_b
+# flapAngle mixer
+# wingMode playpause_a
+
+
+
+
 import pygame
 from pygame.locals import *
 from pygame import midi

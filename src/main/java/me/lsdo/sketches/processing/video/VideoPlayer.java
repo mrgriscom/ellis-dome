@@ -93,8 +93,6 @@ public class VideoPlayer extends VideoBase {
 	playing.init(true);
 	timeline.init(startAt);
 
-	registerHandlers(canvas.ctrl);
-
         System.out.println("duration: " + mov.duration());
         // TODO some event when playback has finished?
     }
@@ -139,11 +137,6 @@ public class VideoPlayer extends VideoBase {
 	}
     }
     
-    public void registerHandlers(InputControl ctrl) {
-	playing.bindRadioButtons(ctrl, "playing");
-	timeline.bindSlider(ctrl, new String[] {"timeline"});
-    }
-
     public void keyPressed() {
         if (this.key == '.') {
 	    skipActions[0].trigger();

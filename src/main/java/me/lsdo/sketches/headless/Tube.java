@@ -137,6 +137,7 @@ public class Tube extends XYAnimation {
 	hAsym.init(.5);
 
 	vHeightWarpMode = new BooleanParameter("v-height warp");
+	vHeightWarpMode.invertPress = true;
 	vHeightWarpMode.verbose = true;
 	vHeightWarpMode.init(true);
 
@@ -146,6 +147,7 @@ public class Tube extends XYAnimation {
 		    speed.set(-speed.get());
 		}
 	    };
+	reverseAction.affinity = BooleanParameter.Affinity.ACTION;
 	reverseAction.init(false);
 
 	resetAction = new BooleanParameter("reset") {
@@ -159,24 +161,8 @@ public class Tube extends XYAnimation {
 		    hSkewSensitivity.reset();
 		}
 	    };
+	resetAction.affinity = BooleanParameter.Affinity.ACTION;
 	resetAction.init(false);
-    }
-
-    public void registerHandlers(InputControl ctrl) {
-	super.registerHandlers(ctrl);
-	
-	speed.bindJog(ctrl, new String[] {"jog_a"});
-        hChecks.bindJog(ctrl, new String[] {"browse"});
-	hSkew.bindJog(ctrl, new String[] {"jog_b"});
-	hAsym.bindSlider(ctrl, new String[] {"pitch_a"});
-	vAsym.bindSlider(ctrl, new String[] {"pitch_b"});
-	vOffset.bindIncDecButtons(ctrl, 1, new String[] {"pitch_inc_a"}, new String[] {"pitch_dec_a"});
-	vHeight.bindSlider(ctrl, new String[] {"mixer"});
-	reverseAction.bindAction(ctrl, new String[] {"playpause_a"});
-	speedSensitivity.bindIncDecButtons(ctrl, 10, new String[] {"headphone_a"}, new String[] {"sync_a"});
-	hSkewSensitivity.bindIncDecButtons(ctrl, 10, new String[] {"headphone_b"}, new String[] {"sync_b"});
-        vHeightWarpMode.bindFalseWhilePressed(ctrl, new String[] {"playpause_b"});
-	resetAction.bindAction(ctrl, new String[] {"back"});
     }
 
     @Override
