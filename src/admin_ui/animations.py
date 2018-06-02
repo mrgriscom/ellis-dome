@@ -52,12 +52,13 @@ def apply_placement(params, placement):
             params[v] = placement[k]
 
 class PlayManager(threading.Thread):
-    def __init__(self):
+    def __init__(self, callback_wrapper=None):
         threading.Thread.__init__(self)
         self.up = True
         self.queue = Queue.Queue()
         self.subscribers = []
         self.lock = threading.Lock()
+        self.callback_wrapper = callback_wrapper
 
         self.running_content = None
         self.running_processes = None
@@ -86,7 +87,12 @@ class PlayManager(threading.Thread):
         with self.lock:
             subs = list(self.subscribers)
         for s in subs:
-            s.notify(msg)
+            def _notify():
+                s.notify(msg)
+            if self.callback_wrapper:
+                self.callback_wrapper(_notify)
+            else:
+                _notify()
             
     # play content immediately, after which normal playlist will resume
     def play(self, content, duration):

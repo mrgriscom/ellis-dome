@@ -15,8 +15,8 @@ public class Tube extends XYAnimation {
     class SensitivityParameter extends NumericParameter {
 	NumericParameter param;
 	
-	public SensitivityParameter(String name, NumericParameter param) {
-	    super(name);
+	public SensitivityParameter(String name, String category, NumericParameter param) {
+	    super(name, category);
 	    this.param = param;
 	    this.scale = NumericParameter.Scale.LOG;
 	}
@@ -30,8 +30,8 @@ public class Tube extends XYAnimation {
 	final double REL_BASELINE = 1;
 	double baseline = 0;
 
-	public RelativeChangeNumericParameter(String name) {
-	    super(name);
+	public RelativeChangeNumericParameter(String name, String category) {
+	    super(name, category);
 	}
 
 	@Override
@@ -50,8 +50,8 @@ public class Tube extends XYAnimation {
     // State variables for appearance of checker pattern
     // Height of an on-off cycle
     RelativeChangeNumericParameter vHeight;
-    IntegerParameter vOffset;
-    IntegerParameter hChecks;
+    NumericParameter.Integer vOffset;
+    NumericParameter.Integer hChecks;
     RelativeChangeNumericParameter hSkew;
     SensitivityParameter hSkewSensitivity;
     NumericParameter vAsym;
@@ -69,7 +69,7 @@ public class Tube extends XYAnimation {
         super(mesh, base_subsampling);
 	this.fov = fov;
 
-	speed = new NumericParameter("speed") {
+	speed = new NumericParameter("speed", "animation") {
 		@Override
 		public void _step(boolean forward, double sens) {
 		    if (Math.abs(get()) > .02) {
@@ -80,13 +80,13 @@ public class Tube extends XYAnimation {
 		}
 	    };
 	speed.verbose = true;
-	speedSensitivity = new SensitivityParameter("speed sensitivity", speed);
+	speedSensitivity = new SensitivityParameter("speed sensitivity", "animation", speed);
 	speedSensitivity.verbose = true;
 	speedSensitivity.setSensitivity(.05);
 	speed.init(1.);
 	speedSensitivity.init(.01);
 	
-	vHeight = new RelativeChangeNumericParameter("v-height") {
+	vHeight = new RelativeChangeNumericParameter("v-height", "animation") {
 	    @Override
 	    double baselineAdjustment(double prev) {
 		if (!vHeightWarpMode.get()) {
@@ -104,44 +104,44 @@ public class Tube extends XYAnimation {
 	vHeight.scale = NumericParameter.Scale.LOG;
 	vHeight.init(1.);
 
-	vOffset = new IntegerParameter("v-offset");
+	vOffset = new NumericParameter.Integer("v-offset", "animation");
 	vOffset.verbose = true;
 	vOffset.init(0);
 
-	hChecks = new IntegerParameter("h-checks");
+	hChecks = new NumericParameter.Integer("h-checks", "animation");
 	hChecks.verbose = true;
 	hChecks.init(4);
 	
-	hSkew = new RelativeChangeNumericParameter("h-skew") {
+	hSkew = new RelativeChangeNumericParameter("h-skew", "animation") {
 	    @Override
 	    double baselineAdjustment(double prev) {
 		return (pos + REL_BASELINE) * (prev - get());
 	    }
 	};
 	hSkew.verbose = true;
-	hSkewSensitivity = new SensitivityParameter("h-skew sensitivity", hSkew);
+	hSkewSensitivity = new SensitivityParameter("h-skew sensitivity", "animation", hSkew);
 	hSkewSensitivity.verbose = true;
 	hSkewSensitivity.setSensitivity(.05);
 	hSkew.init(0.);
 	hSkewSensitivity.init(.001);
 
-	vAsym = new NumericParameter("v-asym");
+	vAsym = new NumericParameter("v-asym", "animation");
 	vAsym.verbose = true;
 	vAsym.min = 0.;
 	vAsym.max = 1.;
 	vAsym.init(.5);
-	hAsym = new NumericParameter("h-asym");
+	hAsym = new NumericParameter("h-asym", "animation");
 	hAsym.verbose = true;
 	hAsym.min = 0.;
 	hAsym.max = 1.;
 	hAsym.init(.5);
 
-	vHeightWarpMode = new BooleanParameter("v-height warp");
+	vHeightWarpMode = new BooleanParameter("v-height warp", "animation");
 	vHeightWarpMode.invertPress = true;
 	vHeightWarpMode.verbose = true;
 	vHeightWarpMode.init(true);
 
-	reverseAction = new BooleanParameter("reverse") {
+	reverseAction = new BooleanParameter("reverse", "animation") {
 		@Override
 		public void onTrue() {
 		    speed.set(-speed.get());
@@ -150,7 +150,7 @@ public class Tube extends XYAnimation {
 	reverseAction.affinity = BooleanParameter.Affinity.ACTION;
 	reverseAction.init(false);
 
-	resetAction = new BooleanParameter("reset") {
+	resetAction = new BooleanParameter("reset", "animation") {
 		@Override
 		public void onTrue() {
 		    speed.reset();

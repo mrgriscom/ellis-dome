@@ -81,35 +81,33 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
 
     def on_close(self):
         self.manager.unsubscribe(self)
-
+        
     def set_placement(self, placement):
-        broadcast_event('xo', '~%s' % placement.get('xo', 0))
-        broadcast_event('yo', '~%s' % placement.get('yo', 0))
-        broadcast_event('rot', '~%s' % placement.get('rot', 0))
-        broadcast_event('scale', '~%s' % placement.get('scale', 1))
-        broadcast_event('wingmode', '~%s' % placement['wing_mode'])
-        broadcast_event('stretch', '~%s' % ('yes' if placement['stretch'] else 'no'))
+        broadcast_event('xo', 'set', placement.get('xo', 0))
+        broadcast_event('yo', 'set', placement.get('yo', 0))
+        broadcast_event('rot', 'set', placement.get('rot', 0))
+        broadcast_event('scale', 'set', placement.get('scale', 1))
+        broadcast_event('wingmode', 'set', placement['wing_mode'])
+        broadcast_event('stretch', 'set', 'yes' if placement['stretch'] else 'no')
 
     def interactive(self, id, session, control_type, val):
         if control_type in ('button', 'button-keepalive'):
             button_thread.handle(id, session, {True: 'press', False: 'release', None: 'keepalive'}[val])
         if control_type == 'slider':
-            broadcast_event(id, val)
+            broadcast_event(id, 'slider', val)
         if control_type == 'jog':
-            broadcast_event(id, 'inc' if val > 0 else 'dec')
+            broadcast_event(id, 'jog', val)
         if control_type == 'raw':
+            assert False, 'fixme'
             if id == 'saveplacement':
                 from datetime import datetime
                 val += ' ' + datetime.now().strftime('%m-%d %H%M')
             broadcast_event(id, '~' + val)
 
     def notify(self, msg):
-        if 'content' in msg:
-            self.write_message(json.dumps({'type': 'content', 'content': msg['content']}))
-        if 'playlist' in msg:
-            self.write_message(json.dumps({'type': 'playlist', 'playlist': msg['playlist']}))
-        if 'duration' in msg:
-            self.write_message(json.dumps({'type': 'duration', 'duration': msg['duration']}))
+        assert type(msg) == type({}) and len(msg) == 1, msg
+        key = msg.keys()[0]
+        self.write_message(json.dumps({'type': key, key: msg[key]}))
             
 keepalive_timeout = 5.
 class ButtonPressManager(threading.Thread):
@@ -161,8 +159,9 @@ class ButtonPressManager(threading.Thread):
                     broadcast_event(id, 'release')
             self.active = pressed
 
-def broadcast_event(id, val):
+def broadcast_event(id, type, val=None):
     # intercept some ourselves
+    # fixme
     if id == 'projectm-next' and val == 'press' and manager.window_id is not None:
         launch.projectm_control(manager.window_id, 'next')
     if id == 'audio-sens':
@@ -174,25 +173,42 @@ def broadcast_event(id, val):
         except:
             pass
 
-    zmq_send('0:server:%s:%s' % (id, val))
+    evt = {
+        'name': id,
+        'eventType': type,
+    }
+    if val is not None:
+        evt['value'] = str(val)        
+    zmq_send(json.dumps(evt))
 
 class ZMQListener(threading.Thread):
     def __init__(self, context, manager):
         threading.Thread.__init__(self)
         self.up = True
 
-        self.socket = context.socket(zmq.SUB)
+        self.socket = context.socket(zmq.PULL)
         self.socket.connect("tcp://localhost:%s" % settings.zmq_port_outbound)
-        self.socket.setsockopt(zmq.SUBSCRIBE, '')
         
         self.manager = manager
 
+    def broadcast(self, msg):
+        self.manager.notify(msg)
+        
     def handle(self, msg):
-        if msg.startswith('videoremain:'):
-            amt = float(msg.split(':')[1])
-            if (manager.running_content or {}).get('sketch_controls_duration', False):
-                manager.extend_duration(amt if amt > 0 else settings.sketch_controls_duration_failsafe_timeout, True)
+        try:
+            msg = json.loads(msg)
+        except ValueError:
+            return
             
+        if msg['type'] == 'duration':
+            duration = msg['duration']
+            if duration < 0 or duration is None:
+                duration = settings.sketch_controls_duration_failsafe_timeout
+            if (manager.running_content or {}).get('sketch_controls_duration', False):
+                manager.extend_duration(duration, True)
+        if msg['type'] == 'parameters':
+            self.broadcast({'params': msg['params']})
+                
     def terminate(self):
         self.up = False
 
@@ -222,7 +238,7 @@ if __name__ == "__main__":
         th.start()
         threads.append(th)
     
-    manager = animations.PlayManager()
+    manager = animations.PlayManager(lambda func: IOLoop.instance().add_callback(func))
     add_thread(manager)
 
     static_data = {

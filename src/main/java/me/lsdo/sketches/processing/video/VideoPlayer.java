@@ -45,7 +45,7 @@ public class VideoPlayer extends VideoBase {
 	mov.play();
 	mov.volume(Config.getSketchProperty("mute", false) ? 0 : 1);
 	
-	playing = new BooleanParameter("playing") {
+	playing = new BooleanParameter("playing", "animation") {
 		@Override
 		public void onTrue() {
 		    mov.play();
@@ -66,19 +66,20 @@ public class VideoPlayer extends VideoBase {
 	int i = 0;
 	for (final double skip : skips) {
 	    for (final boolean forward : new boolean[] {true, false}) {
-		BooleanParameter skipAction = new BooleanParameter((forward ? "forward" : "back") + " " + skip + "s") {
+		BooleanParameter skipAction = new BooleanParameter((forward ? "forward" : "back") + " " + skip + "s", "animation") {
 			@Override
 			public void onTrue() {
 			    relJump((forward ? 1 : -1) * skip);
 			}
 		    };
+		skipAction.affinity = BooleanParameter.Affinity.ACTION;
 		skipAction.init(false);
 		skipActions[i] = skipAction;
 		i++;
 	    }
 	}
 
-	timeline = new NumericParameter("timeline") {
+	timeline = new NumericParameter("timeline", "animation") {
 		@Override
 		public void onSet() {
 		    jump(get());
@@ -132,8 +133,9 @@ public class VideoPlayer extends VideoBase {
 
     public void updateRemainingTime() {
 	if (!repeat) {
-	    double remaining = (playing.get() ? mov.duration() - mov.time() : -1);
-	    canvas.ctrl.broadcast("videoremain:" + remaining);
+	    InputControl.DurationControlJson msg = new InputControl.DurationControlJson();
+	    msg.duration = (playing.get() ? mov.duration() - mov.time() : -1);
+	    canvas.ctrl.broadcast(msg);
 	}
     }
     
