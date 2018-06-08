@@ -113,6 +113,8 @@ function init() {
 	    model.current_playlist(data.playlist);
 	} else if (data.type == "duration") {
 	    model.current_timeout(data.duration);
+	} else if (data.type == "params") {
+	    initParams(data.params);
 	}
     };
     CONN = this.conn;
@@ -126,40 +128,20 @@ function init() {
     $('#extend').click(function() {
 	CONN.send(JSON.stringify({action: 'extend_duration', duration: getDuration()}));
     });
-    bindButton('#flap', 'flap');
+
     bindButton('#projectm-next', 'projectm-next');
-
-    bindButton('#wingmode_unified', 'wingmode_unified');
-    bindButton('#wingmode_mirror', 'wingmode_mirror');
-    bindButton('#wingmode_flip', 'wingmode_flip');
-    bindButton('#wingmode_rotate', 'wingmode_opposite');
-    bindButton('#aspect_stretch', 'stretch_yes');
-    bindButton('#aspect_preserve', 'stretch_no');
-    bindButton('#playing_yes', 'playing_yes');
-    bindButton('#playing_no', 'playing_no');
-
-    bindSlider('#jog-xo', 'jog-xo', true);
-    bindSlider('#jog-yo', 'jog-yo', true);
-    bindSlider('#jog-rot', 'jog-rot', true);
-    bindSlider('#jog-scale', 'jog-scale', true);
-    bindSlider('#xscale', 'xscale', false);
-    bindSlider('#yscale', 'yscale', false);
-    bindSlider('#flap-angle', 'flap-angle', false);
-    bindSlider('#flap-depth', 'flap-depth', false);
-    bindSlider('#flap-speed', 'flap-speed', false);
     bindSlider('#audio-sens', 'audio-sens', false);
-    bindSlider('#timeline', 'timeline', false);
 
-  $('#saveplacement').click(function() {
-    var name = $('#saveas').val();
-    if (name.length == 0) {
-      alert('name required');
-      return;
-    }
-
-    sendEvent('saveplacement', 'raw', name);
-    alert('reload the page');
-  });
+    $('#saveplacement').click(function() {
+	var name = $('#saveas').val();
+	if (name.length == 0) {
+	    alert('name required');
+	    return;
+	}
+	
+	sendEvent('saveplacement', 'raw', name);
+	alert('reload the page');
+    });
 }
 
 function bindSlider(sel, id, relative) {
@@ -192,17 +174,29 @@ function bindSlider(sel, id, relative) {
     }
 }
 
+function bindRadioButton(sel, id, subval) {
+    $(sel).mousedown(function() {
+	sendEvent(id, 'set', subval);
+    });
+    $(sel).bind('touchstart', function(e) {
+	e.preventDefault();
+	sendEvent(id, 'set', subval);
+    });
+}
+
 function bindButton(sel, id) {
     $(sel).mousedown(function() {
 	buttonAction(id, true);
     });
-    $(sel).on('touchstart', function() {
+    $(sel).bind('touchstart', function(e) {
+	e.preventDefault();
 	buttonAction(id, true);
     });
     $(sel).mouseup(function() {
 	buttonAction(id, false);
     });
-    $(sel).on('touchend', function() {
+    $(sel).bind('touchend', function(e) {
+	e.preventDefault();
 	buttonAction(id, false);
     });
 }
@@ -218,7 +212,6 @@ function sendEvent(id, type, val) {
 
 BUTTON_KEEPALIVES = {};
 function buttonAction(id, pressed) {
-
     if (pressed) {
 	sendEvent(id, 'button', true);
 	BUTTON_KEEPALIVES[id] = setInterval(function() {
@@ -227,5 +220,60 @@ function buttonAction(id, pressed) {
     } else {
 	sendEvent(id, 'button', false);
 	clearInterval(BUTTON_KEEPALIVES[id]);
+    }
+}
+
+function initParams(params) {
+    $.each(PARAMS, function(k, v) {
+	if (v.source == params.source) {
+	    v.e.remove();
+	    delete PARAMS[k];
+	}
+    });
+    
+    $.each(params, function(i, e) {
+	e.source = params.source;
+	initParam(e);
+    });
+}
+
+PARAMS = {};
+function initParam(param) {
+    var $section = $('#' + ({
+	placement: 'placement_controls',
+	mesh_effects: 'effects_controls',
+    }[param.category] || 'controls'));
+    
+    var $container = $('<div class="control" />');
+    var $title = $('<div />');
+    if (!param.isAction) {
+	$title.text(param.description || param.name);
+    }
+    $container.append($title);
+    $section.append($container);
+
+    PARAMS[param.name] = {param: param, e: $container};
+    
+    var $control = $('<div />');
+    $container.append($control);
+
+    if (param.isAction) {
+	var $button = $('<button />');
+	$button.text(param.description || param.name);
+	$control.append($button);
+	bindButton($button, param.name);
+    } else if (param.isEnum) {
+	for (var i = 0; i < param.values.length; i++) {
+	    var value = param.values[i];
+	    var caption = param.captions[i];
+	    
+	    var $button = $('<button />');
+	    $button.text(caption);
+	    $control.append($button);
+	    bindRadioButton($button, param.name, value);
+	}
+    } else if (param.isNumeric) {
+	bindSlider($control, param.name, !param.isBounded);
+	// isint
     }
 }

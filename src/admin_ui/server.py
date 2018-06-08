@@ -26,7 +26,7 @@ def web_path(*args):
 
 class MainHandler(web.RequestHandler):
     def get(self):
-        self.render('main.html', onload='init')
+        self.render('main.html', onload='init', geom=settings.geometry)
 
 class WebSocketTestHandler(websocket.WebSocketHandler):
     def initialize(self, manager, static_data, zmq_send):
@@ -93,21 +93,21 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
     def interactive(self, id, session, control_type, val):
         if control_type in ('button', 'button-keepalive'):
             button_thread.handle(id, session, {True: 'press', False: 'release', None: 'keepalive'}[val])
-        if control_type == 'slider':
-            broadcast_event(id, 'slider', val)
-        if control_type == 'jog':
-            broadcast_event(id, 'jog', val)
-        if control_type == 'raw':
-            assert False, 'fixme'
-            if id == 'saveplacement':
-                from datetime import datetime
-                val += ' ' + datetime.now().strftime('%m-%d %H%M')
-            broadcast_event(id, '~' + val)
+        if control_type in ('set', 'slider', 'jog'):
+            broadcast_event(id, control_type, val)
+        #if control_type == 'raw':
+        #    assert False, 'fixme'
+        #    if id == 'saveplacement':
+        #        from datetime import datetime
+        #        val += ' ' + datetime.now().strftime('%m-%d %H%M')
+        #    broadcast_event(id, '~' + val)
 
     def notify(self, msg):
-        assert type(msg) == type({}) and len(msg) == 1, msg
-        key = msg.keys()[0]
-        self.write_message(json.dumps({'type': key, key: msg[key]}))
+        assert type(msg) == type({}) and (len(msg) == 1 or 'type' in msg), msg
+        if 'type' not in msg:
+            key = msg.keys()[0]
+            msg = {'type': key, key: msg[key]}
+        self.write_message(json.dumps(msg))
             
 keepalive_timeout = 5.
 class ButtonPressManager(threading.Thread):
@@ -206,8 +206,9 @@ class ZMQListener(threading.Thread):
                 duration = settings.sketch_controls_duration_failsafe_timeout
             if (manager.running_content or {}).get('sketch_controls_duration', False):
                 manager.extend_duration(duration, True)
-        if msg['type'] == 'parameters':
-            self.broadcast({'params': msg['params']})
+        if msg['type'] == 'params':
+            msg['source'] = 'processing'
+            self.broadcast(msg)
                 
     def terminate(self):
         self.up = False

@@ -87,12 +87,8 @@ class PlayManager(threading.Thread):
         with self.lock:
             subs = list(self.subscribers)
         for s in subs:
-            def _notify():
-                s.notify(msg)
-            if self.callback_wrapper:
-                self.callback_wrapper(_notify)
-            else:
-                _notify()
+            wrapper = self.callback_wrapper or (lambda func: func())
+            wrapper(lambda: s.notify(msg))
             
     # play content immediately, after which normal playlist will resume
     def play(self, content, duration):

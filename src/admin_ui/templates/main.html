@@ -1,6 +1,6 @@
 <html>
 <head>
-  <title>master control</title>
+  <title>{{ geom }} master control</title>
   <meta http-equiv="content-type" content="text/html; charset=utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="style/style.css">
@@ -25,13 +25,18 @@ $(document).ready({{ onload }});
 <body>
   <style>
 
-    body {
-    font-family: sans-serif;
-    }
+body {
+  font-family: sans-serif;
+  margin: 15px;
+}
 
-    button {
-    user-select: none;
-    }
+button {
+  user-select: none;
+}
+
+.control {
+  margin-bottom: 5px;
+}
 
   </style>
 
@@ -40,38 +45,17 @@ $(document).ready({{ onload }});
   <div>
     Minutes per visualization: <input id="mins" type="number" value="2.5"></input>
   </div>
-
   <div>
     <button id="stopall">stop all playback</button>
   </div>
-
   <div>
     <button id="stopcurrent">next visualization in playlist</button>
   </div>
-
   <div>
     <button id="extend">extend duration</button>
   </div>
-
-  <br />
-
   <div>
-    <button id="flap">FLAP</button>
-  </div>
-
-  <br />
-
-  <div>
-    <button id="projectm-next">projectm next viz</button>
-  </div>
-
-  <h3>wings are&hellip;</h3>
-
-  <div data-bind="foreach: wingTrims">
-    <div>
-      <button data-bind="click: $root.setTrim">set</button>
-      <span data-bind="text: $data"></span>
-    </div>
+    <button id="resetduration">reset duration (TODO)</button>
   </div>
 
   <h3>playlists</h3>
@@ -97,6 +81,15 @@ $(document).ready({{ onload }});
     </div>
   </div>
 
+  <h3>placement mode</h3>
+
+  <div data-bind="foreach: wingTrims">
+    <div>
+      <button data-bind="click: $root.setTrim">set</button>
+      <span data-bind="text: $data"></span>
+    </div>
+  </div>
+
   <h3>placements</h3>
 
   <div data-bind="foreach: placements">
@@ -106,56 +99,36 @@ $(document).ready({{ onload }});
     </div>
   </div>
 
+  <h3>effects</h3>
+
+  <div id="effects_controls">
+  </div>
+  
   <h3>custom placement</h3>
 
-  <div><em>(slider positions may not represent current values!)</em></div>
+  <div>save this placement preset as <input id="saveas" type="text" placeholder="name"></input> <button id="saveplacement">save</button></div>
+  <br>
+
+  <div id="placement_controls">
+  </div>
+  
+  <h3>visualization controls</h3>
+
+  <div id="controls">
+  </div>
+  
+
   <br />
 
-  <div>wing #2 in relation to wing #1:
-    <button id="wingmode_unified">side-by-side (single canvas)</button>
-    <button id="wingmode_mirror">mirrored</button>
-    <button id="wingmode_flip">flip horizontally</button>
-    <button id="wingmode_rotate">rotate 180</button>
+  <div>
+    <button id="projectm-next">projectm next viz</button>
   </div>
-
-  <div>aspect ratio:
-    <button id="aspect_stretch">stretch to fit window</button>
-    <button id="aspect_preserve">preserve 1:1</button>
-  </div>
-
-  <div>x-offset: <div id="jog-xo"></div></div>
-  <div>y-offset: <div id="jog-yo"></div></div>
-  <div>rotation: <div id="jog-rot"></div></div>
-  <div>scale: <div id="jog-scale"></div></div>
-
-  <div>xscale: <div id="xscale"></div></div>
-  <div>yscale: <div id="yscale"></div></div>
-  
-  <div>save this placement preset as <input id="saveas" type="text" placeholder="name"></input> <button id="saveplacement">save</button></div>
-
-  <br/>
-  <div>flap angle: <div id="flap-angle"></div></div>
-  <div>flap depth: <div id="flap-depth"></div></div>
-  <div>flap speed: <div id="flap-speed"></div></div>
 
   <br/>
   <div>audio sensitivity (30%-300%): <div id="audio-sens"></div></div>
-
-  <br/>
   
-  <div>
-    <button id="playing_yes">play</button>
-    <button id="playing_no">pause</button>
-  </div>
-  <div>timeline: <div id="timeline"></div></div>
+
   
-  <div id="tubecontrol" style="display: none;">
-    <h3>Tube</h3>
-
-
-  </div>
-
-  <div style="height: 200px;"></div>
-
 </body>
 </html>
+
