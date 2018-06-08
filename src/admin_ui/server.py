@@ -209,7 +209,10 @@ class ZMQListener(threading.Thread):
         if msg['type'] == 'params':
             msg['source'] = 'processing'
             self.broadcast(msg)
-                
+        if msg['type'] == 'param_value':
+            self.broadcast(msg)
+
+            
     def terminate(self):
         self.up = False
 

@@ -115,6 +115,8 @@ function init() {
 	    model.current_timeout(data.duration);
 	} else if (data.type == "params") {
 	    initParams(data.params);
+	} else if (data.type == "param_value") {
+	    updateParamValue(data);
 	}
     };
     CONN = this.conn;
@@ -144,12 +146,12 @@ function init() {
     });
 }
 
+SLIDER_MIN = -100;
+SLIDER_MAX = 100;
 function bindSlider(sel, id, relative) {
-    var min = -100;
-    var max = 100;
-    var mid = .5 * (min + max);
+    var mid = .5 * (SLIDER_MIN + SLIDER_MAX);
     var $e = $(sel);
-    $e.slider({min: min, max: max});
+    $e.slider({min: SLIDER_MIN, max: SLIDER_MAX});
     $e.slider('value', mid);
     $e.lastVal = $e.slider('value');
     $e.on('slide', function(evt, ui) {
@@ -160,7 +162,7 @@ function bindSlider(sel, id, relative) {
 		sendEvent(id, 'jog', diff > 0 ? 1 : -1);
 	    }
 	} else {
-	    sendEvent(id, 'slider', (cur-min)/(max-min));
+	    sendEvent(id, 'slider', (cur-SLIDER_MIN)/(SLIDER_MAX-SLIDER_MIN));
 	}
 	$e.lastVal = cur;
     });
@@ -172,6 +174,7 @@ function bindSlider(sel, id, relative) {
 	    }
 	});
     }
+    return $e;
 }
 
 function bindRadioButton(sel, id, subval) {
@@ -245,35 +248,62 @@ function initParam(param) {
     }[param.category] || 'controls'));
     
     var $container = $('<div class="control" />');
-    var $title = $('<div />');
-    if (!param.isAction) {
-	$title.text(param.description || param.name);
-    }
-    $container.append($title);
     $section.append($container);
 
     PARAMS[param.name] = {param: param, e: $container};
     
-    var $control = $('<div />');
-    $container.append($control);
-
     if (param.isAction) {
 	var $button = $('<button />');
+	$container.append($button);
 	$button.text(param.description || param.name);
-	$control.append($button);
 	bindButton($button, param.name);
     } else if (param.isEnum) {
+	$container.html('<div id="title" />');
 	for (var i = 0; i < param.values.length; i++) {
 	    var value = param.values[i];
 	    var caption = param.captions[i];
 	    
 	    var $button = $('<button />');
 	    $button.text(caption);
-	    $control.append($button);
+	    $container.append($button);
 	    bindRadioButton($button, param.name, value);
 	}
     } else if (param.isNumeric) {
-	bindSlider($control, param.name, !param.isBounded);
+	$container.html('<div id="value" style="float: right;" /><div id="title" />');
+	var $slider = $('<div style="margin-top: 4px; margin-bottom: 2px;" />');
+	$container.append($slider);
+	PARAMS[param.name].$slider = bindSlider($slider, param.name, !param.isBounded);
 	// isint
+    }
+
+    if (!param.isAction) {
+	$container.find('#title').text(param.description || param.name);
+    }
+}
+
+function updateParamValue(val) {
+    var P = PARAMS[val.name];
+    if (!P) {
+	return;
+    }
+    var param = P.param;
+    var $e = P.e;
+
+    if (param.isAction) {
+	// do nothing
+    } else if (param.isEnum) {
+	var $buttons = $e.find('button');
+	for (var i = 0; i < param.values.length; i++) {
+	    var $b = $($buttons[i]);
+	    var value = param.values[i];
+	    $b.css('font-weight', value == val.value ? 'bold' : 'normal');
+	}
+    } else if (param.isNumeric) {
+	$e.find('#value').text(val.value);
+	if (param.isBounded) {
+	    var k = val.sliderPos;
+	    var sliderVal = SLIDER_MIN * (1 - k) + SLIDER_MAX * k;
+	    P.$slider.slider('value', sliderVal);
+	}
     }
 }
