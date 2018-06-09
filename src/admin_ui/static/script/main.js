@@ -114,7 +114,7 @@ function init() {
 	} else if (data.type == "duration") {
 	    model.current_timeout(data.duration);
 	} else if (data.type == "params") {
-	    initParams(data.params);
+	    initParams(data);
 	} else if (data.type == "param_value") {
 	    updateParamValue(data);
 	}
@@ -130,9 +130,6 @@ function init() {
     $('#extend').click(function() {
 	CONN.send(JSON.stringify({action: 'extend_duration', duration: getDuration()}));
     });
-
-    bindButton('#projectm-next', 'projectm-next');
-    bindSlider('#audio-sens', 'audio-sens', false);
 
     $('#saveplacement').click(function() {
 	var name = $('#saveas').val();
@@ -226,16 +223,16 @@ function buttonAction(id, pressed) {
     }
 }
 
-function initParams(params) {
+function initParams(data) {
     $.each(PARAMS, function(k, v) {
-	if (v.source == params.source) {
+	if (v.param.source == data.source) {
 	    v.e.remove();
 	    delete PARAMS[k];
 	}
     });
     
-    $.each(params, function(i, e) {
-	e.source = params.source;
+    $.each(data.params, function(i, e) {
+	e.source = data.source;
 	initParam(e);
     });
 }
@@ -245,6 +242,7 @@ function initParam(param) {
     var $section = $('#' + ({
 	placement: 'placement_controls',
 	mesh_effects: 'effects_controls',
+	audio: 'audio_controls',
     }[param.category] || 'controls'));
     
     var $container = $('<div class="control" />');

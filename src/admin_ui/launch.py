@@ -95,13 +95,8 @@ def launch_emulator(rom):
         'params': {'title': 'retroarch'},
     }
 
-# todo: move these settings into sketch config
-def projectm_control(wid, command):
-    interaction = {
-        'next': 'key r',
-        'toggle-lock': 'key l',
-    }[command]
-    os.popen('xdotool windowactivate --sync %d && xdotool %s' % (wid, interaction))
+def gui_interaction(wid, command):
+    os.popen('xdotool windowactivate --sync %d && xdotool %s' % (wid, command))
 
 def pulse_ctx():
     return contextlib.closing(Pulse('lsdome-admin:%s' % uuid.uuid4().hex))
@@ -114,7 +109,8 @@ def get_audio_sources():
 # not block launching -- audio config is not on the critical path so can be done async.
 # the thread attempts configuration for a short timeout then gives up and dies.
 class AudioConfigThread(threading.Thread):
-    def __init__(self, pids, audio_input=None, input_volume=None, output_volume=None, timeout=2.):
+    def __init__(self, pids, audio_input=None, input_volume=None, output_volume=None,
+                 audio_out_detect_callback=None, timeout=2.):
         threading.Thread.__init__(self)
         self.pids = pids
         self.timeout = timeout
@@ -122,7 +118,8 @@ class AudioConfigThread(threading.Thread):
         self.audio_input = audio_input
         self.input_volume = input_volume
         self.output_volume = output_volume
-
+        self.audio_out_detect_callback = audio_out_detect_callback
+        
     def proc_input_id(self, client):
         return self.get_pulse_id(client.source_output_list(), self.pids_predicate())
 
@@ -174,6 +171,8 @@ class AudioConfigThread(threading.Thread):
                 for name, task in dict(tasks).iteritems():
                     if task():
                         del tasks[name]
+                        if name == 'output_volume':
+                            (self.audio_out_detect_callback or (lambda: None))()
                 time.sleep(.01)
 
             if 'input_volume' in tasks:

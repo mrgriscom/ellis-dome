@@ -2,6 +2,7 @@ import os
 import os.path
 import random
 import settings
+import launch
 
 VIDEO_DIR = '/home/drew/lsdome-media/video'
 if not os.path.exists(VIDEO_DIR):
@@ -13,7 +14,8 @@ if not os.path.exists(VIDEO_DIR):
 
 def get_all_content():
     yield {
-        'sketch': 'black (note: keeps running and using cpu)',
+        'name': 'black (note: keeps running and using cpu)',
+        'sketch': 'black',
         'manual': True,
     }
     yield {
@@ -73,6 +75,21 @@ def get_all_content():
     for content in load_videos():
         yield content
 
+content_server_config = {
+    'projectm': {
+        'server_parameters': [
+            {
+                'param': {
+                    'name': 'next pattern',
+                    'isAction': True,
+                },
+                'handler': None,
+            },
+        ],
+        'post_launch_hook': lambda mgr: projectm_control(mgr, 'next'), # get off the default pattern
+    },
+}
+        
 def load_videos():
     vids = [f.strip() for f in os.popen('find "%s" -type f' % VIDEO_DIR).readlines()]
     for vid in vids:
@@ -95,6 +112,14 @@ def load_videos():
         }
         # joan of arc require mirror mode
 
+def projectm_control(mgr, command):
+    interaction = {
+        'next': 'key r',
+        'toggle-lock': 'key l',
+    }[command]
+    launch.gui_interaction(mgr.window_id, interaction)
+
+        
 class Playlist(object):
     def __init__(self, choices):
         self.choices = list(choices)

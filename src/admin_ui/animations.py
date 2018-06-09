@@ -7,6 +7,7 @@ import random
 import csv
 import psutil
 import settings
+import playlist
 
 def default_sketch_properties():
     return {
@@ -65,6 +66,7 @@ class PlayManager(threading.Thread):
         self.content_timeout = None
         self.window_id = None
         self.background_audio_running = True
+        self.params = []
 
         self.playlist = None
         self.default_duration = None
@@ -78,6 +80,8 @@ class PlayManager(threading.Thread):
         s.notify({'content': self.running_content})
         s.notify({'playlist': repr(self.playlist)})
         s.notify({'duration': self.content_timeout})
+        # TODO change source to invocation uuid
+        s.notify({'type': 'params', 'params': [p['param'] for p in self.params], 'source': 'admin'})
             
     def unsubscribe(self, s):
         with self.lock:
@@ -141,6 +145,9 @@ class PlayManager(threading.Thread):
         self._stop_all()
 
     def _play_content(self, content, duration=None):
+        def _server_config():
+            return playlist.content_server_config.get(playlist.content_name(content), {})
+        
         if self.running_processes:
             self._stop_playback()
 
@@ -149,11 +156,13 @@ class PlayManager(threading.Thread):
         params = dict(default_sketch_properties())
         params.update(content.get('params', {}))
         content['params'] = params
-
+        
         placement = random.choice(list(self.get_available_placements(content)))
         print 'using placement %s' % placement['name']
         apply_placement(params, placement)
 
+        server_params = list(_server_config().get('server_parameters', []))
+        
         audio_config = {}
         if not content.get('has_audio', False) and settings.audio_out:
             # if we have speakers, mute the content unless told otherwise, so it doesn't
@@ -168,15 +177,46 @@ class PlayManager(threading.Thread):
         if content.get('sound_reactive'):
             audio_config['input_volume'] = content.get('volume_adjust', 1.)
             audio_config['audio_input'] = default_audio_input()
+            server_params.append({
+                'param': {
+                    'name': 'audio sensitivity',
+                    'category': 'audio',
+                    'isNumeric': True,
+                    'isBounded': True,
+                },
+            })
+            audio_sources = launch.get_audio_sources()
+            server_params.append({
+                'param': {
+                    'name': 'audio input',
+                    'category': 'audio',
+                    'isEnum': True,
+                    'values': audio_sources,
+                    'captions': audio_sources,
+                },
+            })
+        def audio_out_detect(detected):
+            params = []
+            if detected:
+                params.append({
+                    'param': {
+                        'name': 'audio output',
+                        'category': 'audio',
+                        'isEnum': True,
+                        'values': ['yes', 'no'],
+                        'captions': ['content', 'mute content (play background audio)'],
+                    },
+                })
+            self.params.extend(params)
+            self.notify({'type': 'params', 'params': [p['param'] for p in params], 'source': 'admin:audio-out'})
+        # we only detect lack of audio out based on a timeout, so immediately clear out result of previous check
+        audio_out_detect(False)
+        audio_config['audio_out_detect_callback'] = lambda: audio_out_detect(True)
         
         if content['sketch'] == 'screencast':
             gui_invocation = launch.launch_screencast(content['cmd'], params)
             self.running_processes = gui_invocation[1]
             self.window_id = gui_invocation[0]
-
-            if content['name'] == 'projectm':
-                # get off the default pattern
-                launch.projectm_control(gui_invocation[0], 'next')
         else:
             if content['sketch'] == 'video':
                 params['repeat'] = True
@@ -200,6 +240,13 @@ class PlayManager(threading.Thread):
             self.notify({'duration': self.content_timeout})
             print 'until', self.content_timeout
 
+        self.params.extend(server_params) 
+        self.notify({'type': 'params', 'params': [p['param'] for p in server_params], 'source': 'admin'})
+
+        post_launch_hook = _server_config().get('post_launch_hook')
+        if post_launch_hook:
+            post_launch_hook(self)
+            
     def _set_playlist(self, playlist, duration):
         self.playlist = playlist
         self.notify({'playlist': repr(playlist)})
@@ -220,8 +267,10 @@ class PlayManager(threading.Thread):
         self.running_processes = None
         self.content_timeout = None
         self.window_id = None
+        self.params = []
         self.notify({'content': self.running_content})
         self.notify({'duration': self.content_timeout})
+        self.notify({'type': 'params', 'params': [], 'source': 'admin'})
         print 'content stopped'
 
     def _stop_all(self):

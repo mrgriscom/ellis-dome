@@ -162,8 +162,8 @@ class ButtonPressManager(threading.Thread):
 def broadcast_event(id, type, val=None):
     # intercept some ourselves
     # fixme
-    if id == 'projectm-next' and val == 'press' and manager.window_id is not None:
-        launch.projectm_control(manager.window_id, 'next')
+    if id == 'projectm-next' and val == 'press':
+        playlist.projectm_control(manager, 'next')
     if id == 'audio-sens':
         min_sens = .3
         max_sens = 3.
