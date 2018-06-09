@@ -111,15 +111,16 @@ public class VideoPlayer extends VideoBase {
     }
 
     public void relJump(double t) {
-	jump(mov.time() + t);
-    }
-    
-    public void jump(double t) {
+	t += mov.time();
 	if (repeat) {
 	    t = MathUtil.fmod(t, mov.duration());
 	} else {
             t = Math.max(0, Math.min(mov.duration(), t));
 	}
+	timeline.set(t);
+    }
+    
+    public void jump(double t) {
 	mov.jump((float)t);
 	updateRemainingTime();
 	
