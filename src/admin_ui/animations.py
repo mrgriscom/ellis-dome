@@ -86,9 +86,14 @@ class PlayManager(threading.Thread):
     def notify(self, msg):
         with self.lock:
             subs = list(self.subscribers)
+
+        # need this to capture the subscriber and decouple it from the loop variable
+        def notify_func(s):
+            return lambda: s.notify(msg)
+            
         for s in subs:
             wrapper = self.callback_wrapper or (lambda func: func())
-            wrapper(lambda: s.notify(msg))
+            wrapper(notify_func(s))
             
     # play content immediately, after which normal playlist will resume
     def play(self, content, duration):

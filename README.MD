@@ -5,11 +5,11 @@
 Project for Afrika Burn 2016+. Visualizations for a 2D mesh of addressible LED pixels.
 
 This is a library of animations. It uses the associated `lsdome-processing`
-[library](https://github.com/shen-tian/lsdome-processing).
+[library](https://github.com/mrgriscom/lsdome-processing).
 
 ### Build
 
-1. Follow the build steps for [the parent library](https://github.com/shen-tian/lsdome-processing).
+1. Follow the build steps for [the parent library](https://github.com/mrgriscom/lsdome-processing).
 
 2. Clone this repo and edit `build.gradle`; update `local_processing_install` and `local_processing_user_dir` to the relevant corrent paths. You may also use the published parent library by setting `use_local_lsdome_processing_lib = false`, but be warned this is often extremely out of date.
 
