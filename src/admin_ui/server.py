@@ -78,6 +78,8 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
             self.interactive(data['id'], data['sess'], data['type'], data.get('val'))
         if action == 'extend_duration':
             self.manager.extend_duration(data['duration'])
+        if action == 'reset_duration':
+            self.manager.extend_duration(data['duration'], True)
 
     def on_close(self):
         self.manager.unsubscribe(self)
@@ -160,19 +162,8 @@ class ButtonPressManager(threading.Thread):
             self.active = pressed
 
 def broadcast_event(id, type, val=None):
-    # intercept some ourselves
-    # fixme
-    if id == 'projectm-next' and val == 'press':
-        playlist.projectm_control(manager, 'next')
-    if id == 'audio-sens':
-        min_sens = .3
-        max_sens = 3.
-        sens = min_sens * (1-val) + max_sens * val
-        try:
-            launch.set_audio_source_volume([p.pid for p in manager.running_processes], sens)
-        except:
-            pass
-
+    manager.input_event(id, type, val)
+        
     evt = {
         'name': id,
         'eventType': type,

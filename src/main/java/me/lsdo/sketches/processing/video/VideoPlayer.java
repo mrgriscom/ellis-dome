@@ -30,6 +30,7 @@ public class VideoPlayer extends VideoBase {
     BooleanParameter playing;
     BooleanParameter[] skipActions;
     NumericParameter timeline;
+    BooleanParameter mute;
     boolean updateFreezeFrame = false;
     
     public void loadMedia() {
@@ -43,7 +44,19 @@ public class VideoPlayer extends VideoBase {
         mov = new Movie(this, path);
 	// begin playback so we have access to duration
 	mov.play();
-	mov.volume(Config.getSketchProperty("mute", false) ? 0 : 1);
+
+	mute = new BooleanParameter("mute", "hidden") {
+		@Override
+		public void onTrue() {
+		    mov.volume(0);
+		}
+
+		@Override
+		public void onFalse() {
+		    mov.volume(1);
+		}
+	    };
+	mute.init(Config.getSketchProperty("mute", false));
 	
 	playing = new BooleanParameter("playing", "animation") {
 		@Override

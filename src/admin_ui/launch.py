@@ -153,6 +153,9 @@ class AudioConfigThread(threading.Thread):
         return True
 
     def run(self):
+        self.run_inline(self.timeout)
+        
+    def run_inline(self, timeout=0):
         with pulse_ctx() as client:
             tasks = {}
             if self.input_volume is not None:
@@ -167,13 +170,16 @@ class AudioConfigThread(threading.Thread):
                     tasks['input_device'] = lambda: self.set_audio_input(client, source_id)
 
             start = time.time()
-            while tasks and time.time() < start + self.timeout:
+            while tasks and (time.time() < start + self.timeout or self.timeout <= 0):
                 for name, task in dict(tasks).iteritems():
                     if task():
                         del tasks[name]
                         if name == 'output_volume':
                             (self.audio_out_detect_callback or (lambda: None))()
-                time.sleep(.01)
+                if timeout > 0:
+                    time.sleep(.01)
+                else:
+                    break
 
             if 'input_volume' in tasks:
                 print 'failed to set input volume'

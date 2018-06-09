@@ -130,6 +130,9 @@ function init() {
     $('#extend').click(function() {
 	CONN.send(JSON.stringify({action: 'extend_duration', duration: getDuration()}));
     });
+    $('#resetduration').click(function() {
+	CONN.send(JSON.stringify({action: 'reset_duration', duration: getDuration()}));
+    });
 
     $('#saveplacement').click(function() {
 	var name = $('#saveas').val();
@@ -239,6 +242,9 @@ function initParams(data) {
 
 PARAMS = {};
 function initParam(param) {
+    if (param.category == 'hidden') {
+	return;
+    }
     var $section = $('#' + ({
 	placement: 'placement_controls',
 	mesh_effects: 'effects_controls',

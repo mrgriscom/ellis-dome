@@ -83,13 +83,13 @@ content_server_config = {
                     'name': 'next pattern',
                     'isAction': True,
                 },
-                'handler': None,
+                'setval': lambda mgr, param, type, val: projectm_control(mgr, 'next') if type == 'press' else None,
             },
         ],
         'post_launch_hook': lambda mgr: projectm_control(mgr, 'next'), # get off the default pattern
     },
 }
-        
+
 def load_videos():
     vids = [f.strip() for f in os.popen('find "%s" -type f' % VIDEO_DIR).readlines()]
     for vid in vids:

@@ -73,7 +73,8 @@ class PlayManager(threading.Thread):
 
         self.placements = load_placements()
         self.wing_trim = 'flat'
-
+        self.audio_input = default_audio_input
+        
     def subscribe(self, s):
         with self.lock:
             self.subscribers.append(s)
@@ -124,6 +125,9 @@ class PlayManager(threading.Thread):
     def stop_all(self):
         self.queue.put(lambda: self._stop_all())
 
+    def input_event(self, id, type, val):
+        self.queue.put(lambda: self._input_event(id, type, val))
+        
     def terminate(self):
         self.up = False
 
@@ -143,7 +147,7 @@ class PlayManager(threading.Thread):
 
             self.update_background_audio()
         self._stop_all()
-
+        
     def _play_content(self, content, duration=None):
         def _server_config():
             return playlist.content_server_config.get(playlist.content_name(content), {})
@@ -175,8 +179,18 @@ class PlayManager(threading.Thread):
             # setting seems sticky, so we need to explicitly say we want audio back
             audio_config['output_volume'] = 1.
         if content.get('sound_reactive'):
+            # also set param values
             audio_config['input_volume'] = content.get('volume_adjust', 1.)
-            audio_config['audio_input'] = default_audio_input()
+            audio_config['audio_input'] = self.audio_input
+
+            def setval(mgr, param, type, val):
+                if type != 'slider':
+                    return
+                min_sens = .3
+                max_sens = 3.
+                sens = min_sens * (1-val) + max_sens * val
+                param['value'] = sens
+                launch.AudioConfigThread([p.pid for p in mgr.running_processes], input_volume=sens).run_inline()
             server_params.append({
                 'param': {
                     'name': 'audio sensitivity',
@@ -184,7 +198,13 @@ class PlayManager(threading.Thread):
                     'isNumeric': True,
                     'isBounded': True,
                 },
+                'setval': setval,
             })
+            def setval(mgr, param, type, val):
+                if type != 'set':
+                    return
+                mgr.audio_input = val
+                launch.AudioConfigThread([p.pid for p in mgr.running_processes], audio_input=val).run_inline()
             audio_sources = launch.get_audio_sources()
             server_params.append({
                 'param': {
@@ -194,23 +214,36 @@ class PlayManager(threading.Thread):
                     'values': audio_sources,
                     'captions': audio_sources,
                 },
+                'setval': setval,
             })
         def audio_out_detect(detected):
             params = []
             if detected:
+                def setval(mgr, param, type, val):
+                    if not settings.audio_out:
+                        return
+                    if type != 'set':
+                        return
+                    val = (val == 'yes')
+                    self.running_content['has_audio'] = val
+                    import sys
+                    sys.modules['__main__'].broadcast_event('mute', 'set', 'no' if val else 'yes')
+                    launch.AudioConfigThread([p.pid for p in mgr.running_processes], output_volume=1. if val else 0.).run_inline()
                 params.append({
                     'param': {
-                        'name': 'audio output',
+                        'name': 'audio from',
                         'category': 'audio',
                         'isEnum': True,
                         'values': ['yes', 'no'],
-                        'captions': ['content', 'mute content (play background audio)'],
+                        'captions': ['content', 'background playlist (content muted)'],
                     },
+                    'setval': setval,
                 })
             self.params.extend(params)
             self.notify({'type': 'params', 'params': [p['param'] for p in params], 'source': 'admin:audio-out'})
         # we only detect lack of audio out based on a timeout, so immediately clear out result of previous check
         audio_out_detect(False)
+        # TODO only for settings.audio_out = True
         audio_config['audio_out_detect_callback'] = lambda: audio_out_detect(True)
         
         if content['sketch'] == 'screencast':
@@ -282,6 +315,14 @@ class PlayManager(threading.Thread):
         if self.playlist:
             self._play_content(self.playlist.get_next(), self.default_duration)
 
+    def _input_event(self, id, type, val):
+        param = [p for p in self.params if p['param']['name'] == id]
+        if not param:
+            return
+        param = param[0]
+        param['setval'](self, param, type, val)
+        # return value
+            
     def get_available_placements(self, content):
         for pl in self.placements:
             if 'wing_trim' in pl and pl['wing_trim'] != self.wing_trim:
@@ -301,7 +342,6 @@ class PlayManager(threading.Thread):
             background_audio(play_background_audio)
         self.background_audio_running = play_background_audio
 
-# todo: make this selectable in UI
 def default_audio_input():
     sources = launch.get_audio_sources()
     monitors = [s for s in sources if 'monitor' in s]
