@@ -82,7 +82,7 @@ class PlayManager(threading.Thread):
         s.notify({'playlist': repr(self.playlist)})
         s.notify({'duration': self.content_timeout})
         # TODO change source to invocation uuid
-        s.notify({'type': 'params', 'params': [p['param'] for p in self.params], 'source': 'admin'})
+        s.notify({'type': 'params', 'params': [p.param for p in self.params], 'source': 'admin'})
             
     def unsubscribe(self, s):
         with self.lock:
@@ -168,88 +168,44 @@ class PlayManager(threading.Thread):
         server_params = list(_server_config().get('server_parameters', []))
         
         audio_config = {}
-        if not content.get('has_audio', False) and settings.audio_out:
-            # if we have speakers, mute the content unless told otherwise, so it doesn't
-            # play over the background playlist. (if no speakers, it doesn't really
-            # matter, so don't)
-            audio_config['output_volume'] = 0.
-            # if possible, have the sketch mute itself too upon boot to avoid any transients
-            params['mute'] = True
-        else:
-            # setting seems sticky, so we need to explicitly say we want audio back
-            audio_config['output_volume'] = 1.
+        if settings.audio_out:
+            # TODO make persistent (not sketch based)
+            server_params.append(MasterVolumeParameter(self))
+            if not content.get('has_audio', False):
+                # if we have speakers, mute the content unless told otherwise, so it doesn't
+                # play over the background playlist
+                audio_config['output_volume'] = 0.
+                # if possible, have the sketch mute itself too upon boot to avoid any transients
+                params['mute'] = True
+            else:
+                # setting seems sticky, so we need to explicitly say we want audio back
+                audio_config['output_volume'] = 1.
+
+            def audio_out_detect(detected):
+                params = []
+                if detected:
+                    params.append(OutputTrackParameter(self))
+                self.params.extend(params)
+                self.notify({'type': 'params', 'params': [p.param for p in params], 'source': 'admin:audio-out'})
+            # we only detect lack of audio out based on a timeout, so immediately clear out result of previous check
+            audio_out_detect(False)
+            audio_config['audio_out_detect_callback'] = lambda: audio_out_detect(True)
         if content.get('sound_reactive'):
             # also set param values
             audio_config['input_volume'] = content.get('volume_adjust', 1.)
             audio_config['audio_input'] = self.audio_input
 
-            def setval(mgr, param, type, val):
-                if type != 'slider':
-                    return
-                min_sens = .3
-                max_sens = 3.
-                sens = min_sens * (1-val) + max_sens * val
-                param['value'] = sens
-                launch.AudioConfigThread([p.pid for p in mgr.running_processes], input_volume=sens).run_inline()
-            server_params.append({
-                'param': {
-                    'name': 'audio sensitivity',
-                    'category': 'audio',
-                    'isNumeric': True,
-                    'isBounded': True,
-                },
-                'setval': setval,
-            })
-            def setval(mgr, param, type, val):
-                if type != 'set':
-                    return
-                mgr.audio_input = val
-                launch.AudioConfigThread([p.pid for p in mgr.running_processes], audio_input=val).run_inline()
-            audio_sources = launch.get_audio_sources()
-            server_params.append({
-                'param': {
-                    'name': 'audio input',
-                    'category': 'audio',
-                    'isEnum': True,
-                    'values': audio_sources,
-                    'captions': audio_sources,
-                },
-                'setval': setval,
-            })
-        def audio_out_detect(detected):
-            params = []
-            if detected:
-                def setval(mgr, param, type, val):
-                    if not settings.audio_out:
-                        return
-                    if type != 'set':
-                        return
-                    val = (val == 'yes')
-                    self.running_content['has_audio'] = val
-                    import sys
-                    sys.modules['__main__'].broadcast_event('mute', 'set', 'no' if val else 'yes')
-                    launch.AudioConfigThread([p.pid for p in mgr.running_processes], output_volume=1. if val else 0.).run_inline()
-                params.append({
-                    'param': {
-                        'name': 'audio from',
-                        'category': 'audio',
-                        'isEnum': True,
-                        'values': ['yes', 'no'],
-                        'captions': ['content', 'background playlist (content muted)'],
-                    },
-                    'setval': setval,
-                })
-            self.params.extend(params)
-            self.notify({'type': 'params', 'params': [p['param'] for p in params], 'source': 'admin:audio-out'})
-        # we only detect lack of audio out based on a timeout, so immediately clear out result of previous check
-        audio_out_detect(False)
-        # TODO only for settings.audio_out = True
-        audio_config['audio_out_detect_callback'] = lambda: audio_out_detect(True)
+            server_params.append(AudioSensitivityParameter(self, audio_config['input_volume']))
+            server_params.append(AudioSourceParameter(self))
         
         if content['sketch'] == 'screencast':
             gui_invocation = launch.launch_screencast(content['cmd'], params)
             self.running_processes = gui_invocation[1]
             self.window_id = gui_invocation[0]
+
+            post_launch_hook = _server_config().get('post_launch_hook')
+            if post_launch_hook:
+                post_launch_hook(self)
         else:
             if content['sketch'] == 'video':
                 params['repeat'] = True
@@ -274,12 +230,8 @@ class PlayManager(threading.Thread):
             print 'until', self.content_timeout
 
         self.params.extend(server_params) 
-        self.notify({'type': 'params', 'params': [p['param'] for p in server_params], 'source': 'admin'})
+        self.notify({'type': 'params', 'params': [p.param for p in server_params], 'source': 'admin'})
 
-        post_launch_hook = _server_config().get('post_launch_hook')
-        if post_launch_hook:
-            post_launch_hook(self)
-            
     def _set_playlist(self, playlist, duration):
         self.playlist = playlist
         self.notify({'playlist': repr(playlist)})
@@ -316,12 +268,12 @@ class PlayManager(threading.Thread):
             self._play_content(self.playlist.get_next(), self.default_duration)
 
     def _input_event(self, id, type, val):
-        param = [p for p in self.params if p['param']['name'] == id]
+        param = [p for p in self.params if p.param['name'] == id]
         if not param:
             return
         param = param[0]
-        param['setval'](self, param, type, val)
-        # return value
+        param.handle_input_event(type, val)
+        self.notify(param.get_value())
             
     def get_available_placements(self, content):
         for pl in self.placements:
@@ -360,3 +312,128 @@ def background_audio(enable):
     
     command = 'play' if enable else 'pause'
     os.popen('audacious --%s &' % command)
+
+class Parameter(object):
+    def __init__(self, manager):
+        self.manager = manager
+        self.param = self.param_def()
+
+    def param_def(self):
+        raise RuntimeError('abstract method')
+        
+    def handle_input_event(self, type, val):
+        raise RuntimeError('abstract method')
+
+    def get_value(self):
+        val = {
+            'type': 'param_value',
+            'name': self.param['name'],
+        }
+        self._update_value(val)
+        return val
+
+    def _update_value(self, val):
+        raise RuntimeError('abstract method')        
+
+    @staticmethod
+    def to_bool(val):
+        return {'yes': True, 'no': False}[val]
+
+    @staticmethod
+    def from_bool(val):
+        return 'yes' if val else 'no'
+    
+class AudioSensitivityParameter(Parameter):
+    MIN_SENS = .3
+    MAX_SENS = 3.
+
+    def __init__(self, manager, sens):
+        Parameter.__init__(self, manager)
+        self.value = sens
+    
+    def param_def(self):
+        return {
+            'name': 'audio sensitivity',
+            'category': 'audio',
+            'isNumeric': True,
+            'isBounded': True,
+        }
+
+    def handle_input_event(self, type, val):
+        if type != 'slider':
+            return
+        sens = self.MIN_SENS * (1-val) + self.MAX_SENS * val
+        self.value = sens
+        launch.AudioConfigThread([p.pid for p in self.manager.running_processes], input_volume=sens).run_inline()
+
+    def _update_value(self, val):
+        val.update({
+            'value': '%d%%' % (100. * self.value),
+            'sliderPos': (self.value - self.MIN_SENS) / (self.MAX_SENS - self.MIN_SENS),
+        })
+
+class AudioSourceParameter(Parameter):
+    def param_def(self):
+        audio_sources = launch.get_audio_sources()
+        return {
+            'name': 'audio input',
+            'category': 'audio',
+            'isEnum': True,
+            'values': audio_sources,
+            'captions': audio_sources,
+        }
+
+    def handle_input_event(self, type, val):
+        if type != 'set':
+            return
+        # make sticky
+        self.manager.audio_input = val
+        launch.AudioConfigThread([p.pid for p in self.manager.running_processes], audio_input=val).run_inline()
+
+    def _update_value(self, val):
+        val['value'] = self.manager.audio_input
+
+class MasterVolumeParameter(Parameter):
+    MAX_VOL = 1.5
+
+    def param_def(self):
+        return {
+            'name': 'master volume',
+            'category': 'audio',
+            'isNumeric': True,
+            'isBounded': True,
+        }
+
+    def handle_input_event(self, type, val):
+        if type != 'slider':
+            return
+        vol = val * self.MAX_VOL
+        launch.set_master_volume(vol)
+
+    def _update_value(self, val):
+        vol = launch.get_master_volume()
+        val.update({
+            'value': '%d%%' % (100. * vol),
+            'sliderPos': vol / self.MAX_VOL,
+        })
+
+class OutputTrackParameter(Parameter):
+    def param_def(self):
+        return {
+            'name': 'audio from',
+            'category': 'audio',
+            'isEnum': True,
+            'values': ['yes', 'no'],
+            'captions': ['content', 'background playlist (content muted)'],
+        }
+
+    def handle_input_event(self, type, val):
+        if type != 'set':
+            return
+        val = self.to_bool(val)
+        self.manager.running_content['has_audio'] = val
+        import sys; sys.modules['__main__'].broadcast_event('mute', 'set', self.from_bool(not val))
+        launch.AudioConfigThread([p.pid for p in self.manager.running_processes], output_volume=1. if val else 0.).run_inline()
+
+    def _update_value(self, val):
+        val['value'] = self.from_bool(self.manager.running_content['has_audio'])

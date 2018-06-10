@@ -98,6 +98,7 @@ def launch_emulator(rom):
 def gui_interaction(wid, command):
     os.popen('xdotool windowactivate --sync %d && xdotool %s' % (wid, command))
 
+    
 def pulse_ctx():
     return contextlib.closing(Pulse('lsdome-admin:%s' % uuid.uuid4().hex))
 
@@ -108,18 +109,18 @@ def get_audio_sources():
 def get_default_output(client):
     return client.server_info().default_sink_name
 
-def audio_output_id(client, name):
+def audio_output_obj(client, name):
     return AudioConfigThread.get_pulse_item(client.sink_list(), lambda e: e.name == name)
 
 def get_master_volume():
     with pulse_ctx() as client:
-        o = audio_output_id(client, get_default_output(client))
+        o = audio_output_obj(client, get_default_output(client))
         return o.volume.value_flat if o else None
 
 def set_master_volume(vol):
     # vol 1. = max hardware volume w/o software scaling; >1 allowed
     with pulse_ctx() as client:
-        o = audio_output_id(client, get_default_output(client))
+        o = audio_output_obj(client, get_default_output(client))
         if o is None:
             return False
         os.popen('pactl set-sink-volume %d %d' % (o.index, int(2**16 * vol)))
@@ -217,7 +218,7 @@ class AudioConfigThread(threading.Thread):
 
     @staticmethod
     def get_pulse_id(items, pred):
-        item = get_pulse_item(items, pred)
+        item = AudioConfigThread.get_pulse_item(items, pred)
         return item.index if item else None
 
     def pids_predicate(self):
