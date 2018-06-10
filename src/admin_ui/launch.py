@@ -105,6 +105,26 @@ def get_audio_sources():
     with pulse_ctx() as client:
         return [s.name for s in client.source_list()]
 
+def get_default_output(client):
+    return client.server_info().default_sink_name
+
+def audio_output_id(client, name):
+    return AudioConfigThread.get_pulse_item(client.sink_list(), lambda e: e.name == name)
+
+def get_master_volume():
+    with pulse_ctx() as client:
+        o = audio_output_id(client, get_default_output(client))
+        return o.volume.value_flat if o else None
+
+def set_master_volume(vol):
+    # vol 1. = max hardware volume w/o software scaling; >1 allowed
+    with pulse_ctx() as client:
+        o = audio_output_id(client, get_default_output(client))
+        if o is None:
+            return False
+        os.popen('pactl set-sink-volume %d %d' % (o.index, int(2**16 * vol)))
+        return True
+    
 # configure the audio settings of the launched content. do this in a thread so as to
 # not block launching -- audio config is not on the critical path so can be done async.
 # the thread attempts configuration for a short timeout then gives up and dies.
@@ -189,11 +209,16 @@ class AudioConfigThread(threading.Thread):
             # produces audio (we only know audio that we care about)
             
     @staticmethod
-    def get_pulse_id(items, pred):
+    def get_pulse_item(items, pred):
         matches = filter(pred, items)
         if len(matches) > 1:
             print 'more than one matching %s!' % type(matches[0]), matches
-        return matches[0].index if matches else None
+        return matches[0] if matches else None
+
+    @staticmethod
+    def get_pulse_id(items, pred):
+        item = get_pulse_item(items, pred)
+        return item.index if item else None
 
     def pids_predicate(self):
         return lambda e: int(e.proplist.get('application.process.id', '0')) in self.pids
