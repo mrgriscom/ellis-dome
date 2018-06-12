@@ -51,9 +51,9 @@ def apply_placement(params, placement):
             params[v] = placement[k]
 
 class ContentInvocation(object):
-    def __init__(self, manager, null=False):
+    def __init__(self, manager):
         self.manager = manager
-        self.uuid = uuid.uuid4().hex if not null else None
+        self.uuid = uuid.uuid4().hex
         self.info = {}
         self.processes = []
         self.timeout = None
@@ -65,7 +65,7 @@ class ContentInvocation(object):
             self.add_param(MasterVolumeParameter(self.manager))
         
     def running(self):
-        return self.uuid is not None
+        return bool(self.info)
 
     def _bulk_notify_msgs(self):
         yield {'content': self.info}
@@ -96,15 +96,16 @@ class ContentInvocation(object):
         return [p.pid for p in (self.processes or [])]
         
 class PlayManager(threading.Thread):
-    def __init__(self, callback_wrapper=None):
+    def __init__(self, broadcast_evt_func, callback_wrapper=None):
         threading.Thread.__init__(self)
         self.up = True
         self.queue = Queue.Queue()
         self.subscribers = []
         self.lock = threading.Lock()
         self.callback_wrapper = callback_wrapper
-
-        self.content = ContentInvocation(self, null=True)
+        self.broadcast_evt_func = broadcast_evt_func
+        
+        self.content = ContentInvocation(self)
         self.playlist = None
         self.default_duration = None
         self.background_audio_running = True
@@ -118,6 +119,8 @@ class PlayManager(threading.Thread):
             self.subscribers.append(s)
             self.content.notify(s)
             s.notify(self._playlist_json())
+            # ping java world and force re-broadcast of its params
+            self.broadcast_evt_func('_paraminfo', 'set')
             
     def unsubscribe(self, s):
         with self.lock:
@@ -211,12 +214,9 @@ class PlayManager(threading.Thread):
                 # setting seems sticky, so we need to explicitly say we want audio back
                 audio_config['output_volume'] = 1.
 
-            def audio_out_detect(detected):
-                if detected:
-                    self.content.add_param(OutputTrackParameter(self))
-            # we only detect lack of audio out based on a timeout, so immediately clear out result of previous check
-            audio_out_detect(False)
-            audio_config['audio_out_detect_callback'] = lambda: audio_out_detect(True)
+            def audio_out_detect():
+                self.content.add_param(OutputTrackParameter(self))
+            audio_config['audio_out_detect_callback'] = audio_out_detect
         if content.sound_reactive:
             # also set param values
             audio_config['input_volume'] = content.volume_adjust
@@ -274,7 +274,7 @@ class PlayManager(threading.Thread):
 
     def _stop_playback(self):
         launch.terminate(self.content.processes)
-        self.content = ContentInvocation(self, null=True)
+        self.content = ContentInvocation(self)
         self.content.notify_all()
         print 'content stopped'
 
@@ -452,7 +452,7 @@ class OutputTrackParameter(Parameter):
             return
         val = self.to_bool(val)
         self.manager.content.info['has_audio'] = val
-        import sys; sys.modules['__main__'].broadcast_event('mute', 'set', self.from_bool(not val))
+        self.manager.broadcast_evt_func('mute', 'set', self.from_bool(not val))
         launch.AudioConfigThread(self.manager.content.pids(), output_volume=1. if val else 0.).run_inline()
 
     def _update_value(self, val):

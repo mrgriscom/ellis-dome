@@ -261,7 +261,7 @@ if __name__ == "__main__":
         th.start()
         threads.append(th)
     
-    manager = animations.PlayManager(lambda func: IOLoop.instance().add_callback(func))
+    manager = animations.PlayManager(broadcast_event, lambda func: IOLoop.instance().add_callback(func))
     add_thread(manager)
 
     playlists = playlist.load_playlists()

@@ -255,6 +255,12 @@ function initParam(param) {
     if (param.category == 'hidden') {
 	return;
     }
+
+    // same param was re-sent; just easier to deal with here
+    if (PARAMS[param.name]) {
+	PARAMS[param.name].e.remove();
+    }
+    
     var $section = $('#' + ({
 	placement: 'placement_controls',
 	mesh_effects: 'effects_controls',
