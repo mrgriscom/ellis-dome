@@ -29,60 +29,58 @@ class MainHandler(web.RequestHandler):
         self.render('main.html', onload='init', geom=settings.geometry)
 
 class WebSocketTestHandler(websocket.WebSocketHandler):
-    def initialize(self, manager, static_data, zmq_send):
-        self.manager = manager
-        self.static_data = static_data
-        self.zmq_send = zmq_send
+    def initialize(self):
+        pass
 
     def open(self):
-        placements = list(self.static_data['placements'])
-        ix = len(placements)
-        for f in os.listdir(settings.placements_dir):
-            if f.startswith('.'):
-                continue
-            try:
-                preset = animations.load_placements(os.path.join(settings.placements_dir, f))[0]
-                preset['ix'] = ix
-                ix += 1
-                placements.append(preset)
-            except:
-                print 'error loading preset'
+        #self.placements = list(placements)
+        #ix = len(placements)
+        #for f in os.listdir(settings.placements_dir):
+        #    if f.startswith('.'):
+        #        continue
+        #    try:
+        #        preset = animations.load_placements(os.path.join(settings.placements_dir, f))[0]
+        #        preset['ix'] = ix
+        #        ix += 1
+        #        placements.append(preset)
+        #    except:
+        #        print 'error loading preset'
         msg = {
             'type': 'init',
-            'playlists': sorted([{'name': k} for k in self.static_data['playlists'].keys()], key=lambda e: e['name']),
-            'contents': sorted([{'name': playlist.content_name(c), 'config': c} for c in self.static_data['contents']], key=lambda e: e['name']),
+            'playlists': sorted([{'name': k} for k in playlists.keys()], key=lambda e: e['name']),
+            'contents': sorted([{'name': playlist.content_name(c), 'config': c} for c in contents], key=lambda e: e['name']),
             'placements': placements,
-            'ac_power': psutil.sensors_battery().power_plugged,
         }
         self.write_message(json.dumps(msg))
-        self.manager.subscribe(self)
-
+        manager.subscribe(self)
+        self.notify(battery_thread.get_status())
+        
     def on_message(self, message):
         data = json.loads(message)
         print 'incoming message:', data
 
         action = data.get('action')
         if action == 'stop_all':
-            self.manager.stop_all()
+            manager.stop_all()
         if action == 'stop_current':
-            self.manager.stop_current()
+            manager.stop_current()
         if action == 'play_content':
-            self.manager.play([c for c in self.static_data['contents'] if playlist.content_name(c) == data['name']][0], data['duration'])
+            manager.play([c for c in contents if playlist.content_name(c) == data['name']][0], data['duration'])
         if action == 'set_playlist':
-            self.manager.set_playlist(self.static_data['playlists'][data['name']], data['duration'])
+            manager.set_playlist(playlists[data['name']], data['duration'])
         if action == 'set_trim':
-            self.manager.set_wing_trim(data['state'])
+            manager.set_wing_trim(data['state'])
         if action == 'set_placement':
-            self.set_placement(self.static_data['placements'][data['ix']])
+            self.set_placement(placements[data['ix']])
         if action == 'interactive':
             self.interactive(data['id'], data['sess'], data['type'], data.get('val'))
         if action == 'extend_duration':
-            self.manager.extend_duration(data['duration'])
+            manager.extend_duration(data['duration'])
         if action == 'reset_duration':
-            self.manager.extend_duration(data['duration'], True)
+            manager.extend_duration(data['duration'], True)
 
     def on_close(self):
-        self.manager.unsubscribe(self)
+        manager.unsubscribe(self)
         
     def set_placement(self, placement):
         broadcast_event('xo', 'set', placement.get('xo', 0))
@@ -173,17 +171,15 @@ def broadcast_event(id, type, val=None):
     zmq_send(json.dumps(evt))
 
 class ZMQListener(threading.Thread):
-    def __init__(self, context, manager):
+    def __init__(self, context):
         threading.Thread.__init__(self)
         self.up = True
 
         self.socket = context.socket(zmq.PULL)
         self.socket.connect("tcp://localhost:%s" % settings.zmq_port_outbound)
         
-        self.manager = manager
-
     def broadcast(self, msg):
-        self.manager.notify(msg)
+        manager.notify(msg)
         
     def handle(self, msg):
         try:
@@ -215,6 +211,43 @@ class ZMQListener(threading.Thread):
             except zmq.Again as e:
                 time.sleep(.01)
 
+NOTIF_INTERVAL = 120
+class BatteryMonitorThread(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.up = True
+        self.last_notif = None
+        self.last_status = self.get_status()
+        
+    def terminate(self):
+        self.up = False
+
+    def run(self):
+        while self.up:
+            status = self.get_status()
+            power_source_change = (status['battery_power'] != self.last_status['battery_power'])
+            self.last_status = status            
+            
+            due_for_update = (self.last_notif is None or time.time() - self.last_notif > NOTIF_INTERVAL)
+            immediate_update = power_source_change
+            if due_for_update or immediate_update:
+                manager.notify(status)
+                self.last_notif = time.time()
+            
+            time.sleep(1.)
+
+    def get_status(self):
+        info = psutil.sensors_battery()
+        status = {
+            'type': 'battery',
+            'battery_power': not info.power_plugged,
+            'battery_charge': info.percent / 100.,
+        }
+        if status['battery_power']:
+            secs = info.secsleft
+            if secs >= 0:
+                status['remaining_minutes'] = secs / 60.
+        return status
 
 if __name__ == "__main__":
 
@@ -236,12 +269,10 @@ if __name__ == "__main__":
     manager = animations.PlayManager(lambda func: IOLoop.instance().add_callback(func))
     add_thread(manager)
 
-    static_data = {
-        'playlists': playlist.load_playlists(),
-        'contents': list(playlist.get_all_content()),
-        'placements': animations.load_placements(),
-    }
-    for i, e in enumerate(static_data['placements']):
+    playlists = playlist.load_playlists()
+    contents = list(playlist.get_all_content())
+    placements = animations.load_placements()
+    for i, e in enumerate(placements):
         e['ix'] = i
 
     context = zmq.Context()
@@ -250,15 +281,18 @@ if __name__ == "__main__":
     def zmq_send(msg):
         socket.send(msg.encode('utf8'))
 
-    zmqlisten = ZMQListener(context, manager)
+    zmqlisten = ZMQListener(context)
     add_thread(zmqlisten)
         
     button_thread = ButtonPressManager()
     add_thread(button_thread)
 
+    battery_thread = BatteryMonitorThread()
+    add_thread(battery_thread)
+    
     application = web.Application([
         (r'/', MainHandler),
-        (r'/socket', WebSocketTestHandler, {'manager': manager, 'static_data': static_data, 'zmq_send': zmq_send}),
+        (r'/socket', WebSocketTestHandler),
         (r'/(.*)', web.StaticFileHandler, {'path': web_path('static')}),
     ], template_path=web_path('templates'))
     application.listen(port, ssl_options=ssl)

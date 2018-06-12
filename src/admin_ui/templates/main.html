@@ -40,7 +40,7 @@ button {
 
   </style>
 
-<div style="color: red;" data-bind="text: ac_power"></div>
+  <div data-bind="text: battery_status, style: {color: battery_alert() ? 'red' : 'green'}"></div>
 
   <div>
     Minutes per visualization: <input id="mins" type="number" value="2.5"></input>

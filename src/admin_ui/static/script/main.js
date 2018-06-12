@@ -8,7 +8,8 @@ function AdminUIModel() {
     this.contents = ko.observableArray();
     this.placements = ko.observableArray();
     this.wingTrims = ko.observableArray(['raised', 'flat']);
-    this.ac_power = ko.observable();
+    this.battery_status = ko.observable();
+    this.battery_alert = ko.observable(false);
     this.current_playlist = ko.observable();
     this.current_content = ko.observable();
     this.current_timeout = ko.observable();
@@ -30,7 +31,6 @@ function AdminUIModel() {
 	    p.load(e);
 	    model.placements.push(p);
 	});
-      this.ac_power(data.ac_power ? '' : 'LAPTOP ON BATTERY POWER')
     }
 
     this.setTrim = function(e) {
@@ -117,6 +117,17 @@ function init() {
 	    initParams(data);
 	} else if (data.type == "param_value") {
 	    updateParamValue(data);
+	} else if (data.type == "battery") {
+	    var status = '';
+	    if (data.battery_power || data.battery_charge < .99) {
+		status += (data.battery_power ? 'ON BATTERY' : 'charging');
+		status += ' ' + Math.floor(100. * data.battery_charge) + '%';
+		if (data.remaining_minutes) {
+		    status += ' (' + Math.floor(data.remaining_minutes) + ' min remaining)';
+		}
+	    }
+	    model.battery_status(status);
+	    model.battery_alert(data.battery_power);
 	}
     };
     CONN = this.conn;
