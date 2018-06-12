@@ -9,6 +9,8 @@ import psutil
 import settings
 import playlist
 
+# daemon that controls the currently running thing, and responsible for turning play intention into action (choosing a placement, initializing params, etc.)
+
 def default_sketch_properties():
     return {
         'dynamic_subsampling': 1,
@@ -52,6 +54,15 @@ def apply_placement(params, placement):
         if k in placement:
             params[v] = placement[k]
 
+class ContentInvocation(object):
+    def __init__(self):
+        self.uuid = uuid.uuid4().hex
+        self.content = None
+        self.processes = None
+        self.timeout = None
+        self.window_id = None
+        self.params = []
+            
 class PlayManager(threading.Thread):
     def __init__(self, callback_wrapper=None):
         threading.Thread.__init__(self)
@@ -73,7 +84,7 @@ class PlayManager(threading.Thread):
 
         self.placements = load_placements()
         self.wing_trim = 'flat'
-        self.audio_input = default_audio_input
+        self.audio_input = default_audio_input()
         
     def subscribe(self, s):
         with self.lock:
@@ -149,29 +160,27 @@ class PlayManager(threading.Thread):
         self._stop_all()
         
     def _play_content(self, content, duration=None):
-        def _server_config():
-            return playlist.content_server_config.get(playlist.content_name(content), {})
-        
         if self.running_processes:
             self._stop_playback()
 
-        # allow modification to content w/o modifying original
-        content = dict(content)
         params = dict(default_sketch_properties())
-        params.update(content.get('params', {}))
-        content['params'] = params
+        params.update(content.params)
+        invocation = dict(content.__dict__)
+        invocation['params'] = params
+        del invocation['post_launch']
+        del invocation['server_side_parameters']
         
         placement = random.choice(list(self.get_available_placements(content)))
         print 'using placement %s' % placement['name']
         apply_placement(params, placement)
 
-        server_params = list(_server_config().get('server_parameters', []))
+        server_params = [param_factory(self) for param_factory in content.server_side_parameters]
         
         audio_config = {}
         if settings.audio_out:
             # TODO make persistent (not sketch based)
             server_params.append(MasterVolumeParameter(self))
-            if not content.get('has_audio', False):
+            if not content.has_audio:
                 # if we have speakers, mute the content unless told otherwise, so it doesn't
                 # play over the background playlist
                 audio_config['output_volume'] = 0.
@@ -190,37 +199,38 @@ class PlayManager(threading.Thread):
             # we only detect lack of audio out based on a timeout, so immediately clear out result of previous check
             audio_out_detect(False)
             audio_config['audio_out_detect_callback'] = lambda: audio_out_detect(True)
-        if content.get('sound_reactive'):
+        if content.sound_reactive:
             # also set param values
-            audio_config['input_volume'] = content.get('volume_adjust', 1.)
+            audio_config['input_volume'] = content.volume_adjust
             audio_config['audio_input'] = self.audio_input
 
             server_params.append(AudioSensitivityParameter(self, audio_config['input_volume']))
             server_params.append(AudioSourceParameter(self))
         
-        if content['sketch'] == 'screencast':
-            gui_invocation = launch.launch_screencast(content['cmd'], params)
+        if content.sketch == 'screencast':
+            gui_invocation = launch.launch_screencast(content.cmdline, params)
             self.running_processes = gui_invocation[1]
             self.window_id = gui_invocation[0]
 
-            post_launch_hook = _server_config().get('post_launch_hook')
+            post_launch_hook = content.post_launch
             if post_launch_hook:
                 post_launch_hook(self)
         else:
-            if content['sketch'] == 'video':
+            if content.sketch == 'video':
                 params['repeat'] = True
-                if content['playmode'] == 'shuffle':
-                    params['skip'] = random.uniform(0, max(content['duration'] - duration, 0))
-                elif content['playmode'] == 'full':
+                if content.play_mode == 'shuffle':
+                    params['skip'] = random.uniform(0, max(content.duration - duration, 0))
+                elif content.play_mode == 'full':
                     params['repeat'] = False
-                    content['sketch_controls_duration'] = True
+                    invocation['sketch_controls_duration'] = True
                     duration = settings.sketch_controls_duration_failsafe_timeout
-            p = launch.launch_sketch(content['sketch'], params)
+                    
+            p = launch.launch_sketch(content.sketch, params)
             self.running_processes = [p]
         launch.AudioConfigThread([p.pid for p in self.running_processes], **audio_config).start()
 
-        content['launched_at'] = time.time()
-        self.running_content = content
+        invocation['launched_at'] = time.time()
+        self.running_content = invocation
         self.notify({'content': self.running_content})
         print 'content started'
 
@@ -279,10 +289,8 @@ class PlayManager(threading.Thread):
         for pl in self.placements:
             if 'wing_trim' in pl and pl['wing_trim'] != self.wing_trim:
                 continue
-            if 'aspect' in content:
-                stretch = {'stretch': True, '1:1': False}[content['aspect']]
-                if stretch != pl['stretch']:
-                    continue
+            if content.stretch_aspect != pl['stretch']:
+                continue
             yield pl
 
     def update_background_audio(self):

@@ -45,13 +45,9 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
         #        placements.append(preset)
         #    except:
         #        print 'error loading preset'
-        msg = {
-            'type': 'init',
-            'playlists': sorted([{'name': k} for k in playlists.keys()], key=lambda e: e['name']),
-            'contents': sorted([{'name': playlist.content_name(c), 'config': c} for c in contents], key=lambda e: e['name']),
-            'placements': placements,
-        }
-        self.write_message(json.dumps(msg))
+        self.notify({'playlists': [{'name': pl.name} for pl in sorted(playlists.values(), key=lambda pl: pl.name)]})
+        self.notify({'contents': [{'name': c.name} for c in sorted(contents.values(), key=lambda c: c.name)]})
+        self.notify({'placements': placements})
         manager.subscribe(self)
         self.notify(battery_thread.get_status())
         
@@ -65,7 +61,7 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
         if action == 'stop_current':
             manager.stop_current()
         if action == 'play_content':
-            manager.play([c for c in contents if playlist.content_name(c) == data['name']][0], data['duration'])
+            manager.play(contents[data['name']], data['duration'])
         if action == 'set_playlist':
             manager.set_playlist(playlists[data['name']], data['duration'])
         if action == 'set_trim':
@@ -270,7 +266,7 @@ if __name__ == "__main__":
     add_thread(manager)
 
     playlists = playlist.load_playlists()
-    contents = list(playlist.get_all_content())
+    contents = playlist.all_content()
     placements = animations.load_placements()
     for i, e in enumerate(placements):
         e['ix'] = i

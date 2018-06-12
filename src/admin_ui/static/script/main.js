@@ -14,25 +14,6 @@ function AdminUIModel() {
     this.current_content = ko.observable();
     this.current_timeout = ko.observable();
     
-    var model = this;
-    this.load = function(data) {
-	$.each(data.playlists, function(i, e) {
-	    var pl = new PlaylistModel();
-	    pl.load(e);
-	    model.playlists.push(pl);
-	});
-	$.each(data.contents, function(i, e) {
-	    var c = new ContentModel();
-	    c.load(e);
-	    model.contents.push(c);
-	});
-	$.each(data.placements, function(i, e) {
-	    var p = new PlacementModel();
-	    p.load(e);
-	    model.placements.push(p);
-	});
-    }
-
     this.setTrim = function(e) {
 	CONN.send(JSON.stringify({action: 'set_trim', state: e}));
     }
@@ -105,8 +86,24 @@ function init() {
         var data = JSON.parse(e.data);
 	console.log(data);
 
-	if (data.type == "init") {
-	    model.load(data);
+	if (data.type == "playlists") {
+	    $.each(data.playlists, function(i, e) {
+		var pl = new PlaylistModel();
+		pl.load(e);
+		model.playlists.push(pl);
+	    });
+	} else if (data.type == "contents") {
+	    $.each(data.contents, function(i, e) {
+		var c = new ContentModel();
+		c.load(e);
+		model.contents.push(c);
+	    });
+	} else if (data.type == "placements") {
+	    $.each(data.placements, function(i, e) {
+		var p = new PlacementModel();
+		p.load(e);
+		model.placements.push(p);
+	    });
 	} else if (data.type == "content") {
 	    model.current_content(JSON.stringify(data.content));
 	} else if (data.type == "playlist") {

@@ -10,6 +10,8 @@ import uuid
 import settings
 import threading
 
+# low-level util functions for launching things and controlling basic aspect of playback (audio, gui interaction, etc.)
+
 def launch_sketch(name, params):
     """Launch a built-in sketch
     name - sketch name to pass to the java binary
@@ -64,7 +66,7 @@ def launch_screencast(cmd, params, timeout=5):
 
     # make window always on top
     os.popen('wmctrl -i -r %d -b add,above' % window['wid'])
-    
+
     if window['pid']:
         params['pid'] = window['pid']
     sketch = launch_sketch('screencast', params)
@@ -223,7 +225,8 @@ class AudioConfigThread(threading.Thread):
 
     def pids_predicate(self):
         return lambda e: int(e.proplist.get('application.process.id', '0')) in self.pids
-        
+
+    
 def terminate(procs):
     """Kill each process in procs"""
     for p in (procs or []):
@@ -267,11 +270,3 @@ def get_process_descendants(pid):
         return []
     return [root] + root.children(recursive=True)
 
-
-if __name__ == "__main__":
-
-    test = sys.argv[1]
-
-    p = launch_sketch('video', {'path': '/home/drew/lsdome-media/video/the_knife-we_share_our_mothers_health.mp4'})
-    time.sleep(20)
-    terminate([p])
