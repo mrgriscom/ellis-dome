@@ -23,7 +23,7 @@ def load_java_settings(path):
 load_java_settings(os.path.join(repo_root, 'config.properties'))
 
 # true if the installation has speakers
-audio_out = False
+audio_out = True
 
 media_path = '/home/drew/lsdome-media/'
 roms_path = '/home/drew/roms/'
@@ -31,3 +31,8 @@ roms_path = '/home/drew/roms/'
 # when the sketch controls its own duration, if it sets a duration of
 # 'indefinite', use this instead
 sketch_controls_duration_failsafe_timeout = 300
+
+default_sketch_properties = {
+    'dynamic_subsampling': 1,
+}
+

@@ -107,7 +107,7 @@ function init() {
 	} else if (data.type == "content") {
 	    model.current_content(JSON.stringify(data.content));
 	} else if (data.type == "playlist") {
-	    model.current_playlist(data.playlist);
+	    model.current_playlist(data.playlist.name);
 	} else if (data.type == "duration") {
 	    model.current_timeout(data.duration);
 	} else if (data.type == "params") {
@@ -234,21 +234,23 @@ function buttonAction(id, pressed) {
     }
 }
 
+PARAMS = {};
 function initParams(data) {
+    // if invocation id is different, we're running a new sketch; clear out all
+    // the parameters associated with the previous sketch
     $.each(PARAMS, function(k, v) {
-	if (v.param.source == data.source) {
+	if (v.param.invocation != data.invocation) {
 	    v.e.remove();
 	    delete PARAMS[k];
 	}
     });
     
     $.each(data.params, function(i, e) {
-	e.source = data.source;
+	e.invocation = data.invocation;
 	initParam(e);
     });
 }
 
-PARAMS = {};
 function initParam(param) {
     if (param.category == 'hidden') {
 	return;

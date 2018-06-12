@@ -187,14 +187,13 @@ class ZMQListener(threading.Thread):
             duration = msg['duration']
             if duration < 0 or duration is None:
                 duration = settings.sketch_controls_duration_failsafe_timeout
-            if (manager.running_content or {}).get('sketch_controls_duration', False):
+            if manager.content.info.get('sketch_controls_duration', False):
                 manager.extend_duration(duration, True)
         if msg['type'] == 'params':
-            msg['source'] = 'processing'
+            msg['invocation'] = manager.content.uuid
             self.broadcast(msg)
         if msg['type'] == 'param_value':
             self.broadcast(msg)
-
             
     def terminate(self):
         self.up = False

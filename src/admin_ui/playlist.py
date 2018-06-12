@@ -66,6 +66,12 @@ class Content(object):
             print 'could not read duration of %s' % vid
             duration = 0
         return duration
+
+    def to_json_info(self):
+        info = dict(self.__dict__)
+        for k in ('post_launch', 'server_side_parameters'):
+            del info[k]
+        return info
             
 _all_content = None
 def all_content():
@@ -117,7 +123,7 @@ def projectm_control(mgr, command):
         'next': 'key r',
         'toggle-lock': 'key l',
     }[command]
-    launch.gui_interaction(mgr.window_id, interaction)
+    launch.gui_interaction(mgr.content.window_id, interaction)
 
 def projectm_parameters():
     import animations
@@ -167,6 +173,12 @@ class Playlist(object):
         self.last_played = choice
         return choice
 
+    def to_json(self):
+        return {
+            'name': self.name,
+            'items': sorted(c.name for c in self.choices.keys()),
+        }
+    
 def load_playlists():
     base = Playlist('(almost) everything', (c for c in all_content().values() if not c.manual))
     nosound = Playlist('no sound-reactive', (c for c in base.choices.keys() if not c.sound_reactive or not c.sound_required))
