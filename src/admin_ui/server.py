@@ -16,6 +16,7 @@ from optparse import OptionParser
 import logging
 import json
 import zmq
+from datetime import datetime
 import threading
 import Queue
 import time
@@ -27,7 +28,7 @@ def web_path(*args):
 class MainHandler(web.RequestHandler):
     def get(self):
         self.render('main.html', onload='init', geom=settings.geometry)
-
+        
 class WebSocketTestHandler(websocket.WebSocketHandler):
     def initialize(self):
         pass
@@ -53,7 +54,7 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
         
     def on_message(self, message):
         data = json.loads(message)
-        print 'incoming message:', data
+        print 'incoming message:', datetime.now(), self.request.remote_ip, data
 
         action = data.get('action')
         if action == 'stop_all':
