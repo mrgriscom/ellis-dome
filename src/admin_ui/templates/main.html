@@ -60,19 +60,20 @@ button {
 
   <h3>playlists</h3>
 
-  <div data-bind="text: current_playlist"></div>
+  <div data-bind="visible: !current_playlist()" style="background-color: #fdd;">no playlist set -- output will cease after current content finishes!</div>
+  <div data-bind="visible: current_playlist">currently playing: <span style="font-weight: bold;" data-bind="text: current_playlist"></span>, <span data-bind="text: default_duration"></span>m cycle time</div>
 
   <div data-bind="foreach: playlists">
     <div>
       <button data-bind="click: play">play</button>
-      <span data-bind="text: name"></span>
+      <span data-bind="text: name"></span> (<span data-bind="text: count"></span> items)
     </div>
   </div>
 
   <h3>visualizations</h3>
 
-  <div data-bind="text: current_content"></div>
-  <div>until <span data-bind="text: current_timeout"></span></div>
+  <div data-bind="visible: !current_content()">nothing playing</div>
+  <div data-bind="visible: current_content">currently playing: <span style="font-weight: bold;" data-bind="text: current_content"></span><br />since <span data-bind="text: content_launch_time"></span><br/>until <span data-bind="text: current_timeout"></span> (<span data-bind="text: time_remaining"></span> remaining)</div>
   
   <div data-bind="foreach: contents">
     <div>

@@ -11,8 +11,34 @@ function AdminUIModel() {
     this.battery_status = ko.observable();
     this.battery_alert = ko.observable(false);
     this.current_playlist = ko.observable();
+    this.default_duration = ko.observable();
     this.current_content = ko.observable();
+    this.content_launch_time = ko.observable();
     this.current_timeout = ko.observable();
+
+    var model = this;
+    this.now = ko.observable(new Date());
+    setInterval(function() {
+	model.now(new Date());
+    }, 1000);
+    this.time_remaining = ko.computed(function() {
+	if (!model.current_timeout()) {
+	    return '\u221e';
+	}
+
+	var diff = Math.floor((model.current_timeout() - model.now()) / 1000.);
+	if (diff < 0) {
+	    if (diff >= -1) {
+		diff = 0;
+	    } else {
+		return '(overdue)';
+	    }
+	}
+
+	var m = Math.floor(diff / 60);
+	var s = diff % 60;
+	return m + 'm ' + s + 's';
+    });
     
     this.setTrim = function(e) {
 	CONN.send(JSON.stringify({action: 'set_trim', state: e}));
@@ -20,11 +46,14 @@ function AdminUIModel() {
 }
 
 function PlaylistModel() {
-    this.name = ko.observable()
+    this.name = ko.observable();
+    this.count = ko.observable();
+    //this.items = ko.observableArray();
 
     this.load = function(data) {
 	console.log(data);
 	this.name(data.name);
+	this.count(data.items.length);
     }
 
     this.play = function() {
@@ -33,7 +62,7 @@ function PlaylistModel() {
 }
 
 function ContentModel() {
-    this.name = ko.observable()
+    this.name = ko.observable();
 
     this.load = function(data) {
 	this.name(data.name);
@@ -105,11 +134,13 @@ function init() {
 		model.placements.push(p);
 	    });
 	} else if (data.type == "content") {
-	    model.current_content(JSON.stringify(data.content));
+	    model.current_content(data.content.name);
+	    model.content_launch_time(new Date(data.content.launched_at * 1000));
 	} else if (data.type == "playlist") {
-	    model.current_playlist(data.playlist.name);
+	    model.current_playlist(data.playlist ? data.playlist.name : null);
+	    model.default_duration(data.playlist.duration / 60.);
 	} else if (data.type == "duration") {
-	    model.current_timeout(data.duration);
+	    model.current_timeout(data.duration ? new Date(data.duration * 1000) : 'n/a');
 	} else if (data.type == "params") {
 	    initParams(data);
 	} else if (data.type == "param_value") {

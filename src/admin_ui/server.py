@@ -45,8 +45,8 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
         #        placements.append(preset)
         #    except:
         #        print 'error loading preset'
-        self.notify({'playlists': [{'name': pl.name} for pl in sorted(playlists.values(), key=lambda pl: pl.name)]})
-        self.notify({'contents': [{'name': c.name} for c in sorted(contents.values(), key=lambda c: c.name)]})
+        self.notify({'playlists': [pl.to_json() for pl in sorted(playlists.values(), key=lambda pl: pl.name)]})
+        self.notify({'contents': [c.to_json_info() for c in sorted(contents.values(), key=lambda c: c.name)]})
         self.notify({'placements': placements})
         manager.subscribe(self)
         self.notify(battery_thread.get_status())
