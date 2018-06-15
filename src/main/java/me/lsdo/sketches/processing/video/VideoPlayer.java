@@ -108,7 +108,6 @@ public class VideoPlayer extends VideoBase {
 	timeline.init(startAt);
 
         System.out.println("duration: " + mov.duration());
-        // TODO some event when playback has finished?
     }
 
     public PImage nextFrame() {

@@ -93,24 +93,34 @@ function getDuration() {
     return $('#mins').val() * 60;
 }
 
+function connect(model) {
+    var conn = new WebSocket('ws://' + window.location.host + '/socket');
+    $('#connectionstatus').text('connecting to server...');
 
-function init() {
-    var that = this;
-
-    var model = new AdminUIModel();
-    ko.applyBindings(model);
-
-    this.conn = new WebSocket('ws://' + window.location.host + '/socket');
-    this.conn.onopen = function () {
+    var connectionLost = function() {
+	$('#connectionstatus').text('connection to server lost; reload to reconnect');
+	$('#ui').css('opacity', .65);
+	$('#connectionstatus').css('font-weight', 'bold');
+	$('button').prop('disabled', true);
+	$.each(PARAMS, function(k, v) {
+	    if (v.$slider) {
+		v.$slider.slider("option", "disabled", true);
+	    }
+	});
+	scrollTo(0, 0);
+    }
+    
+    conn.onopen = function () {
+	$('#connectionstatus').text('');
     };
-    this.conn.onclose = function() {
+    conn.onclose = function() {
 	connectionLost();
     };
-    this.conn.onerror = function (error) {
+    conn.onerror = function (error) {
         console.log('websocket error ' + error);
 	connectionLost();
     };
-    this.conn.onmessage = function (e) {
+    conn.onmessage = function (e) {
 	console.log('receiving msg');
         var data = JSON.parse(e.data);
 	console.log(data);
@@ -158,7 +168,13 @@ function init() {
 	    model.battery_alert(data.battery_power);
 	}
     };
-    CONN = this.conn;
+    CONN = conn;
+}
+
+function init() {
+    var model = new AdminUIModel();
+    ko.applyBindings(model);
+    connect(model);    
 
     $('#stopall').click(function() {
 	CONN.send(JSON.stringify({action: 'stop_all'}));
@@ -241,10 +257,6 @@ function bindButton(sel, id) {
 	e.preventDefault();
 	buttonAction(id, false);
     });
-}
-
-function connectionLost() {
-    alert('connection to server lost; reload the page');
 }
 
 SESSION_ID = Math.floor(1000000000*Math.random());
