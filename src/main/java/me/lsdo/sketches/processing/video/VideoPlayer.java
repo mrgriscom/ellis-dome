@@ -69,6 +69,7 @@ public class VideoPlayer extends VideoBase {
 		@Override
 		public void onFalse() {
 		    mov.pause();
+		    timeline.set((double)mov.time());
 		    updateRemainingTime();
 		}
 	    };
@@ -92,6 +93,8 @@ public class VideoPlayer extends VideoBase {
 	    }
 	}
 
+	// timeline is only updated on discrete actions, not continuously as the video
+	// plays, to avoid flooding the client with updates
 	timeline = new NumericParameter("timeline", "animation") {
 		@Override
 		public void onSet() {
@@ -133,6 +136,10 @@ public class VideoPlayer extends VideoBase {
     }
     
     public void jump(double t) {
+	if (t == mov.time()) {
+	    return;
+	}
+	
 	mov.jump((float)t);
 	updateRemainingTime();
 	
