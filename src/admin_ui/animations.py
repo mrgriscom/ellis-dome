@@ -25,25 +25,24 @@ def load_placements(path=None):
             for k, v in rec.items():
                 if v == '':
                     del rec[k]
-            rec['stretch'] = {'y': True, 'n': False}[rec['stretch']]
             def to_float(field):
                 if field in rec:
                     rec[field] = float(rec[field])
-            to_float('xo')
-            to_float('yo')
-            to_float('rot')
+            to_float('x-offset')
+            to_float('y-offset')
+            to_float('rotation')
             to_float('scale')
             return rec
 
         return map(load_rec, r)
 
 def apply_placement(params, placement):
-    params['no_stretch'] = not placement['stretch']
+    params['no_stretch'] = placement['aspect'] != 'stretch'
     params['wing_mode'] = placement['wing_mode']
     fields = {
-        'xo': 'place_x',
-        'yo': 'place_y',
-        'rot': 'place_rot',
+        'x-offset': 'place_x',
+        'y-offset': 'place_y',
+        'rotation': 'place_rot',
         'scale': 'place_scale',
     }
     for k, v in fields.iteritems():
@@ -87,6 +86,10 @@ class ContentInvocation(object):
         self.manager.notify({'duration': self.timeout})
         print 'until', self.timeout
 
+    def update_info(self, kv):
+        self.info.update(kv)
+        self.manager.notify({'content': self.info})
+        
     def add_param(self, param):
         self.params[param.param['name']] = param
         self.manager.notify({'type': 'params', 'params': [param.param], 'invocation': self.uuid})
@@ -163,6 +166,9 @@ class PlayManager(threading.Thread):
 
     def input_event(self, id, type, val):
         self.queue.put(lambda: self._input_event(id, type, val))
+
+    def update_content_info(self, kv):
+        self.queue.put(lambda: self.content.update_info(kv))
         
     def terminate(self):
         self.up = False
@@ -297,7 +303,7 @@ class PlayManager(threading.Thread):
         for pl in self.placements:
             if 'wing_trim' in pl and pl['wing_trim'] != self.wing_trim:
                 continue
-            if content.stretch_aspect != pl['stretch']:
+            if content.stretch_aspect != (pl['aspect'] == 'stretch'):
                 continue
             yield pl
 

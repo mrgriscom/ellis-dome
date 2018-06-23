@@ -15,6 +15,7 @@ function AdminUIModel() {
     this.current_content = ko.observable();
     this.content_launch_time = ko.observable();
     this.current_timeout = ko.observable();
+    this.aspect_ratio = ko.observable();
 
     var model = this;
     this.now = ko.observable(new Date());
@@ -146,6 +147,7 @@ function connect(model) {
 	} else if (data.type == "content") {
 	    model.current_content(data.content.name);
 	    model.content_launch_time(new Date(data.content.launched_at * 1000));
+	    model.aspect_ratio(data.content.aspect || 'n/a');
 	} else if (data.type == "playlist") {
 	    model.current_playlist(data.playlist ? data.playlist.name : null);
 	    model.default_duration(data.playlist.duration / 60.);

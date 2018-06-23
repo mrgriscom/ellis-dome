@@ -46,7 +46,7 @@ button {
   <div data-bind="text: battery_status, style: {color: battery_alert() ? 'red' : 'green'}"></div>
 
   <div>
-    Minutes per visualization: <input id="mins" type="number" value="2.5"></input>
+    Minutes per visualization: <input id="mins" type="number" value="{{ default_duration }}"></input>
   </div>
   <div>
     <button id="stopall">stop all playback</button>
@@ -76,7 +76,12 @@ button {
   <h3>visualizations</h3>
 
   <div data-bind="visible: !current_content()">nothing playing</div>
-  <div data-bind="visible: current_content">currently playing: <span style="font-weight: bold;" data-bind="text: current_content"></span><br />since <span data-bind="text: content_launch_time"></span><br/>until <span data-bind="text: current_timeout"></span> (<span data-bind="text: time_remaining"></span> remaining)</div>
+  <div data-bind="visible: current_content">currently playing:
+    <span style="font-weight: bold;" data-bind="text: current_content"></span><br />
+    since <span data-bind="text: content_launch_time"></span><br/>
+    until <span data-bind="text: current_timeout"></span> (<span data-bind="text: time_remaining"></span> remaining)<br/>
+    aspect ratio: <span data-bind="text: aspect_ratio"></span>
+  </div>
   
   <div data-bind="foreach: contents">
     <div>

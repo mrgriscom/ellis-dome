@@ -27,7 +27,7 @@ def web_path(*args):
 
 class MainHandler(web.RequestHandler):
     def get(self):
-        self.render('main.html', onload='init', geom=settings.geometry)
+        self.render('main.html', onload='init', geom=settings.geometry, default_duration=settings.default_duration/60.)
         
 class WebSocketTestHandler(websocket.WebSocketHandler):
     def initialize(self):
@@ -195,6 +195,8 @@ class ZMQListener(threading.Thread):
             self.broadcast(msg)
         if msg['type'] == 'param_value':
             self.broadcast(msg)
+        if msg['type'] == 'aspect':
+            manager.update_content_info({'aspect': msg['aspect']})
             
     def terminate(self):
         self.up = False

@@ -30,6 +30,8 @@ roms_path = '/home/drew/roms/'
 
 kinect = False
 
+default_duration = 150
+
 # when the sketch controls its own duration, if it sets a duration of
 # 'indefinite', use this instead
 sketch_controls_duration_failsafe_timeout = 300
