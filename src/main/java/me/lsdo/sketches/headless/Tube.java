@@ -86,7 +86,7 @@ public class Tube extends XYAnimation {
 	speed.init(1.);
 	speedSensitivity.init(.01);
 	
-	vHeight = new RelativeChangeNumericParameter("v-height", "animation") {
+	vHeight = new RelativeChangeNumericParameter("ring spacing", "animation") {
 	    @Override
 	    double baselineAdjustment(double prev) {
 		if (!vHeightWarpMode.get()) {
@@ -104,39 +104,39 @@ public class Tube extends XYAnimation {
 	vHeight.scale = NumericParameter.Scale.LOG;
 	vHeight.init(1.);
 
-	vOffset = new NumericParameter.Integer("v-offset", "animation");
+	vOffset = new NumericParameter.Integer("spiral", "animation");
 	vOffset.verbose = true;
 	vOffset.init(0);
 
-	hChecks = new NumericParameter.Integer("h-checks", "animation");
+	hChecks = new NumericParameter.Integer("radial spacing", "animation");
 	hChecks.verbose = true;
 	hChecks.init(4);
 	
-	hSkew = new RelativeChangeNumericParameter("h-skew", "animation") {
+	hSkew = new RelativeChangeNumericParameter("twist", "animation") {
 	    @Override
 	    double baselineAdjustment(double prev) {
 		return (pos + REL_BASELINE) * (prev - get());
 	    }
 	};
 	hSkew.verbose = true;
-	hSkewSensitivity = new SensitivityParameter("h-skew sensitivity", "animation", hSkew);
+	hSkewSensitivity = new SensitivityParameter("twist sensitivity", "animation", hSkew);
 	hSkewSensitivity.verbose = true;
 	hSkewSensitivity.setSensitivity(.05);
 	hSkew.init(0.);
 	hSkewSensitivity.init(.001);
 
-	vAsym = new NumericParameter("v-asym", "animation");
+	vAsym = new NumericParameter("linear asym", "animation");
 	vAsym.verbose = true;
 	vAsym.min = 0.;
 	vAsym.max = 1.;
 	vAsym.init(.5);
-	hAsym = new NumericParameter("h-asym", "animation");
+	hAsym = new NumericParameter("radial asym", "animation");
 	hAsym.verbose = true;
 	hAsym.min = 0.;
 	hAsym.max = 1.;
 	hAsym.init(.5);
 
-	vHeightWarpMode = new BooleanParameter("v-height warp", "animation");
+	vHeightWarpMode = new BooleanParameter("warp mode", "animation");
 	vHeightWarpMode.invertPress = true;
 	vHeightWarpMode.verbose = true;
 	vHeightWarpMode.init(true);

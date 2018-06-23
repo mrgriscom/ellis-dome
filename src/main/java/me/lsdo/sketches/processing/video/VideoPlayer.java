@@ -80,7 +80,12 @@ public class VideoPlayer extends VideoBase {
 	int i = 0;
 	for (final double skip : skips) {
 	    for (final boolean forward : new boolean[] {true, false}) {
-		BooleanParameter skipAction = new BooleanParameter((forward ? "forward" : "back") + " " + skip + "s", "animation") {
+		String sskip = "" + skip;
+		final int iskip = (int)Math.round(skip);
+		if (skip == iskip) {
+		    sskip = "" + iskip;
+		}
+		BooleanParameter skipAction = new BooleanParameter((forward ? "\u23e9" : "\u23ea") + " " + sskip + "s", "animation") {
 			@Override
 			public void onTrue() {
 			    relJump((forward ? 1 : -1) * skip);
@@ -95,7 +100,7 @@ public class VideoPlayer extends VideoBase {
 
 	// timeline is only updated on discrete actions, not continuously as the video
 	// plays, to avoid flooding the client with updates
-	timeline = new NumericParameter("timeline", "animation") {
+	timeline = new NumericParameter("progress", "animation") {
 		@Override
 		public void onSet() {
 		    jump(get());
