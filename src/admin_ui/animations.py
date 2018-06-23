@@ -21,10 +21,10 @@ class Placement(object):
         'yo': 'y-offset',
         'rot': 'rotation',
         'scale': 'scale',
-        'xscale': 'xscale',
-        'yscale': 'yscale',
-        'window_xo': 'xo_poststretch',
-        'window_yo': 'yo_poststretch',
+        'xscale': 'x-scale',
+        'yscale': 'y-scale',
+        'xo_poststretch': 'post-stretch x-offset',
+        'yo_poststretch': 'post-stretch y-offset',
     }
     scale_params = ['scale', 'xscale', 'yscale']
     
@@ -243,9 +243,12 @@ class PlayManager(threading.Thread):
         self.content.info['params'] = params
 
         valid_placements = [p for p in self.placements if p.filter(content, self.placement_mode)]
-        placement = random.choice(valid_placements)
-        print 'using placement %s' % placement.fullname()
-        placement.apply(params)
+        if valid_placements:
+            placement = random.choice(valid_placements)
+            print 'using placement %s' % placement.fullname()
+            placement.apply(params)
+        else:
+            print 'no acceptable placement; using sketch defaults'
 
         for param_factory in content.server_side_parameters:
             self.content.add_param(param_factory(self))

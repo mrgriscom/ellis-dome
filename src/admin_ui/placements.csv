@@ -20,6 +20,6 @@ prometheus,flipped parallel full overlap,wings flat,1:1,,-0.48,-0.08,1.471,flip
 prometheus,flipped tilted overlap top,wings flat,1:1,38,-0.31,-0.28,1.359,flip
 prometheus,flipped tilted overlap bottom inverse,wings flat,1:1,75,-0.3,-0.39,1.471,flip
 lsdome,align horizontal,align horizontal,stretch,,,,,
-lsdome,align vertical,,stretch,30,,,,
+lsdome,align vertical,align vertical,stretch,30,,,,
 lsdome,align horizontal,align horizontal,1:1,,,,,
-lsdome,align vertical,,1:1,30,,,,
+lsdome,align vertical,align vertical,1:1,30,,,,
