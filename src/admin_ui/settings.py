@@ -28,6 +28,8 @@ audio_out = True
 media_path = '/home/drew/lsdome-media/'
 roms_path = '/home/drew/roms/'
 
+kinect = False
+
 # when the sketch controls its own duration, if it sets a duration of
 # 'indefinite', use this instead
 sketch_controls_duration_failsafe_timeout = 300

@@ -20,7 +20,9 @@ class Content(object):
         self.params = kwargs.get('params', {})
         # true if content is only meant to be run manually, not part of a playlist
         self.manual = kwargs.get('manual', False)
-
+        # if sketch can only run on certain geometries, list of compatible geometries
+        self.geometries = kwargs.get('geometries', None)
+        
         # if true, stretch content to fit the viewport
         self.stretch_aspect = kwargs.get('stretch_aspect', False)
 
@@ -34,6 +36,9 @@ class Content(object):
         # true if sketch has audio out (that we actually want to hear)
         self.has_audio = kwargs.get('has_audio', False)
 
+        # true if sketch requires kinect
+        self.kinect = kwargs.get('kinect', False)
+        
         self.server_side_parameters = kwargs.get('server_side_parameters', [])
         
         ## sketch-dependent parameters ##
@@ -72,7 +77,7 @@ class Content(object):
         for k in ('post_launch', 'server_side_parameters'):
             del info[k]
         return info
-            
+
 _all_content = None
 def all_content():
     global _all_content
@@ -81,14 +86,20 @@ def all_content():
             Content('black', 'black (note: keeps running and using cpu)', manual=True),
             Content('cloud'),
             Content('dontknow'),
+            Content('gridtest', geometries=['lsdome'], manual=True),
+            Content('harmonics', geometries=['lsdome']),
             Content('moire'),
+            Content('pixeltest', geometries=['lsdome']),
             Content('rings'),
             Content('tube'),
             Content('twinkle'),
-            # TODO original kaleidoscope for dome
+            Content('kaleidoscope', geometries=['lsdome']),
             Content('xykaleidoscope'),
             Content('particlefft', sound_reactive=True),
+            # ideally pixelflock is disabled in favor of kinectflock when kinect is present... merge the sketches and control via config param?
             Content('pixelflock', sound_reactive=True, sound_required=False),
+            Content('kinectflock', sound_reactive=True, sound_required=False, kinect=True),
+            Content('kinect', 'kinectdepth', kinect=True, manual=True),
             Content('screencast', 'projectm', cmdline='projectM-pulseaudio', sound_reactive=True, volume_adjust=1.5,
                     server_side_parameters=projectm_parameters(),
                     post_launch=lambda manager: projectm_control(manager, 'next'), # get off the default pattern
@@ -98,6 +109,8 @@ def all_content():
             })
         ]
         _all_content.extend(load_videos())
+        _all_content = [c for c in _all_content if not c.geometries or settings.geometry in c.geometries]
+        _all_content = [c for c in _all_content if not c.kinect or settings.kinect]
         assert len(set(c.name for c in _all_content)) == len(_all_content), 'content names not unique'
         _all_content = dict((c.name, c) for c in _all_content)
     return _all_content
