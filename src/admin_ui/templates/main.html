@@ -92,9 +92,9 @@ button {
 
   <h3>placement mode</h3>
 
-  <div data-bind="foreach: wingTrims">
+  <div data-bind="foreach: placementModes">
     <div>
-      <button data-bind="click: $root.setTrim">set</button>
+      <button data-bind="click: $root.setMode">set</button>
       <span data-bind="text: $data"></span>
     </div>
   </div>
@@ -104,7 +104,7 @@ button {
   <div data-bind="foreach: placements">
     <div>
       <button data-bind="click: set">set</button>
-      <span data-bind="text: (stretch() ? 'stretch aspect' : 'preserve aspect')"></span>, <span data-bind="text: name"></span>
+      <span data-bind="text: name"></span>
     </div>
   </div>
 

@@ -48,7 +48,8 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
         #        print 'error loading preset'
         self.notify({'playlists': [pl.to_json() for pl in sorted(playlists.values(), key=lambda pl: pl.name)]})
         self.notify({'contents': [c.to_json_info() for c in sorted(contents.values(), key=lambda c: c.name)]})
-        self.notify({'placements': placements})
+        self.notify({'placements': [p.to_json(i) for i, p in enumerate(manager.placements)]})
+        self.notify({'placement_modes': manager.placement_modes})
         manager.subscribe(self)
         self.notify(battery_thread.get_status())
         
@@ -65,10 +66,10 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
             manager.play(contents[data['name']], data['duration'])
         if action == 'set_playlist':
             manager.set_playlist(playlists[data['name']], data['duration'])
-        if action == 'set_trim':
-            manager.set_wing_trim(data['state'])
+        if action == 'set_placement_mode':
+            manager.set_placement_mode(data['state'])
         if action == 'set_placement':
-            self.set_placement(placements[data['ix']])
+            manager.placements[data['ix']].activate(broadcast_event)
         if action == 'interactive':
             self.interactive(data['id'], data['sess'], data['type'], data.get('val'))
         if action == 'extend_duration':
@@ -79,14 +80,6 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
     def on_close(self):
         manager.unsubscribe(self)
         
-    def set_placement(self, placement):
-        broadcast_event('x-offset', 'set', placement.get('xo', 0))
-        broadcast_event('y-offset', 'set', placement.get('yo', 0))
-        broadcast_event('rotation', 'set', placement.get('rot', 0))
-        broadcast_event('scale', 'set', placement.get('scale', 1))
-        broadcast_event('wing mode', 'set', placement['wing_mode'])
-        broadcast_event('stretch aspect', 'set', 'yes' if placement['stretch'] else 'no')
-
     def interactive(self, id, session, control_type, val):
         if control_type in ('button', 'button-keepalive'):
             button_thread.handle(id, session, {True: 'press', False: 'release', None: 'keepalive'}[val])
@@ -269,9 +262,6 @@ if __name__ == "__main__":
 
     playlists = playlist.load_playlists()
     contents = playlist.all_content()
-    placements = animations.load_placements()
-    for i, e in enumerate(placements):
-        e['ix'] = i
 
     context = zmq.Context()
     socket = context.socket(zmq.PUB)

@@ -6,48 +6,88 @@ import Queue
 import random
 import csv
 import uuid
+import itertools
 import psutil
 import settings
 import playlist
 
 # daemon that controls the currently running thing, and responsible for turning play intention into action (choosing a placement, initializing params, etc.)
 
+class Placement(object):
+    # this must be kept in sync with java-land!
+    # mapping of field name in this class -> parameter def name
+    standard_params = {
+        'xo': 'x-offset',
+        'yo': 'y-offset',
+        'rot': 'rotation',
+        'scale': 'scale',
+        'xscale': 'xscale',
+        'yscale': 'yscale',
+        'window_xo': 'xo_poststretch',
+        'window_yo': 'yo_poststretch',
+    }
+    scale_params = ['scale', 'xscale', 'yscale']
+    
+    def __init__(self, config):
+        self.geometry = config['geometry']
+        self.name = config['name']
+        self.modes = filter(None, [m.strip() for m in config['modes'].split(',')])
+        self.stretch = (config['aspect'] == 'stretch')
+        self.ideal_aspect_ratio = None
+        if not self.stretch:
+            w, h = map(float, config['aspect'].split(':'))
+            self.ideal_aspect_ratio = w/h
+            self.aspect_text = config['aspect']
+
+        for field, param_name in self.standard_params.iteritems():
+            sval = config.get(param_name)
+            if sval:
+                setattr(self, field, float(sval))
+
+        remaining_fields = set(config.keys()) - set(['geometry', 'name', 'modes', 'aspect']) - set(self.standard_params.values())
+        self.geometry_params = dict((k, config[k]) for k in remaining_fields if config[k])
+
+    def fullname(self):
+        return '%s, %s' % ('stretch aspect' if self.stretch else ('preserve aspect (%s)' % self.aspect_text), self.name)
+        
+    def to_json(self, ix):
+        return {
+            'name': self.fullname(),
+            'ix': ix,
+        }
+
+    def filter(self, content, mode):
+        return content.stretch_aspect == self.stretch and (not self.modes or not mode or mode in self.modes)
+
+    def apply(self, params):
+        placement = {
+            'no_stretch': not self.stretch,
+        }
+        placement.update(('placement_%s' % field, getattr(self, field))
+                         for field in self.standard_params.keys()
+                         if hasattr(self, field))
+        placement.update(self.geometry_params)
+        params.update(placement)
+
+    def activate(self, broadcast_func):
+        broadcast_func('stretch aspect', 'set', 'yes' if self.stretch else 'no')
+        for field, param_name in self.standard_params.iteritems():
+            default_val = 1. if field in self.scale_params else 0.
+            broadcast_func(param_name, 'set', getattr(self, field, default_val))
+        for k, v in self.geometry_params.iteritems():
+            broadcast_func(k, 'set', v)
+        
 def load_placements(path=None):
     placements_config_path = os.path.join(settings.py_root, 'placements.csv')
-
     if path is None:
         path = placements_config_path
 
     with open(path) as f:
         r = csv.DictReader(f)
+        placements = map(Placement, r)
 
-        def load_rec(rec):
-            for k, v in rec.items():
-                if v == '':
-                    del rec[k]
-            def to_float(field):
-                if field in rec:
-                    rec[field] = float(rec[field])
-            to_float('x-offset')
-            to_float('y-offset')
-            to_float('rotation')
-            to_float('scale')
-            return rec
-
-        return map(load_rec, r)
-
-def apply_placement(params, placement):
-    params['no_stretch'] = placement['aspect'] != 'stretch'
-    params['wing_mode'] = placement['wing_mode']
-    fields = {
-        'x-offset': 'place_x',
-        'y-offset': 'place_y',
-        'rotation': 'place_rot',
-        'scale': 'place_scale',
-    }
-    for k, v in fields.iteritems():
-        if k in placement:
-            params[v] = placement[k]
+    placements = [p for p in placements if p.geometry == settings.geometry]
+    return placements
 
 class ContentInvocation(object):
     def __init__(self, manager):
@@ -113,9 +153,10 @@ class PlayManager(threading.Thread):
         self.default_duration = None
         self.background_audio_running = True
         self.audio_input = default_audio_input()
-        self.wing_trim = 'flat'
+        self.placement_mode = None
 
         self.placements = load_placements()
+        self.placement_modes = sorted(set(itertools.chain(*(p.modes for p in self.placements))))
         
     def subscribe(self, s):
         with self.lock:
@@ -151,10 +192,10 @@ class PlayManager(threading.Thread):
     def extend_duration(self, duration, relnow=False):
         self.queue.put(lambda: self._extend_duration(duration, relnow))
         
-    def set_wing_trim(self, trim):
-        def set_trim():
-            self.wing_trim = trim
-        self.queue.put(set_trim)
+    def set_placement_mode(self, mode):
+        def _set():
+            self.placement_mode = mode
+        self.queue.put(_set)
 
     # terminate the current content; playlist will start something else, if loaded
     def stop_current(self):
@@ -200,10 +241,11 @@ class PlayManager(threading.Thread):
         params = dict(settings.default_sketch_properties)
         params.update(content.params)
         self.content.info['params'] = params
-        
-        placement = random.choice(list(self.get_available_placements(content)))
-        print 'using placement %s' % placement['name']
-        apply_placement(params, placement)
+
+        valid_placements = [p for p in self.placements if p.filter(content, self.placement_mode)]
+        placement = random.choice(valid_placements)
+        print 'using placement %s' % placement.fullname()
+        placement.apply(params)
 
         for param_factory in content.server_side_parameters:
             self.content.add_param(param_factory(self))
@@ -299,14 +341,6 @@ class PlayManager(threading.Thread):
         param.handle_input_event(type, val)
         self.notify(param.get_value())
             
-    def get_available_placements(self, content):
-        for pl in self.placements:
-            if 'wing_trim' in pl and pl['wing_trim'] != self.wing_trim:
-                continue
-            if content.stretch_aspect != (pl['aspect'] == 'stretch'):
-                continue
-            yield pl
-
     def update_background_audio(self):
         if not settings.audio_out:
             return

@@ -50,8 +50,7 @@ public abstract class VideoBase extends PApplet {
 	final double aspectRatio = (double)media.width / media.height;
 	System.out.println(media.width + "x" + media.height + " " + aspectRatio + ":1");
 
-	boolean preserveAspect = Config.getSketchProperty("no_stretch", false);
-	canvas.initViewport(width, height, preserveAspect, aspectRatio);
+	canvas.initViewport(width, height, aspectRatio);
 	initialized = true;
 	canvas.transformChanged();
     }

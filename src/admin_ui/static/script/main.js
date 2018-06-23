@@ -7,7 +7,7 @@ function AdminUIModel() {
     this.playlists = ko.observableArray();
     this.contents = ko.observableArray();
     this.placements = ko.observableArray();
-    this.wingTrims = ko.observableArray(['raised', 'flat']);
+    this.placementModes = ko.observableArray();
     this.battery_status = ko.observable();
     this.battery_alert = ko.observable(false);
     this.current_playlist = ko.observable();
@@ -41,8 +41,11 @@ function AdminUIModel() {
 	return m + 'm ' + s + 's';
     });
     
-    this.setTrim = function(e) {
-	CONN.send(JSON.stringify({action: 'set_trim', state: e}));
+    this.setMode = function(e) {
+	if (model.placementModes.indexOf(e) == 0) {
+	    e = null;
+	}
+	CONN.send(JSON.stringify({action: 'set_placement_mode', state: e}));
     }
 }
 
@@ -76,12 +79,10 @@ function ContentModel() {
 
 function PlacementModel() {
     this.name = ko.observable();
-    this.stretch = ko.observable();
     this.ix = ko.observable();
 
     this.load = function(data) {
 	this.name(data.name);
-	this.stretch(data.stretch);
 	this.ix(data.ix);
     }
 
@@ -144,6 +145,9 @@ function connect(model) {
 		p.load(e);
 		model.placements.push(p);
 	    });
+	} else if (data.type == "placement_modes") {
+	    model.placementModes.push('all placements');
+	    model.placementModes(model.placementModes().concat(data.placement_modes));
 	} else if (data.type == "content") {
 	    model.current_content(data.content.name);
 	    model.content_launch_time(new Date(data.content.launched_at * 1000));

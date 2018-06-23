@@ -20,7 +20,7 @@ public class Screencast extends WindowAnimation {
     static final int SUBSAMPLING = 8;
     
     ScreenGrabber grabber;
-    
+
     public Screencast(PixelMesh<? extends LedPixel> mesh) {
 	super(mesh, Config.getSketchProperty("subsampling", SUBSAMPLING));
 
@@ -33,14 +33,6 @@ public class Screencast extends WindowAnimation {
 	// Top-left screen coordinate of the screengrab area.
 	int xo = Config.getSketchProperty("xoffset", 200);
 	int yo = Config.getSketchProperty("yoffset", 200);
-
-	// Force 1:1 pixels rather than stretching asymmetrically to fit viewport.
-	boolean preserveAspect = Config.getSketchProperty("no_stretch", false);
-
-	// Further shrink the screencap window by these factors, in order to get more
-	// of the window corners to fall within the mesh's renderable area.
-	double xscale = Config.getSketchProperty("xscale", 1.);
-	double yscale = Config.getSketchProperty("yscale", 1.);
 
 	// Try to match viewport to a GUI window, specified by either window title or
 	// pid. Not all apps support matching by pid. Title match is prefix-based.
@@ -59,9 +51,9 @@ public class Screencast extends WindowAnimation {
 
 	if (height <= 0) {
 	    height = width;
-	    preserveAspect = true;
+	    stretchAspect.set(false);
 	}
-	initViewport(width, height, preserveAspect, 0., xscale, yscale);
+	initViewport(width, height);
 	initGrabber(width, height, xo, yo);
     }
 
