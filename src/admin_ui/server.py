@@ -80,12 +80,12 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
         manager.unsubscribe(self)
         
     def set_placement(self, placement):
-        broadcast_event('xo', 'set', placement.get('xo', 0))
-        broadcast_event('yo', 'set', placement.get('yo', 0))
-        broadcast_event('rot', 'set', placement.get('rot', 0))
+        broadcast_event('x-offset', 'set', placement.get('xo', 0))
+        broadcast_event('y-offset', 'set', placement.get('yo', 0))
+        broadcast_event('rotation', 'set', placement.get('rot', 0))
         broadcast_event('scale', 'set', placement.get('scale', 1))
-        broadcast_event('wingmode', 'set', placement['wing_mode'])
-        broadcast_event('stretch', 'set', 'yes' if placement['stretch'] else 'no')
+        broadcast_event('wing mode', 'set', placement['wing_mode'])
+        broadcast_event('stretch aspect', 'set', 'yes' if placement['stretch'] else 'no')
 
     def interactive(self, id, session, control_type, val):
         if control_type in ('button', 'button-keepalive'):
