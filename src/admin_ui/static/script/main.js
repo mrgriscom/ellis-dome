@@ -209,7 +209,7 @@ function init() {
 
 SLIDER_MIN = -100;
 SLIDER_MAX = 100;
-function bindSlider(sel, id, relative) {
+function bindSlider(sel, id, relative, rel_sens) {
     var mid = .5 * (SLIDER_MIN + SLIDER_MAX);
     var $e = $(sel);
     $e.slider({min: SLIDER_MIN, max: SLIDER_MAX});
@@ -219,9 +219,7 @@ function bindSlider(sel, id, relative) {
 	var cur = ui.value;
 	if (relative) {
 	    var diff = cur - $e.lastVal;
-	    for (var i = 0; i < Math.abs(diff); i++) {
-		sendEvent(id, 'jog', diff > 0 ? 1 : -1);
-	    }
+	    sendEvent(id, 'jog', diff / (rel_sens || 1.));
 	} else {
 	    sendEvent(id, 'slider', (cur-SLIDER_MIN)/(SLIDER_MAX-SLIDER_MIN));
 	}
@@ -341,8 +339,8 @@ function initParam(param) {
 	$container.html('<div id="value" style="float: right;" /><div id="title" />');
 	var $slider = $('<div style="margin-top: 4px; margin-bottom: 2px;" />');
 	$container.append($slider);
-	PARAMS[param.name].$slider = bindSlider($slider, param.name, !param.isBounded);
-	// isint
+	var relSens = (param.isInt ? 4. : null);
+	PARAMS[param.name].$slider = bindSlider($slider, param.name, !param.isBounded, relSens);
     }
 
     if (!param.isAction) {

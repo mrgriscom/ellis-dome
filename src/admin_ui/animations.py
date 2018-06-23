@@ -57,7 +57,13 @@ class Placement(object):
         }
 
     def filter(self, content, mode):
-        return content.stretch_aspect == self.stretch and (not self.modes or not mode or mode in self.modes)
+        if not self.stretch and abs(self.ideal_aspect_ratio - 1.) > .01:
+            # for non-stretch content, don't auto-apply placements with non-1:1 aspect ratio;
+            # assume any exceptions will be manual for special-purpose content
+            return False
+        if mode and self.modes and mode not in self.modes:
+            return False
+        return content.stretch_aspect == self.stretch
 
     def apply(self, params):
         placement = {
