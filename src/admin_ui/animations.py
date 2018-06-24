@@ -183,6 +183,7 @@ class PlayManager(threading.Thread):
             self.subscribers.append(s)
             self.content.notify(s)
             s.notify(self._playlist_json())
+            s.notify(self._placement_mode_json())
             # ping java world and force re-broadcast of its params
             self.broadcast_evt_func('_paraminfo', 'set')
             
@@ -213,9 +214,7 @@ class PlayManager(threading.Thread):
         self.queue.put(lambda: self._extend_duration(duration, relnow))
         
     def set_placement_mode(self, mode):
-        def _set():
-            self.placement_mode = mode
-        self.queue.put(_set)
+        self.queue.put(lambda: self._set_placement_mode(mode))
 
     # terminate the current content; playlist will start something else, if loaded
     def stop_current(self):
@@ -265,7 +264,7 @@ class PlayManager(threading.Thread):
         params.update(content.params)
         self.content.info['params'] = params
 
-        valid_placements = [p for p in self.placements if p.filter(content, self.placement_mode)]
+        valid_placements = self.get_candidate_placements(content)
         if valid_placements:
             placement = random.choice(valid_placements)
             print 'using placement %s' % placement.fullname()
@@ -328,6 +327,9 @@ class PlayManager(threading.Thread):
         if duration:
             self.content.set_timeout(time.time() + duration)
 
+    def get_candidate_placements(self, content):
+        return [p for p in self.placements if p.filter(content, self.placement_mode)]
+            
     def _set_playlist(self, playlist, duration=None):
         self.playlist = playlist
         self.default_duration = duration
@@ -340,6 +342,19 @@ class PlayManager(threading.Thread):
         else:
             json = None
         return {'playlist': json}
+        
+    def _set_placement_mode(self, mode):
+        self.placement_mode = mode
+        self.notify(self._placement_mode_json())
+
+    def _placement_mode_json(self):
+        valid_placements = set(itertools.chain(*(self.get_candidate_placements(playlist.Content('_', stretch_aspect=stretch)) for stretch in (True, False))))
+        placement_ixs = [i for i, e in enumerate(self.placements) if e in valid_placements]
+        return {
+            'type': 'placement_mode',
+            'placement_mode': self.placement_mode,
+            'placements': placement_ixs,
+        }
         
     def _extend_duration(self, duration, relnow):
         if self.content.timeout:

@@ -87,6 +87,7 @@ button {
     <div>
       <button data-bind="click: play">play</button>
       <span data-bind="text: name"></span>
+      <span data-bind="visible: available" style="font-weight: bold; color: green;">&#x2713;</span>
     </div>
   </div>
 
@@ -95,7 +96,7 @@ button {
   <div data-bind="foreach: placementModes">
     <div>
       <button data-bind="click: $root.setMode">set</button>
-      <span data-bind="text: $data"></span>
+      <span data-bind="text: $data, style: {fontWeight: $data == $root.current_placement_mode() ? 'bold' : 'normal'}"></span>
     </div>
   </div>
 
@@ -105,6 +106,7 @@ button {
     <div>
       <button data-bind="click: set">set</button>
       <span data-bind="text: name"></span>
+      <span data-bind="visible: available" style="font-weight: bold; color: green;">&#x2713;</span>
     </div>
   </div>
 

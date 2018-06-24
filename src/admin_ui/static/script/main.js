@@ -16,6 +16,7 @@ function AdminUIModel() {
     this.content_launch_time = ko.observable();
     this.current_timeout = ko.observable();
     this.aspect_ratio = ko.observable();
+    this.current_placement_mode = ko.observable();
 
     var model = this;
     this.now = ko.observable(new Date());
@@ -67,7 +68,8 @@ function PlaylistModel() {
 
 function ContentModel() {
     this.name = ko.observable();
-
+    this.available = ko.observable(false);
+    
     this.load = function(data) {
 	this.name(data.name);
     }
@@ -80,7 +82,8 @@ function ContentModel() {
 function PlacementModel() {
     this.name = ko.observable();
     this.ix = ko.observable();
-
+    this.available = ko.observable(false);
+    
     this.load = function(data) {
 	this.name(data.name);
 	this.ix(data.ix);
@@ -148,13 +151,23 @@ function connect(model) {
 	} else if (data.type == "placement_modes") {
 	    model.placementModes.push('all placements');
 	    model.placementModes(model.placementModes().concat(data.placement_modes));
+	} else if (data.type == "placement_mode") {
+	    model.current_placement_mode(data.placement_mode || 'all placements');
+	    _.each(model.placements(), function(e, i) {
+		e.available(data.placements.indexOf(e.ix()) >= 0);
+	    });
 	} else if (data.type == "content") {
 	    model.current_content(data.content.name);
 	    model.content_launch_time(new Date(data.content.launched_at * 1000));
 	    model.aspect_ratio(data.content.aspect || 'n/a');
 	} else if (data.type == "playlist") {
-	    model.current_playlist(data.playlist ? data.playlist.name : null);
-	    model.default_duration(data.playlist.duration / 60.);
+	    var playlist = data.playlist || {items: []};
+	    model.current_playlist(playlist.name);
+	    model.default_duration(playlist.duration / 60.);
+	 
+	    _.each(model.contents(), function(e) {
+		e.available(playlist.items.indexOf(e.name()) >= 0);
+	    });
 	} else if (data.type == "duration") {
 	    model.current_timeout(data.duration ? new Date(data.duration * 1000) : 'n/a');
 	} else if (data.type == "params") {
@@ -180,7 +193,8 @@ function connect(model) {
 function init() {
     var model = new AdminUIModel();
     ko.applyBindings(model);
-    connect(model);    
+    connect(model);
+    MODEL = model;
 
     $('#stopall').click(function() {
 	CONN.send(JSON.stringify({action: 'stop_all'}));
