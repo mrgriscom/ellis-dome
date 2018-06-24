@@ -310,7 +310,7 @@ class PlayManager(threading.Thread):
             if content.sketch == 'video':
                 params['repeat'] = True
                 if content.play_mode == 'shuffle':
-                    params['skip'] = random.uniform(0, max(content.duration - duration, 0))
+                    params['skip'] = random.uniform(0, max(content.duration - (duration or 0), 0))
                 elif content.play_mode == 'full':
                     params['repeat'] = False
                     self.content.info['sketch_controls_duration'] = True
@@ -358,9 +358,12 @@ class PlayManager(threading.Thread):
         
     def _extend_duration(self, duration, relnow):
         if self.content.timeout:
-            base = time.time() if relnow else self.content.timeout
-            self.content.set_timeout(base + duration)
-
+            if duration is None:
+                self.content.set_timeout(None)
+            else:
+                base = time.time() if relnow else self.content.timeout
+                self.content.set_timeout(base + duration)
+            
     def _stop_playback(self):
         launch.terminate(self.content.processes)
         self.content = ContentInvocation(self)

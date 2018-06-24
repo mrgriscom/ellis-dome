@@ -76,11 +76,14 @@ button {
   <h3>visualizations</h3>
 
   <div data-bind="visible: !current_content()">nothing playing</div>
-  <div data-bind="visible: current_content">currently playing:
-    <span style="font-weight: bold;" data-bind="text: current_content"></span><br />
-    since <span data-bind="text: content_launch_time"></span><br/>
-    until <span data-bind="text: current_timeout"></span> (<span data-bind="text: time_remaining"></span> remaining)<br/>
-    aspect ratio: <span data-bind="text: aspect_ratio"></span>
+  <div data-bind="visible: current_content">
+    <div>currently playing: <span style="font-weight: bold;" data-bind="text: current_content"></span></div>
+    <div>since <span data-bind="text: content_launch_time"></span></div>
+    <div data-bind="visible: current_timeout">
+      until <span data-bind="text: current_timeout"></span> (<span data-bind="text: time_remaining"></span> remaining)
+    </div>
+    <div data-bind="visible: !current_timeout()" style="background-color: #fdd;">playing indefinitely</div>
+    <div>aspect ratio: <span data-bind="text: aspect_ratio"></span></div>
   </div>
   
   <div data-bind="foreach: contents">

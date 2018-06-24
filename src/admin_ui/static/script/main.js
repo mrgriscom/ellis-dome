@@ -98,8 +98,8 @@ function getDuration() {
     return $('#mins').val() * 60;
 }
 
-function connect(model) {
-    var conn = new WebSocket('ws://' + window.location.host + '/socket');
+function connect(model, mode) {
+    var conn = new WebSocket('ws://' + window.location.host + '/socket/' + mode);
     $('#connectionstatus').text('connecting to server...');
 
     var connectionLost = function() {
@@ -169,7 +169,7 @@ function connect(model) {
 		e.available(playlist.items.indexOf(e.name()) >= 0);
 	    });
 	} else if (data.type == "duration") {
-	    model.current_timeout(data.duration ? new Date(data.duration * 1000) : 'n/a');
+	    model.current_timeout(data.duration ? new Date(data.duration * 1000) : null);
 	} else if (data.type == "params") {
 	    initParams(data);
 	} else if (data.type == "param_value") {
@@ -191,9 +191,17 @@ function connect(model) {
 }
 
 function init() {
+    _init('main');
+}
+
+function init_game() {
+    _init('game');
+}
+
+function _init(mode) {
     var model = new AdminUIModel();
     ko.applyBindings(model);
-    connect(model);
+    connect(model, mode);
     MODEL = model;
 
     $('#stopall').click(function() {
