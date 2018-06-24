@@ -34,18 +34,6 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
         pass
 
     def open(self):
-        #self.placements = list(placements)
-        #ix = len(placements)
-        #for f in os.listdir(settings.placements_dir):
-        #    if f.startswith('.'):
-        #        continue
-        #    try:
-        #        preset = animations.load_placements(os.path.join(settings.placements_dir, f))[0]
-        #        preset['ix'] = ix
-        #        ix += 1
-        #        placements.append(preset)
-        #    except:
-        #        print 'error loading preset'
         self.notify({'playlists': [pl.to_json() for pl in sorted(playlists.values(), key=lambda pl: pl.name)]})
         self.notify({'contents': [c.to_json_info() for c in sorted(contents.values(), key=lambda c: c.name)]})
         self.notify({'placements': [p.to_json(i) for i, p in enumerate(manager.placements)]})
@@ -76,6 +64,8 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
             manager.extend_duration(data['duration'])
         if action == 'reset_duration':
             manager.extend_duration(data['duration'], True)
+        if action == 'save_placement':
+            start_placement_save(data['name'])
 
     def on_close(self):
         manager.unsubscribe(self)
@@ -85,12 +75,6 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
             button_thread.handle(id, session, {True: 'press', False: 'release', None: 'keepalive'}[val])
         if control_type in ('set', 'slider', 'jog'):
             broadcast_event(id, control_type, val)
-        #if control_type == 'raw':
-        #    assert False, 'fixme'
-        #    if id == 'saveplacement':
-        #        from datetime import datetime
-        #        val += ' ' + datetime.now().strftime('%m-%d %H%M')
-        #    broadcast_event(id, '~' + val)
 
     def notify(self, msg):
         assert type(msg) == type({}) and (len(msg) == 1 or 'type' in msg), msg
@@ -186,8 +170,10 @@ class ZMQListener(threading.Thread):
         if msg['type'] == 'params':
             msg['invocation'] = manager.content.uuid
             self.broadcast(msg)
+            update_placement_save(msg)
         if msg['type'] == 'param_value':
             self.broadcast(msg)
+            update_placement_save(msg)
         if msg['type'] == 'aspect':
             manager.update_content_info({'aspect': msg['aspect']})
             
@@ -240,6 +226,49 @@ class BatteryMonitorThread(threading.Thread):
                 status['remaining_minutes'] = secs / 60.
         return status
 
+# this is extremely ghetto
+pending_placement_save = None
+def start_placement_save(name):
+    if not manager.content.running():
+        return
+
+    global pending_placement_save
+    pending_placement_save = {'name': '%s (%s)' % (name, datetime.now().strftime('%m-%d %H:%M'))}
+    broadcast_event('_paraminfo', 'set')
+def update_placement_save(msg):
+    if not pending_placement_save:
+        return
+
+    if msg['type'] == 'params':
+        pending_placement_save['params'] = dict((p['name'], None) for p in msg['params'] if p['category'] == 'placement')
+    if msg['type'] == 'param_value':
+        param = msg['name']
+        if param in pending_placement_save['params']:
+            pending_placement_save['params'][param] = msg['value']
+
+    if pending_placement_save['params'] and all(v is not None for v in pending_placement_save['params'].values()):
+        commit_placement_save()
+def commit_placement_save():
+    global pending_placement_save
+
+    aspect = '%.3f:1' % manager.content.info.get('aspect', 1)
+    data = {
+        'geometry': settings.geometry,
+        'name': pending_placement_save['name'],
+        'modes': 'custom',
+        'aspect': 'stretch' if pending_placement_save['params'].get('stretch aspect') == 'yes' else aspect,
+    }
+    data.update(pending_placement_save['params'])
+    if 'stretch aspect' in data:
+        del data['stretch aspect']
+
+    with open(os.path.join(settings.placements_dir, pending_placement_save['name']), 'w') as f:
+        f.write(json.dumps(data))
+    manager.add_placement(data)
+        
+    pending_placement_save = None
+
+        
 if __name__ == "__main__":
 
     parser = OptionParser()
@@ -277,7 +306,7 @@ if __name__ == "__main__":
 
     battery_thread = BatteryMonitorThread()
     add_thread(battery_thread)
-    
+
     application = web.Application([
         (r'/', MainHandler),
         (r'/socket', WebSocketTestHandler),

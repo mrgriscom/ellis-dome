@@ -7,6 +7,7 @@ import random
 import csv
 import uuid
 import itertools
+import json
 import psutil
 import settings
 import playlist
@@ -32,6 +33,7 @@ class Placement(object):
         self.geometry = config['geometry']
         self.name = config['name']
         self.modes = filter(None, [m.strip() for m in config['modes'].split(',')])
+        self.custom = 'custom' in self.modes
         self.stretch = (config['aspect'] == 'stretch')
         self.ideal_aspect_ratio = None
         if not self.stretch:
@@ -48,7 +50,7 @@ class Placement(object):
         self.geometry_params = dict((k, config[k]) for k in remaining_fields if config[k])
 
     def fullname(self):
-        return '%s, %s' % ('stretch aspect' if self.stretch else ('preserve aspect (%s)' % self.aspect_text), self.name)
+        return ('[custom] ' if self.custom else '') + '%s, %s' % ('stretch aspect' if self.stretch else ('preserve aspect (%s)' % self.aspect_text), self.name)
         
     def to_json(self, ix):
         return {
@@ -57,6 +59,8 @@ class Placement(object):
         }
 
     def filter(self, content, mode):
+        if self.custom:
+            return
         if not self.stretch and abs(self.ideal_aspect_ratio - 1.) > .01:
             # for non-stretch content, don't auto-apply placements with non-1:1 aspect ratio;
             # assume any exceptions will be manual for special-purpose content
@@ -91,6 +95,16 @@ def load_placements(path=None):
     with open(path) as f:
         r = csv.DictReader(f)
         placements = map(Placement, r)
+
+    # add saved placements
+    for filename in os.listdir(settings.placements_dir):
+        if filename.startswith('.'):
+            continue
+        with open(os.path.join(settings.placements_dir, filename)) as f:
+            try:
+                placements.append(Placement(json.load(f)))
+            except:
+                print 'error loading preset', filename
 
     placements = [p for p in placements if p.geometry == settings.geometry]
     return placements
@@ -162,7 +176,7 @@ class PlayManager(threading.Thread):
         self.placement_mode = None
 
         self.placements = load_placements()
-        self.placement_modes = sorted(set(itertools.chain(*(p.modes for p in self.placements))))
+        self.placement_modes = sorted(set(itertools.chain(*(p.modes for p in self.placements))) - set(['custom']))
         
     def subscribe(self, s):
         with self.lock:
@@ -216,6 +230,9 @@ class PlayManager(threading.Thread):
 
     def update_content_info(self, kv):
         self.queue.put(lambda: self.content.update_info(kv))
+
+    def add_placement(self, config):
+        self.queue.put(lambda: self.placements.append(Placement(config)))
         
     def terminate(self):
         self.up = False

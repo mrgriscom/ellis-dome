@@ -194,16 +194,14 @@ function init() {
     $('#resetduration').click(function() {
 	CONN.send(JSON.stringify({action: 'reset_duration', duration: getDuration()}));
     });
-
     $('#saveplacement').click(function() {
 	var name = $('#saveas').val();
 	if (name.length == 0) {
 	    alert('name required');
 	    return;
 	}
-	
-	sendEvent('saveplacement', 'raw', name);
-	alert('reload the page');
+	CONN.send(JSON.stringify({action: 'save_placement', name: name}));
+	alert('reload the page to access the saved placement');
     });
 }
 
