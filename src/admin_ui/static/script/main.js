@@ -131,26 +131,25 @@ function connect(model, mode) {
 	console.log(data);
 
 	if (data.type == "playlists") {
-	    $.each(data.playlists, function(i, e) {
+	    model.playlists($.map(data.playlists, function (e) {
 		var pl = new PlaylistModel();
 		pl.load(e);
-		model.playlists.push(pl);
-	    });
+		return pl;
+	    }));
 	} else if (data.type == "contents") {
-	    $.each(data.contents, function(i, e) {
+	    model.contents($.map(data.contents, function (e) {
 		var c = new ContentModel();
 		c.load(e);
-		model.contents.push(c);
-	    });
+		return c;
+	    }));
 	} else if (data.type == "placements") {
-	    $.each(data.placements, function(i, e) {
+	    model.placements($.map(data.placements, function (e) {
 		var p = new PlacementModel();
 		p.load(e);
-		model.placements.push(p);
-	    });
+		return p;
+	    }));
 	} else if (data.type == "placement_modes") {
-	    model.placementModes.push('all placements');
-	    model.placementModes(model.placementModes().concat(data.placement_modes));
+	    model.placementModes(['all placements'].concat(data.placement_modes));
 	} else if (data.type == "placement_mode") {
 	    model.current_placement_mode(data.placement_mode || 'all placements');
 	    _.each(model.placements(), function(e, i) {
@@ -195,7 +194,7 @@ function init() {
 }
 
 function init_game() {
-    _init('game');
+    _init('game/' + SEARCH);
 }
 
 function _init(mode) {

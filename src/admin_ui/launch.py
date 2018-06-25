@@ -62,7 +62,7 @@ def launch_screencast(cmd, params, timeout=5):
         if 'title' not in params:
             print 'window may not report a pid, so specify a title filter'
         terminate(processes)
-        return None
+        return None, None
 
     # make window always on top
     os.popen('wmctrl -i -r %d -b add,above' % window['wid'])
@@ -76,11 +76,15 @@ def launch_screencast(cmd, params, timeout=5):
 # TODO: detect if content window terminates and report back
 
 ROM_CORES = {
-    'gameboy': '/usr/lib/libretro/gambatte_libretro.so',
     'nes': '/usr/lib/libretro/nestopia_libretro.so',
     'snes': '/usr/lib/libretro/bsnes_mercury_performance_libretro.so',
     'genesis': '/usr/lib/libretro/genesis_plus_gx_libretro.so',
+    'n64': '/usr/lib/libretro/mupen64plus_libretro.so',
+    'gameboy': '/usr/lib/libretro/gambatte_libretro.so',
+    'gbc': '/usr/lib/libretro/gambatte_libretro.so',
+    'gamegear': '/usr/lib/libretro/genesis_plus_gx_libretro.so',
 }
+
 # returns args to pass to launch_screencast
 def launch_emulator(rom):
     rompath = os.path.abspath(rom)

@@ -29,13 +29,21 @@ class MainHandler(web.RequestHandler):
     def get(self):
         self.render('main.html', onload='init', geom=settings.geometry, default_duration=settings.default_duration/60.)
         
+class GamesHandler(web.RequestHandler):
+    def get(self, suffix):
+        suffix = suffix[1:] if suffix else ''
+        self.render('game.html', onload='init_game', search=json.dumps(suffix))
+        
 class WebSocketTestHandler(websocket.WebSocketHandler):
-    def initialize(self):
-        pass
+    def initialize(self, get_content, playlists={}):
+        self.get_content = get_content
+        self.playlists = playlists
 
-    def open(self):
-        self.notify({'playlists': [pl.to_json() for pl in sorted(playlists.values(), key=lambda pl: pl.name)]})
-        self.notify({'contents': [c.to_json_info() for c in sorted(contents.values(), key=lambda c: c.name)]})
+    def open(self, *args):
+        self.contents = self.get_content(*args)
+
+        self.notify({'playlists': [pl.to_json() for pl in sorted(self.playlists.values(), key=lambda pl: pl.name)]})
+        self.notify({'contents': [c.to_json_info() for c in sorted(self.contents.values(), key=lambda c: c.name)]})
         self.notify({'placements': [p.to_json(i) for i, p in enumerate(manager.placements)]})
         self.notify({'placement_modes': manager.placement_modes})
         manager.subscribe(self)
@@ -51,9 +59,9 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
         if action == 'stop_current':
             manager.stop_current()
         if action == 'play_content':
-            manager.play(contents[data['name']], data['duration'])
+            manager.play(self.contents[data['name']], data['duration'])
         if action == 'set_playlist':
-            manager.set_playlist(playlists[data['name']], data['duration'])
+            manager.set_playlist(self.playlists[data['name']], data['duration'])
         if action == 'set_placement_mode':
             manager.set_placement_mode(data['state'])
         if action == 'set_placement':
@@ -309,7 +317,9 @@ if __name__ == "__main__":
 
     application = web.Application([
         (r'/', MainHandler),
-        (r'/socket', WebSocketTestHandler),
+        (r'/game(/.*)?', GamesHandler),
+        (r'/socket/main', WebSocketTestHandler, {'playlists': playlists, 'get_content': lambda: contents}),
+        (r'/socket/game/(.*)', WebSocketTestHandler, {'get_content': lambda query: playlist.load_games(query)}),
         (r'/(.*)', web.StaticFileHandler, {'path': web_path('static')}),
     ], template_path=web_path('templates'))
     application.listen(port, ssl_options=ssl)

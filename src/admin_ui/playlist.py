@@ -1,6 +1,7 @@
 import os
 import os.path
 import random
+import re
 import settings
 import launch
 
@@ -73,9 +74,9 @@ class Content(object):
         return duration
 
     def to_json_info(self):
-        info = dict(self.__dict__)
-        for k in ('post_launch', 'server_side_parameters'):
-            del info[k]
+        info = dict((k, getattr(self, k)) for k in ('name', 'sound_reactive', 'has_audio', 'kinect'))
+        if self.play_mode == 'full':
+            info['duration'] = self.duration
         return info
 
 _all_content = None
@@ -155,7 +156,43 @@ def projectm_parameters():
         def _update_value(self, val):
             pass
     return [ProjectMNextPatternAction]
-            
+
+def game_content(rom):
+    try:
+        args = launch.launch_emulator(rom)
+    except:
+        return None
+    name = os.path.splitext(os.path.relpath(os.path.abspath(rom), settings.roms_path))[0]
+    return Content('screencast', name, cmdline=args['cmd'], params=args['params'], stretch_aspect=True, has_audio=True)
+
+_games_content = None
+def load_games(filt):
+    def all_roms_path_files():
+        for dirpath, _, filenames in os.walk(settings.roms_path):
+            for f in filenames:
+                yield os.path.join(dirpath, f)
+    
+    global _games_content
+    if not _games_content:
+        _games_content = filter(None, map(game_content, all_roms_path_files()))
+        _games_content = dict((c.name, c) for c in _games_content)
+        print len(_games_content), 'roms'
+
+    return filter_games(_games_content, filt)
+
+def filter_games(all_games, filt):
+    def name_to_search_key(name):
+        name = os.path.split(name)[1]
+        name = name.split('(')[0]
+        words = name.lower().split()
+        words = [re.sub('[^a-z0-9]', '', w) for w in words]
+        return filter(None, words)
+    
+    def match_key(query, key):
+        return all(any(kw.startswith(qw) for kw in key) for qw in query)
+    
+    return dict((k, v) for k, v in all_games.iteritems() if match_key(name_to_search_key(filt), name_to_search_key(k)))
+
 class Playlist(object):
     def __init__(self, name, choices):
         self.name = name
