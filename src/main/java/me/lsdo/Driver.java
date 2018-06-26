@@ -30,6 +30,7 @@ public class Driver
 	processingSketches.put("kinect", KinectVideo.class);
 	processingSketches.put("kinectflock", KinectFlock.class);
 	processingSketches.put("gif", AnimatedGif.class);
+	processingSketches.put("ripple", Ripple.class);
 
 	headlessSketches.put("black", Black.class);
 	headlessSketches.put("cloud", Cloud.class);
