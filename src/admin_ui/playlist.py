@@ -85,12 +85,13 @@ def all_content():
     if not _all_content:
         _all_content = [
             Content('black', 'black (note: keeps running and using cpu)', manual=True),
+            Content('gridtest', geometries=['lsdome'], manual=True),
+            Content('pixeltest', geometries=['lsdome']),
+            Content('layouttest', 'xy layout test (mouse)', manual=True),
             Content('cloud'),
             Content('dontknow'),
-            Content('gridtest', geometries=['lsdome'], manual=True),
             Content('harmonics', geometries=['lsdome']),
             Content('moire'),
-            Content('pixeltest', geometries=['lsdome']),
             Content('rings'),
             Content('tube'),
             Content('twinkle'),
