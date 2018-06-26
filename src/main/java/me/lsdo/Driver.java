@@ -46,6 +46,7 @@ public class Driver
 	headlessSketches.put("screencast", Screencast.class);
 	headlessSketches.put("tube", Tube.class);
 	headlessSketches.put("twinkle", Twinkle.class);
+	headlessSketches.put("binary", Binary.class);
     }
 
     public static PixelMesh<DomePixel> makeDome() {

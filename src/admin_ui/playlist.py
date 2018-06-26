@@ -88,6 +88,7 @@ def all_content():
             Content('gridtest', geometries=['lsdome'], manual=True),
             Content('pixeltest', geometries=['lsdome']),
             Content('layouttest', 'xy layout test (mouse)', manual=True),
+            Content('binary', manual=True),
             Content('cloud'),
             Content('dontknow'),
             Content('harmonics', geometries=['lsdome']),
