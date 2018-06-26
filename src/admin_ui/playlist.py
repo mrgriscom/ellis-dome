@@ -96,7 +96,7 @@ def all_content():
             Content('twinkle'),
             Content('kaleidoscope', geometries=['lsdome']),
             Content('xykaleidoscope'),
-            Content('particlefft', sound_reactive=True),
+            Content('fft', sound_reactive=True),
             # ideally pixelflock is disabled in favor of kinectflock when kinect is present... merge the sketches and control via config param?
             Content('pixelflock', sound_reactive=True, sound_required=False),
             Content('kinectflock', sound_reactive=True, sound_required=False, kinect=True),

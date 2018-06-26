@@ -22,7 +22,7 @@ public class Driver
 
     static {
 	processingSketches.put("pixelflock", PixelFlock.class);
-	processingSketches.put("particlefft", ParticleFFT.class);
+	processingSketches.put("fft", LiveFFT.class);
 	processingSketches.put("video", VideoPlayer.class);
 	processingSketches.put("stream", VideoCapture.class);
 	processingSketches.put("syphon", Syphon.class);
