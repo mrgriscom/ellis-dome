@@ -158,7 +158,9 @@ class ZMQListener(threading.Thread):
         self.up = True
 
         self.socket = context.socket(zmq.PULL)
-        self.socket.connect("tcp://localhost:%s" % settings.zmq_port_outbound)
+        # counter-intuitively set the pull side as the listener (zmq is agnostic about this)
+        # so that all sockets from java-land are outbound
+        self.socket.bind("tcp://*:%s" % settings.zmq_port_outbound)
         
     def broadcast(self, msg):
         manager.notify(msg)

@@ -78,7 +78,8 @@ def launch_screencast(cmd, params, timeout=5):
 ROM_CORES = {
     'nes': '/usr/lib/libretro/nestopia_libretro.so',
     'snes': '/usr/lib/libretro/bsnes_mercury_performance_libretro.so',
-    'genesis': '/usr/lib/libretro/genesis_plus_gx_libretro.so',
+    # don't use plus_gx due to viewport resize issue
+    'genesis': '/usr/lib/libretro/picodrive_libretro.so',
     'n64': '/usr/lib/libretro/mupen64plus_libretro.so',
     'gameboy': '/usr/lib/libretro/gambatte_libretro.so',
     'gbc': '/usr/lib/libretro/gambatte_libretro.so',
