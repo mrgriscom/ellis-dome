@@ -66,7 +66,11 @@ public class LiveFFT extends PApplet {
 	mode.init(mode.enumByName(Config.getSketchProperty("render_mode", "particle")));
 	
         minim = new Minim(this);
-
+	// by default line-in is mirrored to line-out for some reason, which will
+	// cause bad feedback effects if listening from output monitor
+	AudioOutput out = minim.getLineOut();
+	out.mute();
+	
         // Small buffer size!
         in = minim.getLineIn();
         fft = new FFT(in.bufferSize(), in.sampleRate());
