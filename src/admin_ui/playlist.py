@@ -86,6 +86,7 @@ def all_content():
         _all_content = [
             Content('black', '[util] black (note: keeps running and using cpu)', manual=True),
             Content('gridtest', '[util] uvw grid test', geometries=['lsdome'], manual=True),
+            Content('fctest', '[util] fc topology test', params={'fcconfig': fadecandy_config()}),
             Content('layouttest', '[util] cartesian test (mouse)', manual=True),
             Content('binary', '[util] binary decomp', manual=True),
             Content('cloud'),
@@ -109,15 +110,7 @@ def all_content():
             Content('stream', 'hdmi-in', manual=True, stretch_aspect=True, params={
                 'camera': 'FHD Capture: FHD Capture',
             })
-        ]
-        if settings.geometry == 'lsdome':
-            fcconfig = 'lsdome_%spanel.json' % settings.num_panels
-        elif settings.geometry == 'prometheus':
-            fcconfig = 'prometheus_wing.json'
-        _all_content.append(Content('fctest', '[util] fc test', params={
-            'fcconfig': os.path.join(settings.repo_root, 'src/config/fadecandy', fcconfig),
-        }))
-        
+        ]        
         _all_content.extend(load_videos())
         _all_content = [c for c in _all_content if not c.geometries or settings.geometry in c.geometries]
         _all_content = [c for c in _all_content if not c.kinect or settings.kinect]
@@ -141,6 +134,13 @@ def load_videos():
             'path': vid,
         }, **args)
 
+def fadecandy_config():
+    if settings.geometry == 'lsdome':
+        fcconfig = 'lsdome_%spanel.json' % settings.num_panels
+    elif settings.geometry == 'prometheus':
+        fcconfig = 'prometheus_wing.json'
+    return os.path.join(settings.repo_root, 'src/config/fadecandy', fcconfig)
+            
 def projectm_control(mgr, command):
     interaction = {
         'next': 'key r',
