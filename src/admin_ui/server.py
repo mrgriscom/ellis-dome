@@ -175,8 +175,7 @@ class ZMQListener(threading.Thread):
             duration = msg['duration']
             if duration < 0 or duration is None:
                 duration = settings.sketch_controls_duration_failsafe_timeout
-            if manager.content.info.get('sketch_controls_duration', False):
-                manager.extend_duration(duration, True)
+            manager.extend_duration(duration, True, True)
         if msg['type'] == 'params':
             msg['invocation'] = manager.content.uuid
             self.broadcast(msg)

@@ -210,8 +210,8 @@ class PlayManager(threading.Thread):
     def set_playlist(self, playlist, duration):
         self.queue.put(lambda: self._set_playlist(playlist, duration))
 
-    def extend_duration(self, duration, relnow=False):
-        self.queue.put(lambda: self._extend_duration(duration, relnow))
+    def extend_duration(self, duration, relnow=False, from_sketch=False):
+        self.queue.put(lambda: self._extend_duration(duration, relnow, from_sketch))
         
     def set_placement_mode(self, mode):
         self.queue.put(lambda: self._set_placement_mode(mode))
@@ -356,7 +356,10 @@ class PlayManager(threading.Thread):
             'placements': placement_ixs,
         }
         
-    def _extend_duration(self, duration, relnow):
+    def _extend_duration(self, duration, relnow, from_sketch):
+        if from_sketch != self.content.info.get('sketch_controls_duration', False):
+            return
+        
         if self.content.timeout:
             if duration is None:
                 self.content.set_timeout(None)
