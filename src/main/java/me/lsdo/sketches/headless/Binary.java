@@ -5,8 +5,6 @@ import me.lsdo.processing.util.*;
 import me.lsdo.processing.interactivity.*;
 import java.util.*;
 
-import me.lsdo.processing.geometry.prometheus.*;
-
 // Each pixel flashes its id in binary, for potential auto-registering using computer vision
 
 public class Binary extends PixelMeshAnimation<LedPixel> {
@@ -14,12 +12,27 @@ public class Binary extends PixelMeshAnimation<LedPixel> {
     int maxBits;
 
     NumericParameter period;
-    // TODO baseline
+    double baselineT;
     
     public Binary(PixelMesh<? extends LedPixel> mesh) {
 	super(mesh);
 
-	period = new NumericParameter("period", "animation");
+	baselineT = Config.clock();
+	period = new NumericParameter("period", "animation") {
+		double getPeriods(double period) {
+                    return (Config.clock() - baselineT) / period;
+		}
+
+		@Override
+		public void onChange(Double prev) {
+		    baselineT += getPeriods(prev) * (prev - get());
+		}
+
+		@Override
+		public double getInternal() {
+		    return getPeriods(get());
+		}
+	    };
 	period.min = .05;
 	period.max = 3;
 	period.scale = NumericParameter.Scale.LOG;
@@ -36,7 +49,7 @@ public class Binary extends PixelMeshAnimation<LedPixel> {
     
     @Override
     protected int drawPixel(LedPixel c, double t) {
-	int phase = (int)Math.floor(Config.clock() / period.get()) % maxBits;
+	int phase = (int)Math.floor(period.getInternal()) % maxBits;
 	phase = (maxBits - 1) - phase;
 
 	int i = pixelIds.get(c);

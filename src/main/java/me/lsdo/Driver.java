@@ -41,12 +41,12 @@ public class Driver
 	headlessSketches.put("kaleidoscope", DomeKaleidoscope.class);
 	headlessSketches.put("xykaleidoscope", XYKaleidoscope.class);
 	headlessSketches.put("moire", Moire.class);
-	headlessSketches.put("pixeltest", PixelTest.class);
 	headlessSketches.put("rings", Rings.class);
 	headlessSketches.put("screencast", Screencast.class);
 	headlessSketches.put("tube", Tube.class);
 	headlessSketches.put("twinkle", Twinkle.class);
 	headlessSketches.put("binary", Binary.class);
+	headlessSketches.put("fctest", FadecandyTest.class);
     }
 
     public static PixelMesh<DomePixel> makeDome() {

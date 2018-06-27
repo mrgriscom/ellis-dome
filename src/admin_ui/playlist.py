@@ -84,11 +84,10 @@ def all_content():
     global _all_content
     if not _all_content:
         _all_content = [
-            Content('black', 'black (note: keeps running and using cpu)', manual=True),
-            Content('gridtest', geometries=['lsdome'], manual=True),
-            Content('pixeltest', geometries=['lsdome']),
-            Content('layouttest', 'xy layout test (mouse)', manual=True),
-            Content('binary', manual=True),
+            Content('black', '[util] black (note: keeps running and using cpu)', manual=True),
+            Content('gridtest', '[util] uvw grid test', geometries=['lsdome'], manual=True),
+            Content('layouttest', '[util] cartesian test (mouse)', manual=True),
+            Content('binary', '[util] binary decomp', manual=True),
             Content('cloud'),
             Content('dontknow'),
             Content('harmonics', geometries=['lsdome']),
@@ -111,6 +110,14 @@ def all_content():
                 'camera': 'FHD Capture: FHD Capture',
             })
         ]
+        if settings.geometry == 'lsdome':
+            fcconfig = 'lsdome_%spanel.json' % settings.num_panels
+        elif settings.geometry == 'prometheus':
+            fcconfig = 'prometheus_wing.json'
+        _all_content.append(Content('fctest', '[util] fc test', params={
+            'fcconfig': os.path.join(settings.repo_root, 'src/config/fadecandy', fcconfig),
+        }))
+        
         _all_content.extend(load_videos())
         _all_content = [c for c in _all_content if not c.geometries or settings.geometry in c.geometries]
         _all_content = [c for c in _all_content if not c.kinect or settings.kinect]
