@@ -180,12 +180,12 @@ class ZMQListener(threading.Thread):
         if msg['type'] == 'params':
             msg['invocation'] = manager.content.uuid
             self.broadcast(msg)
-            update_placement_save(msg)
         if msg['type'] == 'param_value':
             self.broadcast(msg)
-            update_placement_save(msg)
         if msg['type'] == 'aspect':
             manager.update_content_info({'aspect': msg['aspect']})
+        if msg['type'] == 'placement':
+            commit_placement_save(msg)
             
     def terminate(self):
         self.up = False
@@ -236,7 +236,6 @@ class BatteryMonitorThread(threading.Thread):
                 status['remaining_minutes'] = secs / 60.
         return status
 
-# this is extremely ghetto
 pending_placement_save = None
 def start_placement_save(name):
     if not manager.content.running():
@@ -244,22 +243,13 @@ def start_placement_save(name):
 
     global pending_placement_save
     pending_placement_save = {'name': '%s (%s)' % (name, datetime.now().strftime('%m-%d %H:%M'))}
-    broadcast_event('_paraminfo', 'set')
-def update_placement_save(msg):
+    broadcast_event('_placement', 'set')
+def commit_placement_save(msg):
+    global pending_placement_save
     if not pending_placement_save:
         return
 
-    if msg['type'] == 'params':
-        pending_placement_save['params'] = dict((p['name'], None) for p in msg['params'] if p['category'] == 'placement')
-    if msg['type'] == 'param_value':
-        param = msg['name']
-        if param in pending_placement_save['params']:
-            pending_placement_save['params'][param] = msg['value']
-
-    if pending_placement_save['params'] and all(v is not None for v in pending_placement_save['params'].values()):
-        commit_placement_save()
-def commit_placement_save():
-    global pending_placement_save
+    pending_placement_save['params'] = dict((pv['name'], pv['value']) for pv in msg['params'])
 
     aspect = '%.3f:1' % manager.content.info.get('aspect', 1)
     data = {
