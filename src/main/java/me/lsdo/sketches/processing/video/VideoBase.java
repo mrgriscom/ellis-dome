@@ -52,7 +52,6 @@ public abstract class VideoBase extends PApplet {
 
 	canvas.initViewport(width, height, aspectRatio);
 	initialized = true;
-	canvas.transformChanged();
     }
 
 }
