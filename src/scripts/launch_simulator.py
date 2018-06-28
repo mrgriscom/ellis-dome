@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '../
 import settings
 import playlist
 
-SIMULATOR = '/home/drew/dev/lsdome/openpixelcontrol/bin/gl_server'
+SIMULATOR = '/home/shen/prometheus/openpixelcontrol/bin/gl_server'
 
 num_opcs = {
     'prometheus': 2,

@@ -26,8 +26,8 @@ load_java_settings(os.path.join(repo_root, 'config.properties'))
 audio_out = True
 kinect = False
 
-media_path = '/home/drew/lsdome-media/'
-roms_path = '/home/drew/roms/'
+media_path = '/home/shen/lsdome-media/'
+roms_path = '/home/shen/roms/'
 
 default_duration = 150
 
@@ -38,4 +38,3 @@ sketch_controls_duration_failsafe_timeout = 300
 default_sketch_properties = {
     'dynamic_subsampling': 1,
 }
-
