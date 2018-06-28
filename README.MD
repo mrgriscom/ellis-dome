@@ -72,18 +72,13 @@ This is a library of animations. It uses the associated `lsdome-processing`
 10. Use the control UI:
 
     Required python dependencies:
-    
+
     - tornado
     - zmq
     - psutil
     - pulsectl
 
-    ```
-    python src/admin_ui/server.py
-    ```
-
-    and navigate to `http://localhost:8000/`
-    ```
+    Launch `python src/admin_ui/server.py` and navigate to `http://localhost:8000/`
 
 11. (obsolete) MIDI support
 
