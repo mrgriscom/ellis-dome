@@ -103,11 +103,19 @@ button {
     </div>
   </div>
 
+  <div data-bind="visible: locked_placement() != null" style="background-color: #fdd; margin-top: 1em;">
+    locked placement in effect: <span style="font-weight: bold;" data-bind="text: locked_placement_name"></span>
+    <br />
+    <button data-bind="click: $root.unlockPlacement">unlock</button>
+  </div>
+  
   <h3>placements</h3>
 
   <div data-bind="foreach: placements">
     <div>
       <button data-bind="click: set">set</button>
+      <button data-bind="click: lock, visible: ix() != $root.locked_placement()">lock</button>
+      <span data-bind="visible: ix() == $root.locked_placement()" style="font-weight: bold;">[locked]</span>
       <span data-bind="text: name"></span>
       <span data-bind="visible: available" style="font-weight: bold; color: green;">&#x2713;</span>
     </div>

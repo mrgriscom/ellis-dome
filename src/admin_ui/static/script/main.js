@@ -17,7 +17,8 @@ function AdminUIModel() {
     this.current_timeout = ko.observable();
     this.aspect_ratio = ko.observable();
     this.current_placement_mode = ko.observable();
-
+    this.locked_placement = ko.observable();
+    
     var model = this;
     this.now = ko.observable(new Date());
     setInterval(function() {
@@ -41,12 +42,20 @@ function AdminUIModel() {
 	var s = diff % 60;
 	return m + 'm ' + s + 's';
     });
+
+    this.locked_placement_name = ko.computed(function() {
+	return model.locked_placement() != null ? model.placements()[model.locked_placement()].name() : null;
+    });
     
     this.setMode = function(e) {
 	if (model.placementModes.indexOf(e) == 0) {
 	    e = null;
 	}
 	CONN.send(JSON.stringify({action: 'set_placement_mode', state: e}));
+    }
+
+    this.unlockPlacement = function(e) {
+	CONN.send(JSON.stringify({action: 'lock_placement', ix: null}));
     }
 }
 
@@ -91,6 +100,10 @@ function PlacementModel() {
 
     this.set = function() {
 	CONN.send(JSON.stringify({action: 'set_placement', ix: this.ix()}));
+    }
+
+    this.lock = function() {
+	CONN.send(JSON.stringify({action: 'lock_placement', ix: this.ix()}));
     }
 }
 
@@ -167,6 +180,8 @@ function connect(model, mode) {
 	    _.each(model.contents(), function(e) {
 		e.available(playlist.items.indexOf(e.name()) >= 0);
 	    });
+	} else if (data.type == "locked_placement") {
+	    model.locked_placement(data.locked_placement);
 	} else if (data.type == "duration") {
 	    model.current_timeout(data.duration ? new Date(data.duration * 1000) : null);
 	} else if (data.type == "params") {
