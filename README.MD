@@ -80,28 +80,6 @@ This is a library of animations. It uses the associated `lsdome-processing`
 
     Launch `python src/admin_ui/server.py` and navigate to `http://localhost:8000/`
 
-11. (obsolete) MIDI support
-
-    Unfortunately, pygame midi support is broken, so we must patch:
-
-    ```
-    sudo mv /usr/local/lib/python2.7/dist-packages/pygame/pypm.so /usr/local/lib/python2.7/dist-packages/pygame/pypm.so.broken
-    sudo ln -s /usr/lib/python2.7/dist-packages/pypm.x86_64-linux-gnu.so /usr/local/lib/python2.7/dist-packages/pygame/pypm.so
-    ```
-
-    To launch the input daemon:
-    
-    `python src/control/input.py`
-
-    Currently only the Numark DJ2Go controller is supported, but if it's connected and everything is working right, you should see something like:
-
-    ```
-    loaded device
-    f0fe308b:dj2go:jog_a:inc
-    ```
-
-    If you see anything about 'mock device', it didn't work.
-
 ### Useful sketches
 
 Some visualizations are generic front-ends for other functionality, and must be configured. Sketches can be configured in `sketch.properties`.
