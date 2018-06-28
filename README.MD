@@ -61,16 +61,31 @@ This is a library of animations. It uses the associated `lsdome-processing`
 
    `bin/gl_server -l <lsdome repo>/src/config/simulator_layouts/<relevant layout>.json -p 7890`
 
+   or
+
+   `./src/scripts/launch_simulator.py`
+
 9. Launch visualizations:
 
     `./build/install/lsdome/bin/lsdome <animation name>`
 
-10. (optional) Set up interactive control via MIDI input. To set up:
+10. Use the control UI:
+
+    Required python dependencies:
+    
+    - tornado
+    - zmq
+    - psutil
+    - pulsectl
 
     ```
-    sudo apt-get install libzmq5 python-pypm
-    pip install pygame zmq
+    python src/admin_ui/server.py
     ```
+
+    and navigate to `http://localhost:8000/`
+    ```
+
+11. (obsolete) MIDI support
 
     Unfortunately, pygame midi support is broken, so we must patch:
 
