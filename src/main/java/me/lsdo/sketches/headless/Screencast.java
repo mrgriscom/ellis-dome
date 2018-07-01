@@ -13,6 +13,7 @@ import static org.bytedeco.javacpp.opencv_imgproc.*;
 import static org.bytedeco.javacpp.opencv_imgcodecs.*;
 import java.nio.*;
 import java.io.*;
+import java.awt.*;
 
 // Note: on linux, as of Ubuntu 17, this requires the Xorg window system, *not* wayland
 
@@ -76,6 +77,24 @@ public class Screencast extends WindowAnimation {
     }
 
     private void initCapture(int width, int height, int xo, int yo) {
+	System.out.println(String.format("%dx%d+%d,%d", width, height, xo, yo));
+
+	Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+	int screenWidth = (int)dim.getWidth();
+	int screenHeight = (int)dim.getHeight();
+
+	int clippedXo = Math.max(xo, 0);
+	int clippedYo = Math.max(yo, 0);
+	int clippedWidth = Math.min(xo + width, screenWidth) - clippedXo;
+	int clippedHeight = Math.min(yo + height, screenHeight) - clippedYo;
+	if (xo != clippedXo || yo != clippedYo || width != clippedWidth || height != clippedHeight) {
+	    xo = clippedXo;
+	    yo = clippedYo;
+	    width = clippedWidth;
+	    height = clippedHeight;
+	    System.out.println("NOTE: window is partially off-screen; clipping capture area to " + String.format("%dx%d+%d,%d", width, height, xo, yo));
+	}
+	
 	initViewport(width, height);
 	initGrabber(width, height, xo, yo);
     }
@@ -85,7 +104,6 @@ public class Screencast extends WindowAnimation {
 	int height = (int)extents[1].y;
 	int xo = (int)extents[0].x;
 	int yo = (int)extents[0].y;
-	System.out.println(String.format("%dx%d+%d,%d", width, height, xo, yo));
 	initCapture(width, height, xo, yo);
     }
     
