@@ -67,6 +67,8 @@ class Placement(object):
             return False
         if mode and self.modes and mode not in self.modes:
             return False
+        if settings.geometry == 'lsdome' and content.dome_pixel_accurate:
+            return getattr(self, 'rot', 0) == 0
         return content.stretch_aspect == self.stretch
 
     def apply(self, params):
