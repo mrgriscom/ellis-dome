@@ -28,6 +28,7 @@ class Content(object):
         self.stretch_aspect = kwargs.get('stretch_aspect', False)
         # if true, sketch is mimicking pixel-perfect triangular dome geometry
         self.dome_pixel_accurate = kwargs.get('dome_pixel_accurate', False)
+        self.placement_filter = kwargs.get('placement_filter')
         
         ## audio settings ##
         # true if content responds to audio input
@@ -119,6 +120,10 @@ def all_content():
                 'source_scale': 1.3,
                 'speed': .25,
             }),
+            
+            Content('video', 'video:chrissy_poi_zoom', params={
+                'path': '/home/drew/lsdome-media/video/hayley_chrissy_fire_spinning.mp4',
+            }, placement_filter=lambda p: p.name == 'poi (01-10 21:44)'),
         ]        
         _all_content.extend(load_videos())
         _all_content = [c for c in _all_content if not c.geometries or settings.geometry in c.geometries]
