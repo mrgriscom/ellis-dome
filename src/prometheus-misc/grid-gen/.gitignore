@@ -1,0 +1,15 @@
+# lein and figwheel etc.
+/*.log
+/target
+/*-init.clj
+/resources/public/js
+out
+.lein-failures
+.lein-repl-history
+.lein-env
+/checkouts
+
+# node stuff
+/node_modules
+package-lock.json
+/.nrepl-port

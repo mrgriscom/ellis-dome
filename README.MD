@@ -61,36 +61,24 @@ This is a library of animations. It uses the associated `lsdome-processing`
 
    `bin/gl_server -l <lsdome repo>/src/config/simulator_layouts/<relevant layout>.json -p 7890`
 
+   or
+
+   `./src/scripts/launch_simulator.py`
+
 9. Launch visualizations:
 
     `./build/install/lsdome/bin/lsdome <animation name>`
 
-10. (optional) Set up interactive control via MIDI input. To set up:
+10. Use the control UI:
 
-    ```
-    sudo apt-get install libzmq5 python-pypm
-    pip install pygame zmq
-    ```
+    Required python dependencies:
 
-    Unfortunately, pygame midi support is broken, so we must patch:
+    - tornado
+    - zmq
+    - psutil
+    - pulsectl
 
-    ```
-    sudo mv /usr/local/lib/python2.7/dist-packages/pygame/pypm.so /usr/local/lib/python2.7/dist-packages/pygame/pypm.so.broken
-    sudo ln -s /usr/lib/python2.7/dist-packages/pypm.x86_64-linux-gnu.so /usr/local/lib/python2.7/dist-packages/pygame/pypm.so
-    ```
-
-    To launch the input daemon:
-    
-    `python src/control/input.py`
-
-    Currently only the Numark DJ2Go controller is supported, but if it's connected and everything is working right, you should see something like:
-
-    ```
-    loaded device
-    f0fe308b:dj2go:jog_a:inc
-    ```
-
-    If you see anything about 'mock device', it didn't work.
+    Launch `python src/admin_ui/server.py` and navigate to `http://localhost:8000/`
 
 ### Useful sketches
 

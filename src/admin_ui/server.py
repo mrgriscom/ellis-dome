@@ -66,6 +66,8 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
             manager.set_placement_mode(data['state'])
         if action == 'set_placement':
             manager.placements[data['ix']].activate(broadcast_event)
+        if action == 'lock_placement':
+            manager.lock_placement(data['ix'])
         if action == 'interactive':
             self.interactive(data['id'], data['sess'], data['type'], data.get('val'))
         if action == 'extend_duration':
@@ -74,7 +76,7 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
             manager.extend_duration(data['duration'], True)
         if action == 'save_placement':
             start_placement_save(data['name'])
-
+            
     def on_close(self):
         manager.unsubscribe(self)
         

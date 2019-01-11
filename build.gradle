@@ -23,7 +23,7 @@ if (use_local_lsdome_processing_lib) {
     }
 } else {
     dependencies {
-        compile "me.lsdo.processing:lsdome-processing:0.9.3"
+        compile "me.lsdo.processing:lsdome-processing:0.9.4"
     }
 }
 

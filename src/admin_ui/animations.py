@@ -67,6 +67,8 @@ class Placement(object):
             return False
         if mode and self.modes and mode not in self.modes:
             return False
+        if settings.geometry == 'lsdome' and content.dome_pixel_accurate:
+            return getattr(self, 'rot', 0) == 0
         return content.stretch_aspect == self.stretch
 
     def apply(self, params):
@@ -174,7 +176,8 @@ class PlayManager(threading.Thread):
         self.background_audio_running = True
         self.audio_input = default_audio_input()
         self.placement_mode = None
-
+        self.locked_placement_ix = None
+        
         self.placements = load_placements()
         self.placement_modes = sorted(set(itertools.chain(*(p.modes for p in self.placements))) - set(['custom']))
         
@@ -184,6 +187,7 @@ class PlayManager(threading.Thread):
             self.content.notify(s)
             s.notify(self._playlist_json())
             s.notify(self._placement_mode_json())
+            s.notify({'locked_placement': self.locked_placement_ix})
             # ping java world and force re-broadcast of its params
             self.broadcast_evt_func('_paraminfo', 'set')
             
@@ -216,6 +220,9 @@ class PlayManager(threading.Thread):
     def set_placement_mode(self, mode):
         self.queue.put(lambda: self._set_placement_mode(mode))
 
+    def lock_placement(self, placement_ix):
+        self.queue.put(lambda: self._lock_placement(placement_ix))
+        
     # terminate the current content; playlist will start something else, if loaded
     def stop_current(self):
         self.queue.put(lambda: self._stop_playback())
@@ -264,9 +271,14 @@ class PlayManager(threading.Thread):
         params.update(content.params)
         self.content.info['params'] = params
 
-        valid_placements = self.get_candidate_placements(content)
-        if valid_placements:
-            placement = random.choice(valid_placements)
+        placement = None
+        if self.locked_placement_ix is not None:
+            placement = self.placements[self.locked_placement_ix]
+        else:
+            valid_placements = self.get_candidate_placements(content)
+            if valid_placements:
+                placement = random.choice(valid_placements)
+        if placement:
             print 'using placement %s' % placement.fullname()
             placement.apply(params)
         else:
@@ -355,7 +367,11 @@ class PlayManager(threading.Thread):
             'placement_mode': self.placement_mode,
             'placements': placement_ixs,
         }
-        
+
+    def _lock_placement(self, placement_ix):
+        self.locked_placement_ix = placement_ix
+        self.notify({'locked_placement': self.locked_placement_ix})
+    
     def _extend_duration(self, duration, relnow, from_sketch):
         if from_sketch != self.content.info.get('sketch_controls_duration', False):
             return

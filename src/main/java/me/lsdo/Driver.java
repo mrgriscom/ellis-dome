@@ -1,6 +1,7 @@
 package me.lsdo;
 
 import me.lsdo.sketches.headless.*;
+import me.lsdo.sketches.headless.kaleidoscope.*;
 import me.lsdo.sketches.processing.*;
 import me.lsdo.sketches.processing.video.*;
 import me.lsdo.processing.*;
@@ -38,8 +39,8 @@ public class Driver
 	headlessSketches.put("dontknow", DontKnow.class);
 	headlessSketches.put("gridtest", TriangularGridTest.class);
 	headlessSketches.put("harmonics", Harmonics.class);
-	headlessSketches.put("kaleidoscope", DomeKaleidoscope.class);
-	headlessSketches.put("xykaleidoscope", XYKaleidoscope.class);
+	headlessSketches.put("kaleidoscope", KLRainbow.class);
+	headlessSketches.put("imgkaleidoscope", KLBackgroundImage.class);
 	headlessSketches.put("moire", Moire.class);
 	headlessSketches.put("rings", Rings.class);
 	headlessSketches.put("screencast", Screencast.class);

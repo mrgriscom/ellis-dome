@@ -26,7 +26,9 @@ class Content(object):
         
         # if true, stretch content to fit the viewport
         self.stretch_aspect = kwargs.get('stretch_aspect', False)
-
+        # if true, sketch is mimicking pixel-perfect triangular dome geometry
+        self.dome_pixel_accurate = kwargs.get('dome_pixel_accurate', False)
+        
         ## audio settings ##
         # true if content responds to audio input
         self.sound_reactive = kwargs.get('sound_reactive', False)
@@ -96,8 +98,6 @@ def all_content():
             Content('rings'),
             Content('tube'),
             Content('twinkle'),
-            Content('kaleidoscope', geometries=['lsdome']),
-            Content('xykaleidoscope'),
             Content('fft', sound_reactive=True),
             # ideally pixelflock is disabled in favor of kinectflock when kinect is present... merge the sketches and control via config param?
             Content('pixelflock', sound_reactive=True, sound_required=False),
@@ -109,7 +109,16 @@ def all_content():
             ),
             Content('stream', 'hdmi-in', manual=True, stretch_aspect=True, params={
                 'camera': 'FHD Capture: FHD Capture',
-            })
+            }),
+            
+            Content('kaleidoscope', geometries=['lsdome'], dome_pixel_accurate=True, params={'scale': 2.}),
+            Content('kaleidoscope', geometries=['prometheus'], params={'scale': 3.2}),
+            Content('imgkaleidoscope', 'hearts', geometries=['lsdome'], dome_pixel_accurate=True, params={
+                'image': "res/img/hearts.jpg",
+                'scale': 1.,
+                'source_scale': 1.3,
+                'speed': .25,
+            }),
         ]        
         _all_content.extend(load_videos())
         _all_content = [c for c in _all_content if not c.geometries or settings.geometry in c.geometries]
