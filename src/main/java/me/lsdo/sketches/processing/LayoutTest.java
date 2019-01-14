@@ -32,7 +32,7 @@ public class LayoutTest extends PApplet {
 	auto.description = "mode";
 	auto.trueCaption = "auto";
 	auto.falseCaption = "manual";
-	auto.init(false);
+	auto.init(true);
 	    
 	horiz = new BooleanParameter("line axis", "animation");
 	horiz.trueCaption = "horizontal";
@@ -69,6 +69,7 @@ public class LayoutTest extends PApplet {
     }
 
     public void mouseMoved() {
+	auto.set(false);
 	offset.set(horiz.get() ? (double)mouseY / height : (double)mouseX / width);
     }
 
