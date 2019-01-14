@@ -1,6 +1,7 @@
 *~
 *.jar
 sketch.properties
+localsettings.py
 
 # dumped pixel positions for simulator;
 layout.json

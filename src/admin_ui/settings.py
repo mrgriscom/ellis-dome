@@ -26,8 +26,8 @@ load_java_settings(os.path.join(repo_root, 'config.properties'))
 audio_out = True
 kinect = False
 
-media_path = '/home/shen/lsdome-media/'
-roms_path = '/home/shen/roms/'
+media_path = '/home/drew/lsdome-media/'
+roms_path = '/home/drew/roms/'
 
 default_duration = 150
 
@@ -39,7 +39,14 @@ default_sketch_properties = {
     'dynamic_subsampling': 1,
 }
 
+opc_simulator_path = '/home/drew/dev/lsdome/openpixelcontrol/bin/gl_server'
+
 # in some installs tornado callbacks don't seem to work correctly; set this
 # to true to disable them (this could in theory break things, but in practice
 # it seems to work fine).
 tornado_callbacks_hack = False
+
+try:
+    from localsettings import *
+except ImportError:
+    pass

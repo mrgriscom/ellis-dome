@@ -61,17 +61,16 @@ class Placement(object):
     def filter(self, content, mode):
         if content.placement_filter:
             return content.placement_filter(self)
-        if self.custom:
+        elif self.custom:
             return False
-        if not self.stretch and abs(self.ideal_aspect_ratio - 1.) > .01:
+        elif not self.stretch and abs(self.ideal_aspect_ratio - 1.) > .01:
             # for non-stretch content, don't auto-apply placements with non-1:1 aspect ratio;
             # assume any exceptions will be manual for special-purpose content
             return False
-        if mode and self.modes and mode not in self.modes:
+        elif mode and self.modes and mode not in self.modes:
             return False
-        if settings.geometry == 'lsdome' and content.dome_pixel_accurate:
-            return getattr(self, 'rot', 0) == 0
-        return content.stretch_aspect == self.stretch
+        else:
+            return content.stretch_aspect == self.stretch
 
     def apply(self, params):
         placement = {

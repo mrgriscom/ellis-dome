@@ -26,8 +26,7 @@ class Content(object):
 
         # if true, stretch content to fit the viewport
         self.stretch_aspect = kwargs.get('stretch_aspect', False)
-        # if true, sketch is mimicking pixel-perfect triangular dome geometry
-        self.dome_pixel_accurate = kwargs.get('dome_pixel_accurate', False)
+        # a function (placement -> bool) that overrides the built-in placement selection
         self.placement_filter = kwargs.get('placement_filter')
 
         ## audio settings ##
@@ -82,6 +81,11 @@ class Content(object):
             info['duration'] = self.duration
         return info
 
+# placement filter that ensures crisp alignment with lsdome panel/pixel geometry
+def pixel_exact(p):
+    # ideally should check all placement params are at their defaults, but this is good enough for lsdome
+    return getattr(p, 'rot', 0) == 0
+    
 _all_content = None
 def all_content():
     global _all_content
@@ -112,9 +116,9 @@ def all_content():
                 'camera': 'FHD Capture: FHD Capture',
             }),
 
-            Content('kaleidoscope', geometries=['lsdome'], dome_pixel_accurate=True, params={'scale': 2.}),
+            Content('kaleidoscope', geometries=['lsdome'], placement_filter=pixel_exact, params={'scale': 2.}),
             Content('kaleidoscope', geometries=['prometheus'], params={'scale': 3.2}),
-            Content('imgkaleidoscope', 'hearts', geometries=['lsdome'], dome_pixel_accurate=True, params={
+            Content('imgkaleidoscope', 'hearts', geometries=['lsdome'], placement_filter=pixel_exact, params={
                 'image': "res/img/hearts.jpg",
                 'scale': 1.,
                 'source_scale': 1.3,
