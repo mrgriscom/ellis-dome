@@ -28,12 +28,12 @@ def web_path(*args):
 class MainHandler(web.RequestHandler):
     def get(self):
         self.render('main.html', onload='init', geom=settings.geometry, default_duration=settings.default_duration/60.)
-        
+
 class GamesHandler(web.RequestHandler):
     def get(self, suffix):
         suffix = suffix[1:] if suffix else ''
         self.render('game.html', onload='init_game', search=json.dumps(suffix))
-        
+
 class WebSocketTestHandler(websocket.WebSocketHandler):
     def initialize(self, get_content, playlists={}):
         self.get_content = get_content
@@ -48,7 +48,7 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
         self.notify({'placement_modes': manager.placement_modes})
         manager.subscribe(self)
         self.notify(battery_thread.get_status())
-        
+
     def on_message(self, message):
         data = json.loads(message)
         print 'incoming message:', datetime.now(), self.request.remote_ip, data
@@ -76,10 +76,10 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
             manager.extend_duration(data['duration'], True)
         if action == 'save_placement':
             start_placement_save(data['name'])
-            
+
     def on_close(self):
         manager.unsubscribe(self)
-        
+
     def interactive(self, id, session, control_type, val):
         if control_type in ('button', 'button-keepalive'):
             button_thread.handle(id, session, {True: 'press', False: 'release', None: 'keepalive'}[val])
@@ -92,7 +92,7 @@ class WebSocketTestHandler(websocket.WebSocketHandler):
             key = msg.keys()[0]
             msg = {'type': key, key: msg[key]}
         self.write_message(json.dumps(msg))
-            
+
 keepalive_timeout = 5.
 class ButtonPressManager(threading.Thread):
     def __init__(self):
@@ -145,13 +145,13 @@ class ButtonPressManager(threading.Thread):
 
 def broadcast_event(id, type, val=None):
     manager.input_event(id, type, val)
-        
+
     evt = {
         'name': id,
         'eventType': type,
     }
     if val is not None:
-        evt['value'] = str(val)        
+        evt['value'] = str(val)
     zmq_send(json.dumps(evt))
 
 class ZMQListener(threading.Thread):
@@ -163,16 +163,16 @@ class ZMQListener(threading.Thread):
         # counter-intuitively set the pull side as the listener (zmq is agnostic about this)
         # so that all sockets from java-land are outbound
         self.socket.bind("tcp://*:%s" % settings.zmq_port_outbound)
-        
+
     def broadcast(self, msg):
         manager.notify(msg)
-        
+
     def handle(self, msg):
         try:
             msg = json.loads(msg)
         except ValueError:
             return
-            
+
         if msg['type'] == 'duration':
             duration = msg['duration']
             if duration < 0 or duration is None:
@@ -187,7 +187,7 @@ class ZMQListener(threading.Thread):
             manager.update_content_info({'aspect': msg['aspect']})
         if msg['type'] == 'placement':
             commit_placement_save(msg)
-            
+
     def terminate(self):
         self.up = False
 
@@ -206,7 +206,7 @@ class BatteryMonitorThread(threading.Thread):
         self.up = True
         self.last_notif = None
         self.last_status = self.get_status()
-        
+
     def terminate(self):
         self.up = False
 
@@ -214,14 +214,14 @@ class BatteryMonitorThread(threading.Thread):
         while self.up:
             status = self.get_status()
             power_source_change = (status['battery_power'] != self.last_status['battery_power'])
-            self.last_status = status            
-            
+            self.last_status = status
+
             due_for_update = (self.last_notif is None or time.time() - self.last_notif > NOTIF_INTERVAL)
             immediate_update = power_source_change
             if due_for_update or immediate_update:
                 manager.notify(status)
                 self.last_notif = time.time()
-            
+
             time.sleep(1.)
 
     def get_status(self):
@@ -266,10 +266,10 @@ def commit_placement_save(msg):
     with open(os.path.join(settings.placements_dir, pending_placement_save['name']), 'w') as f:
         f.write(json.dumps(data))
     manager.add_placement(data)
-        
+
     pending_placement_save = None
 
-        
+
 if __name__ == "__main__":
 
     parser = OptionParser()
@@ -286,8 +286,8 @@ if __name__ == "__main__":
     def add_thread(th):
         th.start()
         threads.append(th)
-    
-    manager = animations.PlayManager(broadcast_event, lambda func: IOLoop.instance().add_callback(func))
+
+    manager = animations.PlayManager(broadcast_event, (lambda func: IOLoop.instance().add_callback(func)) if not settings.tornado_callbacks_hack else None)
     add_thread(manager)
 
     playlists = playlist.load_playlists()
@@ -301,7 +301,7 @@ if __name__ == "__main__":
 
     zmqlisten = ZMQListener(context)
     add_thread(zmqlisten)
-        
+
     button_thread = ButtonPressManager()
     add_thread(button_thread)
 
