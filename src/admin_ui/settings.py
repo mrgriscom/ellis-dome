@@ -23,7 +23,7 @@ def load_java_settings(path):
 load_java_settings(os.path.join(repo_root, 'config.properties'))
 
 # true if the installation has speakers
-audio_out = False
+audio_out = True
 kinect = False
 
 media_path = '/home/shen/lsdome-media/'

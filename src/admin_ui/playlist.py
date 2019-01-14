@@ -23,13 +23,13 @@ class Content(object):
         self.manual = kwargs.get('manual', False)
         # if sketch can only run on certain geometries, list of compatible geometries
         self.geometries = kwargs.get('geometries', None)
-        
+
         # if true, stretch content to fit the viewport
         self.stretch_aspect = kwargs.get('stretch_aspect', False)
         # if true, sketch is mimicking pixel-perfect triangular dome geometry
         self.dome_pixel_accurate = kwargs.get('dome_pixel_accurate', False)
         self.placement_filter = kwargs.get('placement_filter')
-        
+
         ## audio settings ##
         # true if content responds to audio input
         self.sound_reactive = kwargs.get('sound_reactive', False)
@@ -42,9 +42,9 @@ class Content(object):
 
         # true if sketch requires kinect
         self.kinect = kwargs.get('kinect', False)
-        
+
         self.server_side_parameters = kwargs.get('server_side_parameters', [])
-        
+
         ## sketch-dependent parameters ##
 
         # video
@@ -67,7 +67,7 @@ class Content(object):
     def get_video_duration(self):
         if not self.sketch == 'video':
             return
-        
+
         vid = self.params['path']
         try:
             duration = float(os.popen('mediainfo --Inform="Video;%%Duration%%" "%s"' % vid).readlines()[0].strip())/1000.
@@ -111,7 +111,7 @@ def all_content():
             Content('stream', 'hdmi-in', manual=True, stretch_aspect=True, params={
                 'camera': 'FHD Capture: FHD Capture',
             }),
-            
+
             Content('kaleidoscope', geometries=['lsdome'], dome_pixel_accurate=True, params={'scale': 2.}),
             Content('kaleidoscope', geometries=['prometheus'], params={'scale': 3.2}),
             Content('imgkaleidoscope', 'hearts', geometries=['lsdome'], dome_pixel_accurate=True, params={
@@ -120,11 +120,11 @@ def all_content():
                 'source_scale': 1.3,
                 'speed': .25,
             }),
-            
+
             Content('video', 'video:chrissy_poi_zoom', params={
-                'path': '/home/drew/lsdome-media/video/hayley_chrissy_fire_spinning.mp4',
+                'path': os.path.join(VIDEO_DIR, 'hayley_chrissy_fire_spinning.mp4'),
             }, placement_filter=lambda p: p.name == 'poi (01-10 21:44)'),
-        ]        
+        ]
         _all_content.extend(load_videos())
         _all_content = [c for c in _all_content if not c.geometries or settings.geometry in c.geometries]
         _all_content = [c for c in _all_content if not c.kinect or settings.kinect]
@@ -143,7 +143,7 @@ def load_videos():
             args['play_mode'] = 'full'
         if any(k in vid for k in ('knife', 'flood')):
             args['has_audio'] = True
-            
+
         yield Content('video', 'video:%s' % os.path.relpath(vid, VIDEO_DIR), stretch_aspect=True, params={
             'path': vid,
         }, **args)
@@ -154,7 +154,7 @@ def fadecandy_config():
     elif settings.geometry == 'prometheus':
         fcconfig = 'prometheus_wing.json'
     return os.path.join(settings.repo_root, 'src/config/fadecandy', fcconfig)
-            
+
 def projectm_control(mgr, command):
     interaction = {
         'next': 'key r',
@@ -175,7 +175,7 @@ def projectm_parameters():
             if type != 'press':
                 return
             projectm_control(self.manager, 'next')
-            
+
         def _update_value(self, val):
             pass
     return [ProjectMNextPatternAction]
@@ -194,7 +194,7 @@ def load_games(filt):
         for dirpath, _, filenames in os.walk(settings.roms_path):
             for f in filenames:
                 yield os.path.join(dirpath, f)
-    
+
     global _games_content
     if not _games_content:
         _games_content = filter(None, map(game_content, all_roms_path_files()))
@@ -210,10 +210,10 @@ def filter_games(all_games, filt):
         words = name.lower().split()
         words = [re.sub('[^a-z0-9]', '', w) for w in words]
         return filter(None, words)
-    
+
     def match_key(query, key):
         return all(any(kw.startswith(qw) for kw in key) for qw in query)
-    
+
     return dict((k, v) for k, v in all_games.iteritems() if match_key(name_to_search_key(filt), name_to_search_key(k)))
 
 class Playlist(object):
@@ -251,7 +251,7 @@ class Playlist(object):
             'name': self.name,
             'items': sorted(c.name for c in self.choices.keys()),
         }
-    
+
 def load_playlists():
     base = Playlist('(almost) everything', (c for c in all_content().values() if not c.manual))
     nosound = Playlist('no sound-reactive', (c for c in base.choices.keys() if not c.sound_reactive or not c.sound_required))
