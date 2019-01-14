@@ -276,5 +276,8 @@ def load_playlist_files():
 
         def parse_entry(entry):
             parts = entry.split('|')
-            return (all_content()[parts[0]], float(parts[1]) if len(parts) > 1 else 1.)
-        yield Playlist(name, dict(map(parse_entry, entries)))
+            try:
+                return (all_content()[parts[0]], float(parts[1]) if len(parts) > 1 else 1.)
+            except KeyError:
+                print 'content "%s" not available for playlist "%s"' % (parts[0], name)
+        yield Playlist(name, dict(filter(None, map(parse_entry, entries))))
