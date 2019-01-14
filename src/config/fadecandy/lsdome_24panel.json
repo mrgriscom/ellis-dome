@@ -5,7 +5,7 @@
   "devices": [
     {
       "type": "fadecandy",
-      "serial": "LZHXRFVLNNERMVCF",
+      "serial": "THPSLLPHAUZGSGLD",
       "map": [
         [ 0, 0, 0, 64 ],
         [ 0, 64, 64, 56 ],
@@ -19,7 +19,7 @@
     },
     {
       "type": "fadecandy",
-      "serial": "JPBFMAEUBNQXULWX",
+      "serial": "MAKMFRQSBRWHWPIB",
       "map": [
         [ 0, 480, 0, 64 ],
         [ 0, 544, 64, 56 ],
@@ -33,7 +33,7 @@
     },
     {
       "type": "fadecandy",
-      "serial": "UIUYJXAUSONTBBYR",
+      "serial": "SKAPSEQUWKVIGQHX",
       "map": [
         [ 0,  960, 0, 64 ],
         [ 0, 1024, 64, 56 ],
@@ -61,7 +61,7 @@
     },
     {
       "type": "fadecandy",
-      "serial": "OSYQHHOCWMZDTXUH",
+      "serial": "WAYSRTWSKAPFPPGJ",
       "map": [
         [ 0,  1920, 0, 64 ],
         [ 0,  1984, 64, 56 ],
@@ -75,7 +75,7 @@
     },
     {
       "type": "fadecandy",
-      "serial": "WAYSRTWSKAPFPPGJ",
+      "serial": "WASDCAYSKWXCYGZP",
       "map": [
         [ 0,  2400, 0, 64 ],
         [ 0,  2464, 64, 56 ],
@@ -86,6 +86,6 @@
         [ 0,  2760, 384, 64 ],
         [ 0,  2824, 448, 56 ]
       ]
-    },
+    }
   ]
 }
