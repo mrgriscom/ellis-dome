@@ -319,6 +319,9 @@ if __name__ == "__main__":
     except IndexError:
         port = 8000
 
+    if settings.enable_security:
+        assert settings.login_password, 'password not configured!'
+        
     threads = []
     def add_thread(th):
         th.start()
