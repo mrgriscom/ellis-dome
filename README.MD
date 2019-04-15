@@ -74,6 +74,7 @@ This is a library of animations. It uses the associated `lsdome-processing`
     Required python dependencies:
 
     - tornado
+    - tornado_http_auth
     - zmq
     - psutil
     - pulsectl

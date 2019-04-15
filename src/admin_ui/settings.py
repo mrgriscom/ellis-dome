@@ -46,8 +46,9 @@ opc_simulator_path = '/home/drew/dev/lsdome/openpixelcontrol/bin/gl_server'
 # it seems to work fine).
 tornado_callbacks_hack = False
 
-enable_security = False
+enable_security = True
 login_password = None
+cookie_secret = None
 ssl_config = {
     'certfile': os.path.join(os.path.dirname(__file__), 'private/ssl/selfsigned.crt'),
     'keyfile': os.path.join(os.path.dirname(__file__), 'private/ssl/selfsigned.key'),

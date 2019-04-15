@@ -12,6 +12,7 @@ import tornado.web as web
 import tornado.gen as gen
 from tornado.template import Template
 import tornado.websocket as websocket
+from tornado_http_auth import BasicAuthMixin, auth_required
 from optparse import OptionParser
 import logging
 import json
@@ -22,23 +23,60 @@ import Queue
 import time
 import psutil
 
+ID_COOKIE = 'user'
+VALID_USER = 'valid'
+
 def web_path(*args):
     return os.path.join(settings.py_root, *args)
 
-class MainHandler(web.RequestHandler):
+class AuthenticationMixin(object):
+    def get_current_user(self):
+        return self.get_secure_cookie(ID_COOKIE) if settings.enable_security else VALID_USER
+
+    def get_login_url(self):
+        return self.reverse_url('login')
+
+    @staticmethod
+    def authenticate_hard_stop(handler):
+        def _wrap(self, *args):
+            if not self.current_user:
+                self.set_status(403)
+                self.finish()
+                return
+            else:
+                handler(self, *args)
+        return _wrap
+    
+class MainHandler(AuthenticationMixin, web.RequestHandler):
+    @web.authenticated
     def get(self):
         self.render('main.html', onload='init', geom=settings.geometry, default_duration=settings.default_duration/60.)
-
-class GamesHandler(web.RequestHandler):
+        
+class GamesHandler(AuthenticationMixin, web.RequestHandler):
+    @web.authenticated
     def get(self, suffix):
         suffix = suffix[1:] if suffix else ''
         self.render('game.html', onload='init_game', search=json.dumps(suffix))
 
-class WebSocketTestHandler(websocket.WebSocketHandler):
+# DigestAuthMixin doesn't seem to work on chrome. This means password is sent in the clear from
+# this page in insecure mode (though insecure mode should never redirect here, and really the same
+# risk profile as an html login form, so... meh)
+class LoginHandler(BasicAuthMixin, web.RequestHandler):
+    @auth_required(realm='Protected', auth_func=lambda username: settings.login_password)
+    def get(self):
+        self.set_secure_cookie(ID_COOKIE, VALID_USER, path='/')
+        self.redirect(self.get_argument('next'))
+
+class WebsocketHandler(AuthenticationMixin, websocket.WebSocketHandler):
     def initialize(self, get_content, playlists={}):
         self.get_content = get_content
         self.playlists = playlists
 
+    @AuthenticationMixin.authenticate_hard_stop
+    def get(self, *args):
+        # intercept and authenticate before websocket setup / protocol switch
+        websocket.WebSocketHandler.get(self, *args)
+        
     def open(self, *args):
         self.contents = self.get_content(*args)
 
@@ -309,11 +347,17 @@ if __name__ == "__main__":
 
     application = web.Application([
         (r'/', MainHandler),
+        web.URLSpec('/login', LoginHandler, name='login'),
         (r'/game(/.*)?', GamesHandler),
-        (r'/socket/main', WebSocketTestHandler, {'playlists': playlists, 'get_content': lambda: contents}),
-        (r'/socket/game/(.*)', WebSocketTestHandler, {'get_content': lambda query: playlist.load_games(query)}),
+        (r'/socket/main', WebsocketHandler, {'playlists': playlists, 'get_content': lambda: contents}),
+        (r'/socket/game/(.*)', WebsocketHandler, {'get_content': lambda query: playlist.load_games(query)}),
         (r'/(.*)', web.StaticFileHandler, {'path': web_path('static')}),
-    ], template_path=web_path('templates'))
+    ],
+        template_path=web_path('templates'),
+        cookie_secret=settings.cookie_secret,
+        debug=False,
+        #debug=True,
+    )
     application.listen(port, ssl_options=settings.ssl_config if settings.enable_security else None)
 
     try:
