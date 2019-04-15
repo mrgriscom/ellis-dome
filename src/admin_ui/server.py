@@ -280,7 +280,6 @@ if __name__ == "__main__":
         port = int(args[0])
     except IndexError:
         port = 8000
-    ssl = None
 
     threads = []
     def add_thread(th):
@@ -315,7 +314,7 @@ if __name__ == "__main__":
         (r'/socket/game/(.*)', WebSocketTestHandler, {'get_content': lambda query: playlist.load_games(query)}),
         (r'/(.*)', web.StaticFileHandler, {'path': web_path('static')}),
     ], template_path=web_path('templates'))
-    application.listen(port, ssl_options=ssl)
+    application.listen(port, ssl_options=settings.ssl_config if settings.enable_security else None)
 
     try:
         IOLoop.instance().start()

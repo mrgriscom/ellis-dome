@@ -112,7 +112,12 @@ function getDuration() {
 }
 
 function connect(model, mode) {
-    var conn = new WebSocket('ws://' + window.location.host + '/socket/' + mode);
+    var secure = window.location.protocol.startsWith('https');
+    if (secure && window.location.host.startsWith('localhost')) {
+	alert("chrome doesn't support secure websockets to localhost; use an actual IP address");
+    }
+    
+    var conn = new WebSocket((secure ? 'wss' : 'ws') + '://' + window.location.host + '/socket/' + mode);
     $('#connectionstatus').text('connecting to server...');
 
     var connectionLost = function() {
