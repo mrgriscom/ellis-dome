@@ -50,6 +50,7 @@ enable_security = True
 # if access is compromised, change BOTH of these (password for new logins, secret to invalidate existing)
 login_password = None
 cookie_secret = None
+assert not login_password and not cookie_secret, 'set only in localsettings.py'
 
 ssl_config = {
     'certfile': os.path.join(os.path.dirname(__file__), 'private/ssl/selfsigned.crt'),
