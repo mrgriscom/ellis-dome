@@ -47,8 +47,10 @@ opc_simulator_path = '/home/drew/dev/lsdome/openpixelcontrol/bin/gl_server'
 tornado_callbacks_hack = False
 
 enable_security = True
+# if access is compromised, change BOTH of these (password for new logins, secret to invalidate existing)
 login_password = None
 cookie_secret = None
+
 ssl_config = {
     'certfile': os.path.join(os.path.dirname(__file__), 'private/ssl/selfsigned.crt'),
     'keyfile': os.path.join(os.path.dirname(__file__), 'private/ssl/selfsigned.key'),
