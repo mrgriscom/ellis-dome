@@ -75,7 +75,7 @@ class WebsocketHandler(AuthenticationMixin, websocket.WebSocketHandler):
     @AuthenticationMixin.authenticate_hard_stop
     def get(self, *args):
         # intercept and authenticate before websocket setup / protocol switch
-        websocket.WebSocketHandler.get(self, *args)
+        super(WebsocketHandler, self).get(*args)
         
     def open(self, *args):
         self.contents = self.get_content(*args)
