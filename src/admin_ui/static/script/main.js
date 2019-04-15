@@ -114,7 +114,7 @@ function getDuration() {
 function connect(model, mode) {
     var secure = window.location.protocol.startsWith('https');
     if (secure && window.location.host.startsWith('localhost')) {
-	alert("chrome doesn't support secure websockets to localhost; use an actual IP address");
+	alert("chrome doesn't support secure websockets to 'localhost'; use an actual IP address");
     }
     
     var conn = new WebSocket((secure ? 'wss' : 'ws') + '://' + window.location.host + '/socket/' + mode);
