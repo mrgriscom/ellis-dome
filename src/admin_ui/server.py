@@ -58,10 +58,12 @@ class GamesHandler(AuthenticationMixin, web.RequestHandler):
         suffix = suffix[1:] if suffix else ''
         self.render('game.html', onload='init_game', search=json.dumps(suffix))
 
-# DigestAuthMixin doesn't seem to work on chrome. This means password is sent in the clear from
-# this page in insecure mode (though insecure mode should never redirect here, and really the same
-# risk profile as an html login form, so... meh)
+# DigestAuthMixin doesn't seem to work on chrome
 class LoginHandler(BasicAuthMixin, web.RequestHandler):
+    def prepare(self):
+        # torpedo request before there's a chance of sending passwords in the clear
+        assert settings.enable_security        
+    
     @auth_required(realm='Protected', auth_func=lambda username: settings.login_password)
     def get(self):
         self.set_secure_cookie(ID_COOKIE, VALID_USER, path='/')
