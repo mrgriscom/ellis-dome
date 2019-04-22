@@ -1,10 +1,10 @@
 *~
 *.jar
 sketch.properties
-localsettings.py
+localsettings.py*
 private/
 
-# dumped pixel positions for simulator;
+# dumped pixel positions for simulator
 layout.json
 
 # build output

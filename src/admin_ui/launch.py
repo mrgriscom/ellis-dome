@@ -138,7 +138,7 @@ def set_master_volume(vol):
 # the thread attempts configuration for a short timeout then gives up and dies.
 class AudioConfigThread(threading.Thread):
     def __init__(self, pids, audio_input=None, input_volume=None, output_volume=None,
-                 audio_out_detect_callback=None, timeout=2.):
+                 audio_out_detect_callback=None, timeout=5.):
         threading.Thread.__init__(self)
         self.pids = pids
         self.timeout = timeout
