@@ -39,8 +39,10 @@ class Content(object):
         # true if sketch has audio out (that we actually want to hear)
         self.has_audio = kwargs.get('has_audio', False)
 
-        # true if sketch requires kinect
-        self.kinect = kwargs.get('kinect', False)
+        # true if content can use kinect
+        self.kinect_enabled = kwargs.get('kinect_enabled', False)
+        # if kinect_enabled, false if content still works without connect
+        self.kinect_required = kwargs.get('kinect_required', True)
 
         self.server_side_parameters = kwargs.get('server_side_parameters', [])
 
@@ -76,7 +78,7 @@ class Content(object):
         return duration
 
     def to_json_info(self):
-        info = dict((k, getattr(self, k)) for k in ('name', 'sound_reactive', 'has_audio', 'kinect'))
+        info = dict((k, getattr(self, k)) for k in ('name', 'sound_reactive', 'has_audio', 'kinect_enabled'))
         if self.play_mode == 'full':
             info['duration'] = self.duration
         return info
@@ -104,10 +106,8 @@ def all_content():
             Content('tube'),
             Content('twinkle'),
             Content('fft', sound_reactive=True),
-            # ideally pixelflock is disabled in favor of kinectflock when kinect is present... merge the sketches and control via config param?
-            Content('pixelflock', sound_reactive=True, sound_required=False),
-            Content('kinectflock', sound_reactive=True, sound_required=False, kinect=True),
-            Content('kinect', 'kinectdepth', kinect=True, manual=True),
+            Content('pixelflock', sound_reactive=True, sound_required=False, kinect_enabled=True, kinect_required=False),
+            Content('kinect', 'kinectdepth', kinect_enabled=True),
             Content('screencast', 'projectm', cmdline='projectM-pulseaudio', sound_reactive=True, volume_adjust=1.5,
                     server_side_parameters=projectm_parameters(),
                     post_launch=lambda manager: projectm_control(manager, 'next'), # get off the default pattern
@@ -131,7 +131,7 @@ def all_content():
         ]
         _all_content.extend(load_videos())
         _all_content = [c for c in _all_content if not c.geometries or settings.geometry in c.geometries]
-        _all_content = [c for c in _all_content if not c.kinect or settings.kinect]
+        _all_content = [c for c in _all_content if not (c.kinect_enabled and c.kinect_required) or settings.kinect]
         assert len(set(c.name for c in _all_content)) == len(_all_content), 'content names not unique'
         _all_content = dict((c.name, c) for c in _all_content)
     return _all_content

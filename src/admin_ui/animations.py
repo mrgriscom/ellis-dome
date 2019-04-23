@@ -310,7 +310,10 @@ class PlayManager(threading.Thread):
 
             self.content.add_param(AudioSensitivityParameter(self, audio_config['input_volume']))
             self.content.add_param(AudioSourceParameter(self))
-        
+
+        if content.kinect_enabled:
+            params['kinect'] = settings.kinect
+            
         if content.sketch == 'screencast':
             gui_invocation = launch.launch_screencast(content.cmdline, params)
             self.content.processes = gui_invocation[1]

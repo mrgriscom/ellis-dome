@@ -29,7 +29,6 @@ public class Driver
 	processingSketches.put("syphon", Syphon.class);
 	processingSketches.put("spout", Spout.class);
 	processingSketches.put("kinect", KinectVideo.class);
-	processingSketches.put("kinectflock", KinectFlock.class);
 	processingSketches.put("gif", AnimatedGif.class);
 	processingSketches.put("ripple", Ripple.class);
 	processingSketches.put("layouttest", LayoutTest.class);
