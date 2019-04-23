@@ -58,12 +58,16 @@ class Placement(object):
             'ix': ix,
         }
 
+    @property
+    def is_1to1(self):
+        return not self.stretch and abs(self.ideal_aspect_ratio - 1.) < .01
+    
     def filter(self, content, mode):
         if content.placement_filter:
             return content.placement_filter(self)
         elif self.custom:
             return False
-        elif not self.stretch and abs(self.ideal_aspect_ratio - 1.) > .01:
+        elif not self.stretch and not self.is_1to1:
             # for non-stretch content, don't auto-apply placements with non-1:1 aspect ratio;
             # assume any exceptions will be manual for special-purpose content
             return False

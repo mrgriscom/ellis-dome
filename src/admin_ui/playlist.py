@@ -86,7 +86,7 @@ class Content(object):
 # placement filter that ensures crisp alignment with lsdome panel/pixel geometry
 def pixel_exact(p):
     # ideally should check all placement params are at their defaults, but this is good enough for lsdome
-    return getattr(p, 'rot', 0) == 0
+    return getattr(p, 'rot', 0) == 0 and p.is_1to1
     
 _all_content = None
 def all_content():
@@ -132,6 +132,10 @@ def all_content():
         _all_content.extend(load_videos())
         _all_content = [c for c in _all_content if not c.geometries or settings.geometry in c.geometries]
         _all_content = [c for c in _all_content if not (c.kinect_enabled and c.kinect_required) or settings.kinect]
+        for c in _all_content:
+            if c.kinect_enabled and settings.kinect:
+                # when kinect used, ensure display lines up with camera
+                c.placement_filter = pixel_exact
         assert len(set(c.name for c in _all_content)) == len(_all_content), 'content names not unique'
         _all_content = dict((c.name, c) for c in _all_content)
     return _all_content
