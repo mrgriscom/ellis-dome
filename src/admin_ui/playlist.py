@@ -107,7 +107,8 @@ def all_content():
             Content('twinkle'),
             Content('fft', sound_reactive=True),
             Content('pixelflock', sound_reactive=True, sound_required=False, kinect_enabled=True, kinect_required=False),
-            Content('kinect', 'kinectdepth', kinect_enabled=True),
+            Content('kinect', 'kinectdepth', kinect_enabled=True,
+                    placement_filter=lambda p: getattr(p, 'rot', 0) == 0 and p.stretch),
             Content('screencast', 'projectm', cmdline='projectM-pulseaudio', sound_reactive=True, volume_adjust=1.5,
                     server_side_parameters=projectm_parameters(),
                     post_launch=lambda manager: projectm_control(manager, 'next'), # get off the default pattern
@@ -133,7 +134,7 @@ def all_content():
         _all_content = [c for c in _all_content if not c.geometries or settings.geometry in c.geometries]
         _all_content = [c for c in _all_content if not (c.kinect_enabled and c.kinect_required) or settings.kinect]
         for c in _all_content:
-            if c.kinect_enabled and settings.kinect:
+            if c.kinect_enabled and settings.kinect and not c.placement_filter:
                 # when kinect used, ensure display lines up with camera
                 c.placement_filter = pixel_exact
         assert len(set(c.name for c in _all_content)) == len(_all_content), 'content names not unique'
