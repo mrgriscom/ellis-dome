@@ -9,6 +9,7 @@ package me.lsdo.sketches.util;
 import processing.core.*;
 import java.util.ArrayList;
 import java.util.Random;
+import me.lsdo.processing.util.*;
 
 public // The Boid class
 
@@ -17,7 +18,7 @@ class Boid {
     public PVector location;
     public PVector velocity;
     PVector acceleration;
-    public float r;
+    public float size;
     float maxforce;    // Maximum steering force
     float maxspeed;    // Maximum speed
     int currentHue;
@@ -26,14 +27,12 @@ class Boid {
     int light = 75;
     int hueOffset;
 
-    int width;
-    int height;
-
     float sepWeight = 1.5f;
     float aliWeight = 1.0f;
     float cohWeight = 1.0f;
 
-    static final float OFFSCREEN_SPACE = 100f; //how much bigger the universe is in each dimension than the viewport
+    BoidFlock flock;
+    
     static final float BOID_SIZE = 6.0f; //how big the boids are
     static final int MAX_SPEED = 1; //how fast the boids can move
     static final int COLOUR_RANGE = 10; //hue, saturation and brightness values for visible boids can be current +- this
@@ -41,25 +40,17 @@ class Boid {
     int[] boidColor;
 
     private Random random;
-
-    public static interface BoidManipulator {
-	public void manipulate(Boid b);
-    }
-
-    BoidManipulator manipulator;
     
-    public Boid(float x, float y, int hue, int boxWidth, int boxHeight) {
-	this(x, y, hue, boxWidth, boxHeight, null);
+    public Boid(float x, float y, int hue) {
+	this(x, y, hue, PVector.random2D(), BOID_SIZE);
     }
-	
-    public Boid(float x, float y, int hue, int boxWidth, int boxHeight, BoidManipulator manipulator) {
-	this.manipulator = manipulator;
-	
+
+    public Boid(float x, float y, int hue, PVector velocity, float size) {
         acceleration = new PVector(0, 0);
-        velocity = PVector.random2D();
+        this.velocity = velocity;
         location = new PVector(x, y);
 
-        r = BOID_SIZE;
+        this.size = size;
         maxspeed = MAX_SPEED;
         maxforce = 0.03f;
 
@@ -69,13 +60,16 @@ class Boid {
 
         sat = 90 + (COLOUR_RANGE - random.nextInt(COLOUR_RANGE*2));
         hueOffset = (COLOUR_RANGE - random.nextInt(COLOUR_RANGE*2));
-
-        width = boxWidth;
-        height = boxHeight;
     }
 
+    public PVector2 getLocation() {
+	return new PVector2(location.x, location.y);
+    }
 
-
+    public void translate(PVector2 offset) {
+	location.add(new PVector(offset.x, offset.y));
+    }
+    
     void run(ArrayList<Boid> boids) {
         flock(boids);
         update();
@@ -119,12 +113,8 @@ class Boid {
         velocity.add(acceleration);
         // Limit speed
         velocity.limit(maxspeed);
-        location.add(velocity);
+        location.add(velocity); // FIXME move to translate()
 
-	if (manipulator != null) {
-	    manipulator.manipulate(this);
-	}
-	
         // Reset accelertion to 0 each cycle
         acceleration.mult(0);
         //update color
@@ -156,32 +146,16 @@ class Boid {
         return col;
     }
 
-    /**
-    void render() {
-        // Draw a triangle rotated in the direction of velocity
-        float theta = velocity.heading2D() + radians(90);
-        // heading2D() above is now heading() but leaving old syntax until Processing.js catches up
-
-        int[] col = getColour();
-        fill(col[0], col[1], col[2], col[3]);
-        pushMatrix();
-        translate(location.x, location.y);
-        rotate(theta);
-        beginShape(TRIANGLES);
-        vertex(0, -r*2);
-        vertex(-r, r*2);
-        vertex(r, r*2);
-        endShape();
-        popMatrix();
+    float getRadius() {
+	return size;
     }
-     */
-
+    
     // Wraparound
     void borders() {
-        if ((location.x) < -r-OFFSCREEN_SPACE) location.x = width+r;
-        if ((location.y) < -r-OFFSCREEN_SPACE) location.y = height+r;
-        if ((location.x) > ((width+r)+OFFSCREEN_SPACE)) location.x = -r;
-        if ((location.y) > ((height+r)+OFFSCREEN_SPACE)) location.y = -r;
+        if ((location.x) < -getRadius()-flock.fringe) location.x = flock.worldWidth+getRadius();
+        if ((location.y) < -getRadius()-flock.fringe) location.y = flock.worldHeight+getRadius();
+        if ((location.x) > ((flock.worldWidth+getRadius())+flock.fringe)) location.x = -getRadius();
+        if ((location.y) > ((flock.worldHeight+getRadius())+flock.fringe)) location.y = -getRadius();
     }
 
     // Separation
@@ -273,5 +247,26 @@ class Boid {
             return new PVector(0, 0);
         }
     }
+
+    public void render(PApplet app) {
+        // Draw a triangle rotated in the direction of velocity
+        float theta = velocity.heading2D() + app.radians(90);
+        // heading2D() above is now heading() but leaving old syntax until Processing.js catches up
+
+        int[] col = getColour();
+        app.fill(col[0], col[1], col[2], col[3]);
+        app.pushMatrix();
+        app.translate(location.x, location.y);
+        app.rotate(theta);
+        app.beginShape(app.TRIANGLES);
+
+        app.vertex(0, -size*2);
+        app.vertex(-size, size*2);
+        app.vertex(size, size*2);
+        app.endShape();
+        app.popMatrix();
+    }
+
+
 }
 

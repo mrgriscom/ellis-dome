@@ -16,6 +16,8 @@ import org.openkinect.processing.*;
  */
 public class PixelFlock extends PApplet {
 
+    final int NUM_BOIDS = 75;
+
     Minim minim;
     AudioInput in;
     FFT fft;
@@ -34,13 +36,9 @@ public class PixelFlock extends PApplet {
     ProcessingAnimation canvas;
 
     class BoidBehavior {
-	Boid makeBoid(float x, float y, int hue, int boxWidth, int boxHeight) {
-	    return new Boid(x, y, hue, boxWidth, boxHeight);
-	}
-	
+	BoidFlock.BoidManipulator getManipulator() { return null; }
 	void update() {}
     }
-
     BoidBehavior behavior;
     
     public void settings() {
@@ -52,6 +50,7 @@ public class PixelFlock extends PApplet {
 
 	if (Config.getSketchProperty("kinect", false)) {
 	    behavior = new KinectBoidBehavior(this);
+	    //behavior = new SimulatedKinectBoidBehavior(this);
 	} else {
 	    behavior = new BoidBehavior();
 	}
@@ -65,10 +64,10 @@ public class PixelFlock extends PApplet {
 
         colorMode(HSB, 100);
         time = millis();
-        flock = new BoidFlock();
+        flock = new BoidFlock(width, height, 10, behavior.getManipulator());
         // Add an initial set of boids into the system
-        for (int i = 0; i < 75; i++) {
-            flock.addBoid(behavior.makeBoid(width/2, height/2, startHue, width, height));
+        for (int i = 0; i < NUM_BOIDS; i++) {
+            flock.addBoid(new Boid(width/2, height/2, startHue));
         }
     }
     
@@ -78,7 +77,7 @@ public class PixelFlock extends PApplet {
 	flock.run();
 
         for (Boid b : flock.boids) {
-            render(b);
+            b.render(this);
 	}
 
         for (int i = 0; i < fftFilter.length; i++) {
@@ -110,28 +109,6 @@ public class PixelFlock extends PApplet {
         canvas.draw();
     }
 
-    void render(Boid b) {
-
-
-        // Dra w a triangle rotated in the direction of velocity
-        float theta = b.velocity.heading2D() + radians(90);
-        // heading2D() above is now heading() but leaving old syntax until Processing.js catches up
-
-        int[] col = b.getColour();
-        fill(col[0], col[1], col[2], col[3]);
-        pushMatrix();
-        translate(b.location.x, b.location.y);
-        rotate(theta);
-        beginShape(TRIANGLES);
-
-        vertex(0, -b.r*2);
-        vertex(-b.r, b.r*2);
-        vertex(b.r, b.r*2);
-        endShape();
-        popMatrix();
-
-    }
-
     class KinectBoidBehavior extends BoidBehavior {
 	Kinect kinect;
 	int[] depth;
@@ -139,57 +116,76 @@ public class PixelFlock extends PApplet {
 	int depthThresh;
 	int excludeWindowWidth = 200;
 	int highlightWindowWidth = 100;
-	public List<PVector> kinectKeyPoints;
+	public List<PVector2> kinectKeyPoints;
 
-	Boid.BoidManipulator repulsor = new Boid.BoidManipulator() {
-		public PVector kinectScreenToXy(PVector p) {
-		    double x = (p.x - 150) / 150.;
-		    double y = -(p.y - 150) / 150.;
-		    return new PVector((float)x, (float)y);
-		}
-		
-		// this seems to repulse boids but not in the right places
+	final int KINECT_WIDTH = 640;
+	final int KINECT_HEIGHT = 480;
+
+	PVector2 screenToXy(PVector2 loc) {
+	    return LayoutUtil.screenToXy(loc, width, height, 2., false);
+	}
+
+	float aspectOffsetFactor() {
+	    return (1 - (float)KINECT_HEIGHT / KINECT_WIDTH);
+	}
+	
+	PVector2 kinectToXy(PVector2 loc) {
+	    // this assumes a square render window and kinect feed with >1 aspect ratio
+	    PVector2 xy = LayoutUtil.screenToXy(loc, KINECT_WIDTH, KINECT_WIDTH, 2., false);
+	    // correction to center the kinect display while maintaining aspect ratio
+	    xy.y -= aspectOffsetFactor();
+	    return xy;
+	}
+
+	PVector2 xyToKinect(PVector2 xy) {
+	    xy = new PVector2(xy.x, xy.y + aspectOffsetFactor());
+	    return LayoutUtil.xyToScreen(xy, KINECT_WIDTH, KINECT_WIDTH);
+	}
+	
+	BoidFlock.BoidManipulator repulsor = new BoidFlock.BoidManipulator() {
 		public void manipulate(Boid b) {
-		    for (PVector kinectRef : kinectKeyPoints) {
-			PVector boid = kinectScreenToXy(b.location);
-			PVector knect = kinectScreenToXy(kinectRef);
+		    for (PVector2 kinectRef : kinectKeyPoints) {
+			PVector2 boid = screenToXy(b.getLocation());
+			PVector2 kref = kinectToXy(kinectRef);
 			
-			double x = boid.x - knect.x;
-			double y = boid.y - knect.y;
-			double len = Math.pow(x*x+y*y, .5);
-			double normx = x / len;
-			double normy = y / len;
+			PVector2 diff = PVector2.sub(boid, kref);
+			float len = diff.mag();
+			PVector2 norm = PVector2.mult(diff, 1 / len);
 			double strength = .4 /*.1*/ / Math.max(len * len, .01);
 			
 			// whirlpool
-			//location.add(new PVector((float)(strength * normy), (float)(strength * -normx)));
+			//b.translate(new PVector((float)(strength * normy), (float)(strength * -normx)));
 			// repulse
-			PVector motionOffset = new PVector((float)(strength * normx), (float)(strength * normy));
-			b.location.add(motionOffset);
+			PVector2 motionOffset = PVector2.mult(norm, (float)strength);
+			b.translate(motionOffset);
 		    }
 		}
 	    };
+
+	// needed for simulator constructor
+	KinectBoidBehavior() {}
 	
 	KinectBoidBehavior(PApplet app) {
-	    depthThresh = Config.getSketchProperty("maxdepth", 750);	
+	    depthThresh = Config.getSketchProperty("maxdepth", 750);
 	    kinect = new Kinect(app);
+	    assert kinect.width == KINECT_WIDTH && kinect.height == KINECT_HEIGHT;
 	    kinect.initDepth();
 	    kinect.enableColorDepth(true);
 	    kinect.enableMirror(true);
 	    display = app.createImage(kinect.width, kinect.height, RGB);
 	}
 
-	Boid makeBoid(float x, float y, int hue, int boxWidth, int boxHeight) {
-	    return new Boid(x, y, hue, boxWidth, boxHeight, repulsor);
+	BoidFlock.BoidManipulator getManipulator() {
+	    return repulsor;
 	}
 	
 	void update() {
 	    depth = kinect.getRawDepth();
-	    kinectKeyPoints = new ArrayList<PVector>();
+	    kinectKeyPoints = new ArrayList<PVector2>();
 	    while (true) {
-		PVector closest = null;
+		PVector2 closest = null;
 		int closestDepth = 0;
-		
+
 		for (int x = 0; x < kinect.width; x++) {
 		    for (int y = 0; y < kinect.height; y++) {
 			int i = x + y*kinect.width;
@@ -199,7 +195,7 @@ public class PixelFlock extends PApplet {
 			}
 			
 			boolean excluded = false;
-			for (PVector keyPoint : kinectKeyPoints) {
+			for (PVector2 keyPoint : kinectKeyPoints) {
 			    if (Math.abs(keyPoint.x - x) < excludeWindowWidth / 2 &&
 				Math.abs(keyPoint.y - y) < excludeWindowWidth / 2) {
 				excluded = true;
@@ -214,7 +210,7 @@ public class PixelFlock extends PApplet {
 			    continue;
 			}
 			
-			closest = new PVector(x, y);
+			closest = new PVector2(x, y);
 			closestDepth = rawDepth;
 		    }
 		}
@@ -224,8 +220,9 @@ public class PixelFlock extends PApplet {
 		    break;
 		}
 	    }
+
 	    /*
-	    for (PVector keyPoint : kinectKeyPoints) {
+	    for (PVector2 keyPoint : kinectKeyPoints) {
 	        System.out.println(keyPoint);
 	    }
 	    if (kinectKeyPoints.size() > 0) {
@@ -240,7 +237,7 @@ public class PixelFlock extends PApplet {
 		    int rawDepth = depth[i];
 		    
 		    boolean active = false;
-		    for (PVector keyPoint : kinectKeyPoints) {
+		    for (PVector2 keyPoint : kinectKeyPoints) {
 			float dx = keyPoint.x - x;
 			float dy = keyPoint.y - y;
 			if (dx*dx + dy*dy < highlightWindowWidth * highlightWindowWidth) {
@@ -258,8 +255,22 @@ public class PixelFlock extends PApplet {
 		}
 	    }
 	    display.updatePixels();
-	    
-	    image(display, 0, 37.5f, 300, 225);
+
+	    PVector2 offset = LayoutUtil.xyToScreen(kinectToXy(new PVector2(0, 0)), width, height);
+	    image(display, offset.x, offset.y, width, (float)width * KINECT_HEIGHT / KINECT_WIDTH);
+	}
+    }
+
+    class SimulatedKinectBoidBehavior extends KinectBoidBehavior {
+	PApplet app;
+	
+	SimulatedKinectBoidBehavior(PApplet app) {
+	    this.app = app;
+	}
+
+	void update() {
+	    kinectKeyPoints = new ArrayList<PVector2>();
+	    kinectKeyPoints.add(xyToKinect(screenToXy(new PVector2(app.mouseX, app.mouseY))));
 	}
     }
     

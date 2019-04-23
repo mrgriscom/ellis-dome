@@ -10,14 +10,34 @@ public class BoidFlock {
     public ArrayList<Boid> boids; // An ArrayList for all the boids
     int currentHue = 60;
 
-    public BoidFlock() {
+    int worldWidth;
+    int worldHeight;
+    int fringe;
+
+    public static interface BoidManipulator {
+	public void manipulate(Boid b);
+    }
+    BoidManipulator manipulator;
+    
+    public BoidFlock(int worldWidth, int worldHeight, int fringe, BoidManipulator manipulator) {
+	this.worldWidth = worldWidth;
+	this.worldHeight = worldHeight;
+	this.fringe = fringe;
+
+	this.manipulator = manipulator;
+	
         boids = new ArrayList<Boid>(); // Initialize the ArrayList
     }
 
     public void run() {
         for (Boid b : boids) {
             b.run(boids);  // Passing the entire list of boids to each boid individually
-        }
+	}
+	if (manipulator != null) {
+	    for (Boid b : boids) {
+		manipulator.manipulate(b);
+	    }
+	}
     }
 
     public void cycleHue() {
@@ -57,5 +77,6 @@ public class BoidFlock {
 
     public void addBoid(Boid b) {
         boids.add(b);
+	b.flock = this;
     }
 }
