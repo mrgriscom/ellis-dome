@@ -68,12 +68,13 @@ class Boid {
 
     public void translate(PVector2 offset) {
 	location.add(new PVector(offset.x, offset.y));
+	location.x = (float)(MathUtil.fmod(location.x + flock.fringe, flock.totalWidth()) - flock.fringe);
+	location.y = (float)(MathUtil.fmod(location.y + flock.fringe, flock.totalHeight()) - flock.fringe);
     }
     
     void run(ArrayList<Boid> boids) {
         flock(boids);
         update();
-        borders();
         //render();
     }
 
@@ -113,7 +114,7 @@ class Boid {
         velocity.add(acceleration);
         // Limit speed
         velocity.limit(maxspeed);
-        location.add(velocity); // FIXME move to translate()
+        translate(new PVector2(velocity.x, velocity.y));
 
         // Reset accelertion to 0 each cycle
         acceleration.mult(0);
@@ -144,18 +145,6 @@ class Boid {
                 hue, sat, light, 100
         };
         return col;
-    }
-
-    float getRadius() {
-	return size;
-    }
-    
-    // Wraparound
-    void borders() {
-        if ((location.x) < -getRadius()-flock.fringe) location.x = flock.worldWidth+getRadius();
-        if ((location.y) < -getRadius()-flock.fringe) location.y = flock.worldHeight+getRadius();
-        if ((location.x) > ((flock.worldWidth+getRadius())+flock.fringe)) location.x = -getRadius();
-        if ((location.y) > ((flock.worldHeight+getRadius())+flock.fringe)) location.y = -getRadius();
     }
 
     // Separation
@@ -248,7 +237,28 @@ class Boid {
         }
     }
 
+    // radius of circle that encloses a rendered boid
+    float getRadius() {
+	return size * new PVector2(2, 1).mag();
+    }
+
+    // render the boid, considering any additional copies that need to be rendered due to wraparound
     public void render(PApplet app) {
+	for (int xo = -1; xo <= 1; xo++) {
+	    for (int yo = -1; yo <= 1; yo++) {
+		PVector apparentLoc = new PVector(location.x + xo*flock.totalWidth(), location.y + yo*flock.totalHeight());
+		if (apparentLoc.x + getRadius() > 0 &&
+		    apparentLoc.x - getRadius() < flock.worldWidth &&
+		    apparentLoc.y + getRadius() > 0 &&
+		    apparentLoc.y - getRadius() < flock.worldHeight) {
+		    renderBoid(app, apparentLoc);
+		}
+	    }
+	}
+    }
+
+    // render a single instance of this boid at a given location
+    void renderBoid(PApplet app, PVector location) {
         // Draw a triangle rotated in the direction of velocity
         float theta = velocity.heading2D() + app.radians(90);
         // heading2D() above is now heading() but leaving old syntax until Processing.js catches up

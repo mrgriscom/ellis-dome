@@ -29,6 +29,9 @@ public class BoidFlock {
         boids = new ArrayList<Boid>(); // Initialize the ArrayList
     }
 
+    public int totalWidth() { return worldWidth + 2*fringe; }
+    public int totalHeight() { return worldHeight + 2*fringe; }
+    
     public void run() {
         for (Boid b : boids) {
             b.run(boids);  // Passing the entire list of boids to each boid individually
