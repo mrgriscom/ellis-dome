@@ -7,9 +7,16 @@ import ddf.minim.analysis.*;
 import ddf.minim.*;
 import me.lsdo.Driver;
 import me.lsdo.processing.*;
+import me.lsdo.processing.interactivity.*;
 import me.lsdo.processing.util.*;
 import org.openkinect.freenect.*;
 import org.openkinect.processing.*;
+
+enum BoidHarassmentMode {
+    REPEL,
+    WHIRLPOOL,
+    BLACKHOLE
+}
 
 /**
  * Created by shen on 2016/09/17.
@@ -64,7 +71,7 @@ public class PixelFlock extends PApplet {
 
         colorMode(HSB, 100);
         time = millis();
-        flock = new BoidFlock(width, height, 10, behavior.getManipulator());
+        flock = new BoidFlock(width, height, 0, behavior.getManipulator());
         // Add an initial set of boids into the system
         for (int i = 0; i < NUM_BOIDS; i++) {
             flock.addBoid(new Boid(width/2, height/2, startHue));
@@ -118,6 +125,9 @@ public class PixelFlock extends PApplet {
 	int highlightWindowWidth = 100;
 	public List<PVector2> kinectKeyPoints;
 
+	EnumParameter<BoidHarassmentMode> mode;
+	NumericParameter strength;
+	
 	final int KINECT_WIDTH = 640;
 	final int KINECT_HEIGHT = 480;
 
@@ -149,23 +159,62 @@ public class PixelFlock extends PApplet {
 			PVector2 kref = kinectToXy(kinectRef);
 			
 			PVector2 diff = PVector2.sub(boid, kref);
-			float len = diff.mag();
-			PVector2 norm = PVector2.mult(diff, 1 / len);
-			double strength = .4 /*.1*/ / Math.max(len * len, .01);
+			double len = diff.mag();
+			PVector2 norm = PVector2.mult(diff, 1 / (float)len);
+
+			// cap strength by enforcing a min distance
+			len = Math.max(len, .1);
+
+			PVector2 dir = norm;
+			double weight = 1;
+			double pow;
+			switch (mode.get()) {
+			case REPEL:
+			    pow = 2;
+			    break;
+			case BLACKHOLE:
+			    weight = -1;
+			    pow = 2;
+			    break;
+			case WHIRLPOOL:
+			    dir = new PVector2(norm.y, -norm.x);
+			    weight = 7;
+			    pow = 1;
+			    break;
+			default: throw new RuntimeException();
+			}
 			
-			// whirlpool
-			//b.translate(new PVector((float)(strength * normy), (float)(strength * -normx)));
-			// repulse
-			PVector2 motionOffset = PVector2.mult(norm, (float)strength);
-			b.translate(motionOffset);
+			double force = 1e-4 * strength.get() * weight * Math.pow(len, -pow);
+			PVector2 offset = PVector2.mult(dir, (float)force);
+			// convert back to boid (screen) coordinate space
+			// need to do delta because coord systems don't share origin
+			PVector2 boidOffset = PVector2.sub(LayoutUtil.xyToScreen(offset, width, height),
+							   LayoutUtil.xyToScreen(new PVector2(0, 0), width, height));
+			b.translate(boidOffset);
 		    }
 		}
 	    };
 
-	// needed for simulator constructor
-	KinectBoidBehavior() {}
+	KinectBoidBehavior() {
+	    strength = new NumericParameter("strength", "animation");
+	    strength.min = 0;
+	    strength.max = 20;
+	    strength.init(5);
+
+	    mode = new EnumParameter<BoidHarassmentMode>("harassment mode", "animation", BoidHarassmentMode.class);
+	    String modeProp = Config.getSketchProperty("mode", "");
+	    BoidHarassmentMode defaultMode;
+	    if (!modeProp.isEmpty()) {
+		defaultMode = mode.enumByName(modeProp);
+	    } else {
+		// choose randomly
+		defaultMode = mode.values()[(int)(Math.random() * mode.values().length)];
+	    }
+	    mode.init(defaultMode);
+	}
 	
 	KinectBoidBehavior(PApplet app) {
+	    this();
 	    depthThresh = Config.getSketchProperty("maxdepth", 750);
 	    kinect = new Kinect(app);
 	    assert kinect.width == KINECT_WIDTH && kinect.height == KINECT_HEIGHT;
@@ -265,9 +314,11 @@ public class PixelFlock extends PApplet {
 	PApplet app;
 	
 	SimulatedKinectBoidBehavior(PApplet app) {
+	    super();
 	    this.app = app;
 	}
 
+	// no easy way to detect mouseout
 	void update() {
 	    kinectKeyPoints = new ArrayList<PVector2>();
 	    kinectKeyPoints.add(xyToKinect(screenToXy(new PVector2(app.mouseX, app.mouseY))));
