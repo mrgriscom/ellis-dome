@@ -199,7 +199,7 @@ public class PixelFlock extends PApplet {
 	    strength = new NumericParameter("strength", "animation");
 	    strength.min = 0;
 	    strength.max = 20;
-	    strength.init(5);
+	    strength.init(10);
 
 	    mode = new EnumParameter<BoidHarassmentMode>("harassment mode", "animation", BoidHarassmentMode.class);
 	    String modeProp = Config.getSketchProperty("mode", "");
