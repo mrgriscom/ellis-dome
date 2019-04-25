@@ -87,7 +87,7 @@ class Content(object):
 def pixel_exact(p):
     # ideally should check all placement params are at their defaults, but this is good enough for lsdome
     return getattr(p, 'rot', 0) == 0 and p.is_1to1
-    
+
 _all_content = None
 def all_content():
     global _all_content
@@ -96,7 +96,7 @@ def all_content():
             Content('black', '[util] black (note: keeps running and using cpu)', manual=True),
             Content('gridtest', '[util] uvw grid test', geometries=['lsdome'], manual=True),
             Content('fctest', '[util] fc topology test', params={'fcconfig': fadecandy_config()}),
-            Content('layouttest', '[util] cartesian test (mouse)', manual=True),
+            Content('layouttest', '[util] cartesian test (mouse)', manual=True, placement_filter=pixel_exact),
             Content('binary', '[util] binary decomp', manual=True),
             Content('cloud'),
             Content('dontknow'),
