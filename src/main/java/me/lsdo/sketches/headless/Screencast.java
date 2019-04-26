@@ -255,6 +255,7 @@ public class Screencast extends WindowAnimation {
 		    continue;
 		}
 
+		String windowId = parts[0];
 		int pid = Integer.parseInt(parts[2]);
 		int xo = Integer.parseInt(parts[3]);
 		int yo = Integer.parseInt(parts[4]);
@@ -271,8 +272,40 @@ public class Screencast extends WindowAnimation {
 		
 		if ((targetPid > 0 && pid == targetPid) ||
 		    (!targetTitle.isEmpty() && title.toLowerCase().startsWith(targetTitle.toLowerCase()))) {
+		    // xo/yo seems miscalculated in some environments, use a different command that works better
+		    int[] xyo = getWindowPlacementForId(windowId);
+		    xo = xyo[0];
+		    yo = xyo[1];
 		    return new PVector2[] {LayoutUtil.V(xo, yo), LayoutUtil.V(width, height)};
 		}
+	    }
+	} catch (Exception e) { }
+	return null;
+    }
+    private int[] getWindowPlacementForId(String windowId) {
+	try {
+	    Process p = Runtime.getRuntime().exec("xwininfo -id " + windowId);
+	    p.waitFor();
+
+	    final int NULL = -9999;
+	    int xo = NULL;
+	    int yo = NULL;
+	    
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	    String line = "";
+	    while ((line = reader.readLine()) != null) {
+		if (line.trim().startsWith("Absolute")) {
+		    String[] parts = line.split(":");
+		    int coord = Integer.parseInt(parts[1].trim());
+		    if (parts[0].endsWith("X")) {
+			xo = coord;
+		    } else if (parts[0].endsWith("Y")) {
+			yo = coord;
+		    }
+		}
+	    }
+	    if (xo != NULL && yo != NULL) {
+		return new int[] {xo, yo};
 	    }
 	} catch (Exception e) { }
 	return null;
