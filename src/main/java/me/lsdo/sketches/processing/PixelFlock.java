@@ -24,6 +24,7 @@ enum BoidHarassmentMode {
 public class PixelFlock extends PApplet {
 
     final int NUM_BOIDS = 75;
+    final int OUT_OF_WINDOW_FRINGE = 20;
 
     Minim minim;
     AudioInput in;
@@ -47,11 +48,11 @@ public class PixelFlock extends PApplet {
 	void update() {}
     }
     BoidBehavior behavior;
-    
+
     public void settings() {
         size(300, 300);
     }
-    
+
     public void setup() {
 	canvas = Driver.makeCanvas(this);
 
@@ -61,7 +62,7 @@ public class PixelFlock extends PApplet {
 	} else {
 	    behavior = new BoidBehavior();
 	}
-	
+
         minim = new Minim(this);
         in = minim.getLineIn();
         fft = new FFT(in.bufferSize(), in.sampleRate());
@@ -71,13 +72,13 @@ public class PixelFlock extends PApplet {
 
         colorMode(HSB, 100);
         time = millis();
-        flock = new BoidFlock(width, height, 0, behavior.getManipulator());
+        flock = new BoidFlock(width, height, OUT_OF_WINDOW_FRINGE, behavior.getManipulator());
         // Add an initial set of boids into the system
         for (int i = 0; i < NUM_BOIDS; i++) {
             flock.addBoid(new Boid(width/2, height/2, startHue));
         }
     }
-    
+
     public void draw() {
         background(0);
 	behavior.update();
@@ -127,7 +128,7 @@ public class PixelFlock extends PApplet {
 
 	EnumParameter<BoidHarassmentMode> mode;
 	NumericParameter strength;
-	
+
 	final int KINECT_WIDTH = 640;
 	final int KINECT_HEIGHT = 480;
 
@@ -138,7 +139,7 @@ public class PixelFlock extends PApplet {
 	float aspectOffsetFactor() {
 	    return (1 - (float)KINECT_HEIGHT / KINECT_WIDTH);
 	}
-	
+
 	PVector2 kinectToXy(PVector2 loc) {
 	    // this assumes a square render window and kinect feed with >1 aspect ratio
 	    PVector2 xy = LayoutUtil.screenToXy(loc, KINECT_WIDTH, KINECT_WIDTH, 2., false);
@@ -151,13 +152,13 @@ public class PixelFlock extends PApplet {
 	    xy = new PVector2(xy.x, xy.y + aspectOffsetFactor());
 	    return LayoutUtil.xyToScreen(xy, KINECT_WIDTH, KINECT_WIDTH);
 	}
-	
+
 	BoidFlock.BoidManipulator repulsor = new BoidFlock.BoidManipulator() {
 		public void manipulate(Boid b) {
 		    for (PVector2 kinectRef : kinectKeyPoints) {
 			PVector2 boid = screenToXy(b.getLocation());
 			PVector2 kref = kinectToXy(kinectRef);
-			
+
 			PVector2 diff = PVector2.sub(boid, kref);
 			double len = diff.mag();
 			PVector2 norm = PVector2.mult(diff, 1 / (float)len);
@@ -183,7 +184,7 @@ public class PixelFlock extends PApplet {
 			    break;
 			default: throw new RuntimeException();
 			}
-			
+
 			double force = 1e-4 * strength.get() * weight * Math.pow(len, -pow);
 			PVector2 offset = PVector2.mult(dir, (float)force);
 			// convert back to boid (screen) coordinate space
@@ -212,7 +213,7 @@ public class PixelFlock extends PApplet {
 	    }
 	    mode.init(defaultMode);
 	}
-	
+
 	KinectBoidBehavior(PApplet app) {
 	    this();
 	    depthThresh = Config.getSketchProperty("maxdepth", 750);
@@ -227,7 +228,7 @@ public class PixelFlock extends PApplet {
 	BoidFlock.BoidManipulator getManipulator() {
 	    return repulsor;
 	}
-	
+
 	void update() {
 	    depth = kinect.getRawDepth();
 	    kinectKeyPoints = new ArrayList<PVector2>();
@@ -242,7 +243,7 @@ public class PixelFlock extends PApplet {
 			if (rawDepth == 0 || rawDepth > depthThresh) {
 			    continue;
 			}
-			
+
 			boolean excluded = false;
 			for (PVector2 keyPoint : kinectKeyPoints) {
 			    if (Math.abs(keyPoint.x - x) < excludeWindowWidth / 2 &&
@@ -254,11 +255,11 @@ public class PixelFlock extends PApplet {
 			if (excluded) {
 			    continue;
 			}
-			
+
 			if (closest != null && rawDepth >= closestDepth) {
 			    continue;
 			}
-			
+
 			closest = new PVector2(x, y);
 			closestDepth = rawDepth;
 		    }
@@ -278,13 +279,13 @@ public class PixelFlock extends PApplet {
 	        System.out.println("----- " + System.currentTimeMillis());
 	    }
 	    */
-	    
+
 	    display.loadPixels();
 	    for (int x = 0; x < kinect.width; x++) {
 		for (int y = 0; y < kinect.height; y++) {
 		    int i = x + y*kinect.width;
 		    int rawDepth = depth[i];
-		    
+
 		    boolean active = false;
 		    for (PVector2 keyPoint : kinectKeyPoints) {
 			float dx = keyPoint.x - x;
@@ -294,7 +295,7 @@ public class PixelFlock extends PApplet {
 			    break;
 			}
 		    }
-		    
+
 		    double lum = (rawDepth == 0 || rawDepth > 2000 ? 0. : 1. - Math.max(rawDepth-600., 0.) / (900. - 600));
 		    if (active) {
 			display.pixels[i] = color(0, 100, (int)(100*lum));
@@ -312,7 +313,7 @@ public class PixelFlock extends PApplet {
 
     class SimulatedKinectBoidBehavior extends KinectBoidBehavior {
 	PApplet app;
-	
+
 	SimulatedKinectBoidBehavior(PApplet app) {
 	    super();
 	    this.app = app;
@@ -324,5 +325,5 @@ public class PixelFlock extends PApplet {
 	    kinectKeyPoints.add(xyToKinect(screenToXy(new PVector2(app.mouseX, app.mouseY))));
 	}
     }
-    
+
 }
