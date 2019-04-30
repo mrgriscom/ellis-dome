@@ -216,7 +216,7 @@ public class PixelFlock extends PApplet {
 
 	KinectBoidBehavior(PApplet app) {
 	    this();
-	    depthThresh = Config.getSketchProperty("maxdepth", 750);
+	    depthThresh = Config.getSketchProperty("maxdepth", 850);
 	    kinect = new Kinect(app);
 	    assert kinect.width == KINECT_WIDTH && kinect.height == KINECT_HEIGHT;
 	    kinect.initDepth();
@@ -265,7 +265,12 @@ public class PixelFlock extends PApplet {
 			double requiredYield = .4;
 			for (int xo = -neighborFringe; xo <= neighborFringe + 1; xo++) {
 			    for (int yo = -neighborFringe; yo <= neighborFringe + 1; yo++) {
-				int neighborDepth = depth[(x+xo) + (y+yo)*kinect.width];
+                                int nx = x+xo;
+                                int ny = y+yo;
+                                if (nx < 0 || nx >= kinect.width || ny < 0 || ny >= kinect.height) {
+                                    continue;
+                                }
+				int neighborDepth = depth[nx + ny*kinect.width];
 				if (neighborDepth != 0 && neighborDepth <= depthThresh) {
 				    numOverThreshNeighbors++;
 				}
@@ -274,7 +279,7 @@ public class PixelFlock extends PApplet {
 			if (numOverThreshNeighbors / Math.pow(2*neighborFringe + 1, 2.) < requiredYield) {
 			    continue;
 			}
-			
+
 			closest = new PVector2(x, y);
 			closestDepth = rawDepth;
 		    }
@@ -311,8 +316,8 @@ public class PixelFlock extends PApplet {
 			}
 		    }
 
-		    double nearThresh = depthThresh - 150;
-		    double farThresh = depthThresh + 150;
+		    double nearThresh = 750; //depthThresh - 150;
+		    double farThresh = 960; //depthThresh + 150;
 		    double lum = (rawDepth == 0 || rawDepth > 2000 ? 0. : 1. - Math.max(rawDepth - nearThresh, 0.) / (farThresh - nearThresh));
 		    if (active) {
 			display.pixels[i] = color(0, 100, (int)(100*lum));

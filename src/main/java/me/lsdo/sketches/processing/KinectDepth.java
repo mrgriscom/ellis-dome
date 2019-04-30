@@ -21,12 +21,12 @@ public class KinectDepth extends PApplet {
     float farHue = 80;
 
     BooleanParameter debug;
-    
+
     Kinect kinect;
 
     final int KINECT_WIDTH = 640;
     final int KINECT_HEIGHT = 480;
-    
+
     ProcessingAnimation canvas;
 
     public void settings() {
@@ -36,7 +36,7 @@ public class KinectDepth extends PApplet {
     public void setup() {
 	canvas = new ProcessingAnimation(this, Driver.makeGeometry()) {
 		int[] depth;
-		
+
 		@Override
 		public void captureFrame() {
 		    depth = kinect.getRawDepth();
@@ -76,11 +76,11 @@ public class KinectDepth extends PApplet {
 	nearThresh = new NumericParameter("nearthresh", "animation");
 	nearThresh.min = 0;
 	nearThresh.max = 2000;
-	nearThresh.init(300);
+	nearThresh.init(750);
 	farThresh = new NumericParameter("farthresh", "animation");
 	farThresh.min = 0;
 	farThresh.max = 2000;
-	farThresh.init(1200);
+	farThresh.init(960);
 	gamma = new NumericParameter("gamma", "animation");
 	gamma.min = 0;
 	gamma.max = 1;
@@ -89,7 +89,7 @@ public class KinectDepth extends PApplet {
 	debug = new BooleanParameter("debug", "animation");
 	debug.init(false);
     }
-    
+
     public void draw() {
         canvas.draw();
     }
