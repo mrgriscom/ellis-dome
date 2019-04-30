@@ -19,6 +19,8 @@ public class KinectDepth extends PApplet {
     NumericParameter gamma;
     float nearHue = 0;
     float farHue = 80;
+
+    BooleanParameter debug;
     
     Kinect kinect;
 
@@ -47,6 +49,10 @@ public class KinectDepth extends PApplet {
 
 		    if (rawDepth == 0) {
 			return color(0, 0, 0);
+		    } else if (debug.get()) {
+			return (rawDepth <= nearThresh.get() ?
+				color(0, 50, 100) :
+				color(50, 100, 20));
 		    } else {
 			rawDepth = Math.min(Math.max(rawDepth, nearThresh.get()), farThresh.get());
 			double k = 1. - (rawDepth - nearThresh.get()) / (farThresh.get() - nearThresh.get());
@@ -79,6 +85,9 @@ public class KinectDepth extends PApplet {
 	gamma.min = 0;
 	gamma.max = 1;
 	gamma.init(.75);
+
+	debug = new BooleanParameter("debug", "animation");
+	debug.init(false);
     }
     
     public void draw() {
