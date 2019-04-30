@@ -107,7 +107,7 @@ def all_content():
             Content('twinkle'),
             Content('fft', sound_reactive=True),
             Content('pixelflock', sound_reactive=True, sound_required=False, kinect_enabled=True, kinect_required=False),
-            Content('kinect', 'kinectdepth', kinect_enabled=True,
+            Content('kinectdepth', 'kinectdepth', kinect_enabled=True,
                     placement_filter=lambda p: getattr(p, 'rot', 0) == 0 and p.stretch),
             Content('screencast', 'projectm', cmdline='projectM-pulseaudio', sound_reactive=True, volume_adjust=1.5,
                     server_side_parameters=projectm_parameters(),
