@@ -260,6 +260,21 @@ public class PixelFlock extends PApplet {
 			    continue;
 			}
 
+			int numOverThreshNeighbors = 0;
+			int neighborFringe = 2;
+			double requiredYield = .4;
+			for (int xo = -neighborFringe; xo <= neighborFringe + 1; xo++) {
+			    for (int yo = -neighborFringe; yo <= neighborFringe + 1; yo++) {
+				int neighborDepth = depth[(x+xo) + (y+yo)*kinect.width];
+				if (neighborDepth != 0 && neighborDepth <= depthThresh) {
+				    numOverThreshNeighbors++;
+				}
+			    }
+			}
+			if (numOverThreshNeighbors / Math.pow(2*neighborFringe + 1, 2.) < requiredYield) {
+			    continue;
+			}
+			
 			closest = new PVector2(x, y);
 			closestDepth = rawDepth;
 		    }
@@ -296,7 +311,9 @@ public class PixelFlock extends PApplet {
 			}
 		    }
 
-		    double lum = (rawDepth == 0 || rawDepth > 2000 ? 0. : 1. - Math.max(rawDepth-600., 0.) / (900. - 600));
+		    double nearThresh = depthThresh - 150;
+		    double farThresh = depthThresh + 150;
+		    double lum = (rawDepth == 0 || rawDepth > 2000 ? 0. : 1. - Math.max(rawDepth - nearThresh, 0.) / (farThresh - nearThresh));
 		    if (active) {
 			display.pixels[i] = color(0, 100, (int)(100*lum));
 		    } else {

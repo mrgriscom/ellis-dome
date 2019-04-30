@@ -15,6 +15,7 @@ import me.lsdo.processing.util.*;
 
 // Play various video streams directly from Kinect.
 // This sketch is mostly for debugging.
+// See KinectDepth.java for a similar concept but with more tunable parameters.
 
 public class KinectVideo extends VideoBase {
 
