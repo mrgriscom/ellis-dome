@@ -1,5 +1,6 @@
 import os.path
 import ConfigParser
+from datetime import datetime
 
 py_root = os.path.dirname(os.path.abspath(__file__))
 repo_root = reduce(lambda a, b: os.path.dirname(a), xrange(2), py_root)
@@ -24,6 +25,12 @@ load_java_settings(os.path.join(repo_root, 'config.properties'))
 
 # true if the installation has speakers
 audio_out = True
+quiet_hours = [
+    (datetime(2019, 4, 29, 7, 0), datetime(2019, 4, 29, 11, 0)),
+    (datetime(2019, 4, 30, 7, 0), datetime(2019, 4, 30, 11, 0)),
+    (datetime(2019, 5,  1, 7, 0), datetime(2019, 5,  1, 11, 0)),
+    (datetime(2019, 5,  2, 7, 0), datetime(2019, 5,  2, 11, 0)),
+]
 
 kinect = False
 # kinect depth value for the closest distance we care about (used for cutting off color ramps, etc.)

@@ -22,6 +22,8 @@ import threading
 import Queue
 import time
 import psutil
+import itertools
+import bisect
 
 ID_COOKIE = 'user'
 VALID_USER = 'valid'
@@ -277,6 +279,49 @@ class BatteryMonitorThread(threading.Thread):
                 status['remaining_minutes'] = secs / 60.
         return status
 
+class QuietHoursThread(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.up = True
+        self.last_volume = None
+        self.param_id = animations.MasterVolumeParameter(None).param['name']
+        self.validate_quiet_hours()
+
+    def terminate(self):
+        self.up = False
+
+    def run(self):
+        while self.up:
+            param = self.get_param()
+            get_val = lambda: param.get_value()['sliderPos']
+            
+            quiet = self.is_quiet_hours(datetime.now())
+            muted = get_val() < 1e-3
+            if quiet != muted:
+                if quiet:
+                    print 'muting for start of quiet hours', datetime.now()
+                    self.last_volume = get_val()
+                    broadcast_event(self.param_id, 'slider', 0.)
+                else:
+                    print 'unmuting for end of quiet hours', datetime.now()
+                    broadcast_event(self.param_id, 'slider', self.last_volume)
+                
+            time.sleep(1.)
+
+    def flatten_quiet_hours(self):
+        return list(itertools.chain(*sorted(settings.quiet_hours)))
+            
+    def validate_quiet_hours(self):
+        assert len(self.flatten_quiet_hours()) == len(set(self.flatten_quiet_hours()))
+        assert self.flatten_quiet_hours() == sorted(self.flatten_quiet_hours())
+            
+    def is_quiet_hours(self, t):
+        return bisect.bisect_right(self.flatten_quiet_hours(), t) % 2 == 1
+            
+    def get_param(self):
+        # volume parameter should always be present
+        return manager.content.params[self.param_id]
+    
 pending_placement_save = None
 def start_placement_save(name):
     if not manager.content.running():
@@ -350,6 +395,9 @@ if __name__ == "__main__":
     battery_thread = BatteryMonitorThread()
     add_thread(battery_thread)
 
+    if settings.audio_out:
+        add_thread(QuietHoursThread())
+    
     application = web.Application([
         (r'/', MainHandler),
         web.URLSpec('/login', LoginHandler, name='login'),
