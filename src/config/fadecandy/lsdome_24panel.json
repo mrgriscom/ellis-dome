@@ -5,7 +5,7 @@
   "devices": [
     {
       "type": "fadecandy",
-      "serial": "THPSLLPHAUZGSGLD",
+      "serial": "WASDCAYSKWXCYGZP",
       "map": [
         [ 0, 0, 0, 64 ],
         [ 0, 64, 64, 56 ],
@@ -75,7 +75,7 @@
     },
     {
       "type": "fadecandy",
-      "serial": "WASDCAYSKWXCYGZP",
+      "serial": "THPSLLPHAUZGSGLD",
       "map": [
         [ 0,  2400, 0, 64 ],
         [ 0,  2464, 64, 56 ],
