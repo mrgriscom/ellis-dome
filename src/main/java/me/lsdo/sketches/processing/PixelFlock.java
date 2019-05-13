@@ -58,7 +58,6 @@ public class PixelFlock extends PApplet {
 
 	if (Config.getSketchProperty("kinect", false)) {
 	    behavior = new KinectBoidBehavior(this);
-	    //behavior = new SimulatedKinectBoidBehavior(this);
 	} else {
 	    behavior = new BoidBehavior();
 	}
@@ -129,20 +128,17 @@ public class PixelFlock extends PApplet {
 	EnumParameter<BoidHarassmentMode> mode;
 	NumericParameter strength;
 
-	final int KINECT_WIDTH = 640;
-	final int KINECT_HEIGHT = 480;
-
 	PVector2 screenToXy(PVector2 loc) {
 	    return LayoutUtil.screenToXy(loc, width, height, 2., false);
 	}
 
 	float aspectOffsetFactor() {
-	    return (1 - (float)KINECT_HEIGHT / KINECT_WIDTH);
+	    return (1 - (float)kinect.height / kinect.width);
 	}
 
 	PVector2 kinectToXy(PVector2 loc) {
 	    // this assumes a square render window and kinect feed with >1 aspect ratio
-	    PVector2 xy = LayoutUtil.screenToXy(loc, KINECT_WIDTH, KINECT_WIDTH, 2., false);
+	    PVector2 xy = LayoutUtil.screenToXy(loc, kinect.width, kinect.width, 2., false);
 	    // correction to center the kinect display while maintaining aspect ratio
 	    xy.y -= aspectOffsetFactor();
 	    return xy;
@@ -150,7 +146,7 @@ public class PixelFlock extends PApplet {
 
 	PVector2 xyToKinect(PVector2 xy) {
 	    xy = new PVector2(xy.x, xy.y + aspectOffsetFactor());
-	    return LayoutUtil.xyToScreen(xy, KINECT_WIDTH, KINECT_WIDTH);
+	    return LayoutUtil.xyToScreen(xy, kinect.width, kinect.width);
 	}
 
 	BoidFlock.BoidManipulator repulsor = new BoidFlock.BoidManipulator() {
@@ -196,7 +192,7 @@ public class PixelFlock extends PApplet {
 		}
 	    };
 
-	KinectBoidBehavior() {
+	KinectBoidBehavior(PApplet app) {
 	    strength = new NumericParameter("strength", "animation");
 	    strength.min = 0;
 	    strength.max = 20;
@@ -212,13 +208,9 @@ public class PixelFlock extends PApplet {
 		defaultMode = mode.values()[(int)(Math.random() * mode.values().length)];
 	    }
 	    mode.init(defaultMode);
-	}
 
-	KinectBoidBehavior(PApplet app) {
-	    this();
 	    depthThresh = Config.getSketchProperty("maxdepth", 750);
 	    kinect = new Kinect(app);
-	    assert kinect.width == KINECT_WIDTH && kinect.height == KINECT_HEIGHT;
 	    kinect.initDepth();
 	    kinect.enableColorDepth(true);
 	    kinect.enableMirror(true);
@@ -260,6 +252,7 @@ public class PixelFlock extends PApplet {
 			    continue;
 			}
 
+			/*
 			int numOverThreshNeighbors = 0;
 			int neighborFringe = 2;
 			double requiredYield = .4;
@@ -274,6 +267,7 @@ public class PixelFlock extends PApplet {
 			if (numOverThreshNeighbors / Math.pow(2*neighborFringe + 1, 2.) < requiredYield) {
 			    continue;
 			}
+			*/
 			
 			closest = new PVector2(x, y);
 			closestDepth = rawDepth;
@@ -324,22 +318,7 @@ public class PixelFlock extends PApplet {
 	    display.updatePixels();
 
 	    PVector2 offset = LayoutUtil.xyToScreen(kinectToXy(new PVector2(0, 0)), width, height);
-	    image(display, offset.x, offset.y, width, (float)width * KINECT_HEIGHT / KINECT_WIDTH);
-	}
-    }
-
-    class SimulatedKinectBoidBehavior extends KinectBoidBehavior {
-	PApplet app;
-
-	SimulatedKinectBoidBehavior(PApplet app) {
-	    super();
-	    this.app = app;
-	}
-
-	// no easy way to detect mouseout
-	void update() {
-	    kinectKeyPoints = new ArrayList<PVector2>();
-	    kinectKeyPoints.add(xyToKinect(screenToXy(new PVector2(app.mouseX, app.mouseY))));
+	    image(display, offset.x, offset.y, width, (float)width * kinect.height / kinect.width);
 	}
     }
 
