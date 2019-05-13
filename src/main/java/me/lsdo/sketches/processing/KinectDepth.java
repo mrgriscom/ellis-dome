@@ -22,19 +22,34 @@ public class KinectDepth extends PApplet {
 
     BooleanParameter debug;
     
-    Kinect kinect;
+    abstract class KinectBufferAnimation extends WindowAnimation {
+	static final int DEFAULT_AA = 8;
+	Kinect kinect;
 
-    final int KINECT_WIDTH = 640;
-    final int KINECT_HEIGHT = 480;
-    
-    ProcessingAnimation canvas;
+	public KinectBufferAnimation(Kinect kinect, PixelMesh<? extends LedPixel> mesh){
+	    super(mesh, Config.getSketchProperty("subsampling", DEFAULT_AA));
+	    this.kinect = kinect;
+	    initViewport(kinect.width, kinect.height);
+	}
+    }    
+    WindowAnimation canvas;
 
     public void settings() {
-        size(KINECT_WIDTH, KINECT_HEIGHT);
+	// Note: nothing is ever rendered to the processing window -- we sample
+	// from the kinect buffers directly. In fact the only reason this is a
+	// processing sketch is so we can use the processing kinect libs.
+	size(100, 100);
     }
 
     public void setup() {
-	canvas = new ProcessingAnimation(this, Driver.makeGeometry()) {
+        colorMode(HSB, 100);
+
+	Kinect kinect = new Kinect(this);
+	kinect.initDepth();
+	kinect.enableColorDepth(true);
+	kinect.enableMirror(true);
+
+	canvas = new KinectBufferAnimation(kinect, Driver.makeGeometry()) {
 		int[] depth;
 		
 		@Override
@@ -61,18 +76,8 @@ public class KinectDepth extends PApplet {
 			return color(hue, 100, 100);
 		    }
 		}
-
-		@Override
-		protected void postFrame(double t){}
 	    };
-
-        colorMode(HSB, 100);
-
-	kinect = new Kinect(this);
-	kinect.initDepth();
-	kinect.enableColorDepth(true);
-	kinect.enableMirror(true);
-
+	
 	nearThresh = new NumericParameter("nearthresh", "animation");
 	nearThresh.min = 0;
 	nearThresh.max = 2000;
@@ -91,6 +96,6 @@ public class KinectDepth extends PApplet {
     }
     
     public void draw() {
-        canvas.draw();
+        canvas.draw(millis() / 1000.);
     }
 }
