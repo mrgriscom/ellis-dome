@@ -23,11 +23,9 @@ public class KinectDepth extends PApplet {
     BooleanParameter debug;
     
     abstract class KinectBufferAnimation extends WindowAnimation {
-	static final int DEFAULT_AA = 8;
 	Kinect kinect;
-
 	public KinectBufferAnimation(Kinect kinect, PixelMesh<? extends LedPixel> mesh){
-	    super(mesh, Config.getSketchProperty("subsampling", DEFAULT_AA));
+	    super(mesh);
 	    this.kinect = kinect;
 	    initViewport(kinect.width, kinect.height);
 	}

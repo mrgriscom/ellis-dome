@@ -10,7 +10,7 @@ public class KLBackgroundImage extends KaleidoscopeBase {
     PImage img;
 
     public KLBackgroundImage(PixelMesh<? extends LedPixel> mesh) {
-        super(mesh, 8);
+        super(mesh, WindowAnimation.DEFAULT_AA);
 
 	app = new PApplet();
 	app.sketchPath(); // call to initialize

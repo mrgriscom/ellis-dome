@@ -21,11 +21,11 @@ public abstract class KaleidoscopeBase extends XYAnimation {
     double source_scale;
     
     public KaleidoscopeBase(PixelMesh<? extends LedPixel> mesh) {
-	this(mesh, 1);
+	this(mesh, XYAnimation.DEFAULT_BASE_SUBSAMPLING);
     }
     
     public KaleidoscopeBase(PixelMesh<? extends LedPixel> mesh, int defaultSubsampling) {
-	super(mesh, Config.getSketchProperty("subsampling", defaultSubsampling));
+	super(mesh, defaultSubsampling);
 	speed = Config.getSketchProperty("speed", 1.);
 	scale = Config.getSketchProperty("scale", 1.);
 	source_scale = Config.getSketchProperty("source_scale", 1.);

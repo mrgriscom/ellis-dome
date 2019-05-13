@@ -19,8 +19,6 @@ import java.awt.*;
 
 public class Screencast extends WindowAnimation {
 
-    static final int SUBSAMPLING = 8;
-    
     ScreenGrabber grabber;
 
     String title;
@@ -29,7 +27,7 @@ public class Screencast extends WindowAnimation {
     BooleanParameter retargetAction;
     
     public Screencast(PixelMesh<? extends LedPixel> mesh) {
-	super(mesh, Config.getSketchProperty("subsampling", SUBSAMPLING));
+	super(mesh);
 
 	int width = Config.getSketchProperty("width", 512);
 	// If height omitted, set equal to width and force no_stretch. Otherwise,
