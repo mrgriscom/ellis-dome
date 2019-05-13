@@ -121,9 +121,9 @@ public class PixelFlock extends PApplet {
 	Kinect kinect;
 	int[] depth;
 	PImage display;
-	int depthThresh;
+	NumericParameter depthThresh;
 	int excludeWindowWidth = 200;
-	int highlightWindowWidth = 100;
+	int highlightWindowWidth = 60;
 	public List<PVector2> kinectKeyPoints;
 
 	EnumParameter<BoidHarassmentMode> mode;
@@ -216,7 +216,10 @@ public class PixelFlock extends PApplet {
 
 	KinectBoidBehavior(PApplet app) {
 	    this();
-	    depthThresh = Config.getSketchProperty("maxdepth", 850);
+            depthThresh = new NumericParameter("depththresh", "animation");
+            depthThresh.min = 300;
+            depthThresh.max = 1000;
+            depthThresh.init(Config.getSketchProperty("maxdepth", 850));
 	    kinect = new Kinect(app);
 	    assert kinect.width == KINECT_WIDTH && kinect.height == KINECT_HEIGHT;
 	    kinect.initDepth();
@@ -240,7 +243,7 @@ public class PixelFlock extends PApplet {
 		    for (int y = 0; y < kinect.height; y++) {
 			int i = x + y*kinect.width;
 			int rawDepth = depth[i];
-			if (rawDepth == 0 || rawDepth > depthThresh) {
+			if (rawDepth == 0 || rawDepth > depthThresh.get()) {
 			    continue;
 			}
 
@@ -271,7 +274,7 @@ public class PixelFlock extends PApplet {
                                     continue;
                                 }
 				int neighborDepth = depth[nx + ny*kinect.width];
-				if (neighborDepth != 0 && neighborDepth <= depthThresh) {
+				if (neighborDepth != 0 && neighborDepth <= depthThresh.get()) {
 				    numOverThreshNeighbors++;
 				}
 			    }
