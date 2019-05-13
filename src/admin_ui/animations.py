@@ -317,6 +317,9 @@ class PlayManager(threading.Thread):
 
         if content.kinect_enabled:
             params['kinect'] = settings.kinect
+            if settings.kinect:
+                for kp in ('kinect_ceiling', 'kinect_floor', 'kinect_activation'):
+                    params[kp] = getattr(settings, kp)
             
         if content.sketch == 'screencast':
             gui_invocation = launch.launch_screencast(content.cmdline, params)

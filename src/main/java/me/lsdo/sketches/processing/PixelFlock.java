@@ -125,9 +125,18 @@ public class PixelFlock extends PApplet {
 	int highlightWindowWidth = 60;
 	public List<PVector2> kinectKeyPoints;
 
+	int kinectCeiling;
+	int kinectFloor;
+	
 	EnumParameter<BoidHarassmentMode> mode;
 	NumericParameter strength;
 
+	// search window to rule out spurious depth 'spikes'
+	int denoiseRadius = 2;
+	// at least this percentage of values within the window must register
+	// as above-threshold in order to count
+	double denoiseThreshold = .4;
+	
 	PVector2 screenToXy(PVector2 loc) {
 	    return LayoutUtil.screenToXy(loc, width, height, 2., false);
 	}
@@ -193,6 +202,9 @@ public class PixelFlock extends PApplet {
 	    };
 
 	KinectBoidBehavior(PApplet app) {
+	    kinectCeiling = Config.getSketchProperty("kinect_ceiling", -1);
+	    kinectFloor = Config.getSketchProperty("kinect_floor", -1);
+	    
 	    strength = new NumericParameter("strength", "animation");
 	    strength.min = 0;
 	    strength.max = 20;
@@ -210,9 +222,9 @@ public class PixelFlock extends PApplet {
 	    mode.init(defaultMode);
 
             depthThresh = new NumericParameter("depththresh", "animation");
-            depthThresh.min = 300;
-            depthThresh.max = 1000;
-            depthThresh.init(Config.getSketchProperty("maxdepth", 850));
+            depthThresh.min = kinectCeiling;
+            depthThresh.max = kinectFloor;
+            depthThresh.init(Config.getSketchProperty("kinect_activation", kinectCeiling));
 
 	    kinect = new Kinect(app);
 	    kinect.initDepth();
@@ -257,10 +269,8 @@ public class PixelFlock extends PApplet {
 			}
 
 			int numOverThreshNeighbors = 0;
-			int neighborFringe = 2;
-			double requiredYield = .4;
-			for (int xo = -neighborFringe; xo <= neighborFringe + 1; xo++) {
-			    for (int yo = -neighborFringe; yo <= neighborFringe + 1; yo++) {
+			for (int xo = -denoiseRadius; xo <= denoiseRadius + 1; xo++) {
+			    for (int yo = -denoiseRadius; yo <= denoiseRadius + 1; yo++) {
                                 int nx = x+xo;
                                 int ny = y+yo;
                                 if (nx < 0 || nx >= kinect.width || ny < 0 || ny >= kinect.height) {
@@ -272,7 +282,7 @@ public class PixelFlock extends PApplet {
 				}
 			    }
 			}
-			if (numOverThreshNeighbors / Math.pow(2*neighborFringe + 1, 2.) < requiredYield) {
+			if (numOverThreshNeighbors / Math.pow(2*denoiseRadius + 1, 2.) < denoiseThreshold) {
 			    continue;
 			}
 
@@ -312,8 +322,8 @@ public class PixelFlock extends PApplet {
 			}
 		    }
 
-		    double nearThresh = 750; //depthThresh - 150;
-		    double farThresh = 960; //depthThresh + 150;
+		    double nearThresh = kinectCeiling;
+		    double farThresh = kinectFloor;
 		    double lum = (rawDepth == 0 || rawDepth > 2000 ? 0. : 1. - Math.max(rawDepth - nearThresh, 0.) / (farThresh - nearThresh));
 		    if (active) {
 			display.pixels[i] = color(0, 100, (int)(100*lum));

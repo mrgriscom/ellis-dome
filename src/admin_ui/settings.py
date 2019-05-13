@@ -24,7 +24,14 @@ load_java_settings(os.path.join(repo_root, 'config.properties'))
 
 # true if the installation has speakers
 audio_out = True
+
 kinect = False
+# kinect depth value for the closest distance we care about (used for cutting off color ramps, etc.)
+kinect_ceiling = 750
+# kinect depth value for the farthest distance we care about, typically the ground
+kinect_floor = 960
+# kinect depth threshold to trigger things, typically reachable by raising a limb from kinect_floor
+kinect_activation = 850
 
 media_path = '/home/drew/lsdome-media/'
 roms_path = '/home/drew/roms/'

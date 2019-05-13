@@ -14,6 +14,12 @@ import org.openkinect.processing.*;
 
 public class KinectDepth extends PApplet {
 
+    // actual physical limits of kinect depth perception (value is
+    // technically [0,2^11), but real world kinect range is less)
+    // (very approx)
+    public static final int KINECT_MIN = 300;
+    public static final int KINECT_MAX = 2000;
+    
     NumericParameter nearThresh;
     NumericParameter farThresh;
     NumericParameter gamma;
@@ -77,13 +83,13 @@ public class KinectDepth extends PApplet {
 	    };
 	
 	nearThresh = new NumericParameter("nearthresh", "animation");
-	nearThresh.min = 0;
-	nearThresh.max = 2000;
-	nearThresh.init(750);
+	nearThresh.min = KINECT_MIN;
+	nearThresh.max = KINECT_MAX;
+	nearThresh.init(Config.getSketchProperty("kinect_ceiling", KINECT_MIN));
 	farThresh = new NumericParameter("farthresh", "animation");
-	farThresh.min = 0;
-	farThresh.max = 2000;
-	farThresh.init(960);
+	farThresh.min = KINECT_MIN;
+	farThresh.max = KINECT_MAX;
+	farThresh.init(Config.getSketchProperty("kinect_floor", KINECT_MAX));
 	gamma = new NumericParameter("gamma", "animation");
 	gamma.min = 0;
 	gamma.max = 1;
