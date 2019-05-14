@@ -210,7 +210,10 @@ def load_games(filt):
         _games_content = dict((c.name, c) for c in _games_content)
         print len(_games_content), 'roms'
 
-    return filter_games(_games_content, filt)
+    if filt == 'favs':
+        return filter_games_favorites(_games_content)
+    else:
+        return filter_games(_games_content, filt)
 
 def filter_games(all_games, filt):
     def name_to_search_key(name):
@@ -225,6 +228,11 @@ def filter_games(all_games, filt):
 
     return dict((k, v) for k, v in all_games.iteritems() if match_key(name_to_search_key(filt), name_to_search_key(k)))
 
+def filter_games_favorites(all_games):
+    with open(settings.rom_favorites) as f:
+        favs = set(os.path.splitext(g.strip())[0] for g in f.readlines())
+    return dict((k, v) for k, v in all_games.iteritems() if k in favs)
+        
 class Playlist(object):
     def __init__(self, name, choices):
         self.name = name

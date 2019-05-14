@@ -48,6 +48,7 @@ kinect_activation = 850
 
 media_path = '/home/drew/lsdome-media/'
 roms_path = '/home/drew/roms/'
+rom_favorites = '/home/drew/dev/emu/favorites'
 
 default_duration = 150
 
