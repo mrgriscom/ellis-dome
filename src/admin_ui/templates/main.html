@@ -94,21 +94,6 @@ button {
     </div>
   </div>
 
-  <h3>placement mode</h3>
-
-  <div data-bind="foreach: placementModes">
-    <div>
-      <button data-bind="click: $root.setMode">set</button>
-      <span data-bind="text: $data, style: {fontWeight: $data == $root.current_placement_mode() ? 'bold' : 'normal'}"></span>
-    </div>
-  </div>
-
-  <div data-bind="visible: locked_placement() != null" style="background-color: #fdd; margin-top: 1em;">
-    locked placement in effect: <span style="font-weight: bold;" data-bind="text: locked_placement_name"></span>
-    <br />
-    <button data-bind="click: $root.unlockPlacement">unlock</button>
-  </div>
-  
   <h3>placements</h3>
 
   <div data-bind="foreach: placements">
@@ -118,6 +103,21 @@ button {
       <span data-bind="visible: ix() == $root.locked_placement()" style="font-weight: bold;">[locked]</span>
       <span data-bind="text: name"></span>
       <span data-bind="visible: available" style="font-weight: bold; color: green;">&#x2713;</span>
+    </div>
+  </div>
+
+  <h3>auto-placement whitelist</h3>
+
+  <div data-bind="visible: locked_placement() != null" style="background-color: #fdd; margin-top: 1em;">
+    locked placement in effect: <span style="font-weight: bold;" data-bind="text: locked_placement_name"></span>
+    <br />
+    <button data-bind="click: $root.unlockPlacement">unlock</button>
+  </div>
+  
+  <div data-bind="foreach: placementModes">
+    <div>
+      <button data-bind="click: $root.setMode">whitelist</button>
+      <span data-bind="text: $data, style: {fontWeight: $data == $root.current_placement_mode() ? 'bold' : 'normal'}"></span>
     </div>
   </div>
 

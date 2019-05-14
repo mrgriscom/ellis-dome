@@ -1,34 +1,36 @@
-geometry,name,modes,aspect,rotation,x-offset,y-offset,scale,wing_mode
-prometheus,single canvas,wings flat,stretch,,,,,unified
-prometheus,mirror parallel,wings flat,stretch,,,,,mirror
-prometheus,mirror tilt in,wings flat,stretch,-38,,,,mirror
-prometheus,mirror tilt out,,stretch,27,,,,mirror
-prometheus,mirror perpendicular,,stretch,90,,,,mirror
-prometheus,mirror anamorphic,"wings flat, wings raised",stretch,109,,,,mirror
-prometheus,mirror perpendicular (reverse),wings flat,stretch,-90,,,,mirror
-prometheus,mirror anamorphic (reverse),wings flat,stretch,-71,,,,mirror
-prometheus,flipped parallel some overlap,wings flat,stretch,,-0.15,,,flip
-prometheus,flipped parallel full overlap,wings flat,stretch,,-0.4,,,flip
-prometheus,flipped tilt in no overlap,wings flat,stretch,-16,-0.05,,,flip
-prometheus,flipped tilt out some overlap,,stretch,27,-0.12,,,flip
-prometheus,flipped tilt out full overlap,,stretch,27,-0.32,,,flip
-prometheus,flipped perpendicular full overlap,,stretch,90,0,,,flip
-prometheus,flipped anamorphic full overlap,"wings flat, wings raised",stretch,109,0.21,,,flip
-prometheus,flipped perpendicular full overlap (reverse),wings flat,stretch,-90,0,,,flip
-prometheus,flipped anamorphic full overlap (reverse),wings flat,stretch,-71,-0.21,,,flip
-prometheus,single canvas,wings flat,1:1,,,,,unified
-prometheus,mirror radial,,1:1,10,-0.09,-0.11,1.494,mirror
-prometheus,flipped radial,,1:1,10,-0.09,-0.11,1.494,flip
-prometheus,mirror max coverage,,1:1,-15.6,-0.55,0.16,1.668,mirror
-prometheus,flipped parallel some overlap,wings flat,1:1,,-0.16,-0.08,1.471,flip
-prometheus,flipped parallel full overlap,wings flat,1:1,,-0.48,-0.08,1.471,flip
-prometheus,flipped tilted overlap top,wings flat,1:1,38,-0.31,-0.28,1.359,flip
-prometheus,flipped tilted overlap bottom inverse,wings flat,1:1,75,-0.3,-0.39,1.471,flip
-prometheus,single canvas,,16:9,,,-0.02,1.628,unified
-prometheus,mirror radial slight overlap,,16:9,103.6,0.16,-0.2,1.769,mirror
-prometheus,flipped radial slight overlap,,16:9,103.6,0.16,-0.2,1.769,flip
-lsdome,align horizontal,align horizontal,stretch,,,,,
-lsdome,align vertical,align vertical,stretch,30,,,,
-lsdome,align horizontal,align horizontal,1:1,,,,,
-lsdome,align vertical,align vertical,1:1,30,,,,
-lsdome,align horizontal,,16:9,,,,1.154,
+geometry,name,modes,aspect,rotation,x-offset,y-offset,scale,wing_mode,x-scale,y-scale
+prometheus,single canvas,wings flat,stretch,,,,,unified,,
+prometheus,mirror parallel,wings flat,stretch,,,,,mirror,,
+prometheus,mirror tilt in,wings flat,stretch,-38,,,,mirror,,
+prometheus,mirror tilt out,,stretch,27,,,,mirror,,
+prometheus,mirror perpendicular,,stretch,90,,,,mirror,,
+prometheus,mirror anamorphic,"wings flat, wings raised",stretch,109,,,,mirror,,
+prometheus,mirror perpendicular (reverse),wings flat,stretch,-90,,,,mirror,,
+prometheus,mirror anamorphic (reverse),wings flat,stretch,-71,,,,mirror,,
+prometheus,flipped parallel some overlap,wings flat,stretch,,-0.15,,,flip,,
+prometheus,flipped parallel full overlap,wings flat,stretch,,-0.4,,,flip,,
+prometheus,flipped tilt in no overlap,wings flat,stretch,-16,-0.05,,,flip,,
+prometheus,flipped tilt out some overlap,,stretch,27,-0.12,,,flip,,
+prometheus,flipped tilt out full overlap,,stretch,27,-0.32,,,flip,,
+prometheus,flipped perpendicular full overlap,,stretch,90,0,,,flip,,
+prometheus,flipped anamorphic full overlap,"wings flat, wings raised",stretch,109,0.21,,,flip,,
+prometheus,flipped perpendicular full overlap (reverse),wings flat,stretch,-90,0,,,flip,,
+prometheus,flipped anamorphic full overlap (reverse),wings flat,stretch,-71,-0.21,,,flip,,
+prometheus,single canvas,wings flat,1:1,,,,,unified,,
+prometheus,mirror radial,,1:1,10,-0.09,-0.11,1.494,mirror,,
+prometheus,flipped radial,,1:1,10,-0.09,-0.11,1.494,flip,,
+prometheus,mirror max coverage,,1:1,-15.6,-0.55,0.16,1.668,mirror,,
+prometheus,flipped parallel some overlap,wings flat,1:1,,-0.16,-0.08,1.471,flip,,
+prometheus,flipped parallel full overlap,wings flat,1:1,,-0.48,-0.08,1.471,flip,,
+prometheus,flipped tilted overlap top,wings flat,1:1,38,-0.31,-0.28,1.359,flip,,
+prometheus,flipped tilted overlap bottom inverse,wings flat,1:1,75,-0.3,-0.39,1.471,flip,,
+prometheus,single canvas,,16:9,,,-0.02,1.628,unified,,
+prometheus,mirror radial slight overlap,,16:9,103.6,0.16,-0.2,1.769,mirror,,
+prometheus,flipped radial slight overlap,,16:9,103.6,0.16,-0.2,1.769,flip,,
+lsdome,align horizontal,align horizontal,stretch,,,,,,,
+lsdome,align vertical,align vertical,stretch,30,,,,,,
+lsdome,align horizontal,align horizontal,1:1,,,,,,,
+lsdome,align vertical,align vertical,1:1,30,,,,,,
+lsdome,align horizontal,,16:9,,,,1.154,,,
+lsdome,horizontal squash,custom,stretch,,,,,,1.2,
+lsdome,vertical squash,custom,stretch,30,,,,,,1.333
