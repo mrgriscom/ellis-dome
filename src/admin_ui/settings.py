@@ -77,6 +77,8 @@ ssl_config = {
     'keyfile': os.path.join(os.path.dirname(__file__), 'private/ssl/selfsigned.key'),
 }
 
+uptime_log = os.path.join(repo_root, 'uptime.log')
+
 try:
     from localsettings import *
 except ImportError:

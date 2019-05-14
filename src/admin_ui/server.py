@@ -262,6 +262,11 @@ class BatteryMonitorThread(threading.Thread):
             immediate_update = power_source_change
             if due_for_update or immediate_update:
                 manager.notify(status)
+                try:
+                    with open(settings.uptime_log, 'a') as f:
+                        f.write('%s: %s\n' % (datetime.now(), status))
+                except IOError:
+                    print 'error logging uptime'
                 self.last_notif = time.time()
 
             time.sleep(1.)
