@@ -354,6 +354,13 @@ def commit_placement_save(msg):
 
     pending_placement_save = None
 
+# this assumes fc config on hub matches local copy in repo
+def validate_config():
+    with open(playlist.fadecandy_config()) as f:
+        config = json.load(f)
+    if config['color']['whitepoint'] != [1, 1, 1]:
+        print '*** NOT RUNNING AT FULL BRIGHTNESS ***'
+    
 
 if __name__ == "__main__":
 
@@ -397,6 +404,8 @@ if __name__ == "__main__":
 
     if settings.audio_out:
         add_thread(QuietHoursThread())
+
+    validate_config()
     
     application = web.Application([
         (r'/', MainHandler),

@@ -25,6 +25,12 @@ load_java_settings(os.path.join(repo_root, 'config.properties'))
 
 # true if the installation has speakers
 audio_out = True
+# designated quiet times when the audio will be forcibly muted (and can't be
+# overridden). mainly here for when the dome will be unattended. less useful
+# for silent burns as those don't have a defined end time due to conditions
+# and delays, but those mostly occur near sunset (when we'll be present) or
+# sunrise (when we don't care about turning sound back on after).
+# also, this has no effect on generator noise...
 quiet_hours = [
     (datetime(2019, 4, 29, 7, 0), datetime(2019, 4, 29, 11, 0)),
     (datetime(2019, 4, 30, 7, 0), datetime(2019, 4, 30, 11, 0)),
