@@ -195,7 +195,7 @@ def game_content(rom):
     except:
         return None
     name = os.path.splitext(os.path.relpath(os.path.abspath(rom), settings.roms_path))[0]
-    return Content('screencast', name, cmdline=args['cmd'], params=args['params'], stretch_aspect=True, has_audio=True)
+    return Content('screencast', name, cmdline=args['cmd'], params=args.get('params', {}), stretch_aspect=True, has_audio=True)
 
 _games_content = None
 def load_games(filt):

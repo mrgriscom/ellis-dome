@@ -79,7 +79,10 @@ def launch_external(cmd, title=None, timeout=5):
 
     return (window, processes)    
 
-ROM_CORES = {
+EMULATORS = {
+    'mame': {'cmd': 'mame -window %s'},
+}
+RETROARCH_CORES = {
     'nes': '/usr/lib/libretro/nestopia_libretro.so',
     'snes': '/usr/lib/libretro/bsnes_mercury_performance_libretro.so',
     # don't use plus_gx due to viewport resize issue
@@ -89,22 +92,20 @@ ROM_CORES = {
     'gbc': '/usr/lib/libretro/gambatte_libretro.so',
     'gamegear': '/usr/lib/libretro/genesis_plus_gx_libretro.so',
 }
+EMULATORS.update((retrosys, {
+    'cmd': 'retroarch -L %s %%s' % core,
+    'params': {'title': 'retroarch'},
+}) for retrosys, core in RETROARCH_CORES.iteritems())
 
 # returns args to pass to launch_screencast
 def launch_emulator(rom):
     rompath = os.path.abspath(rom)
-    core = None
-    for k, v in ROM_CORES.iteritems():
+    for k, v in EMULATORS.iteritems():
         if rompath.startswith(os.path.join(settings.roms_path, k)):
-            core = v
-            break
-    if not core:
-        raise RuntimeError('don\'t recognize system')
-
-    return {
-        'cmd': 'retroarch -L %s "%s"' % (core, rom),
-        'params': {'title': 'retroarch'},
-    }
+            args = dict(v) # copy
+            args['cmd'] = args['cmd'] % ('"%s"' % rom)
+            return args
+    raise RuntimeError('don\'t recognize system')
 
 def gui_interaction(wid, command):
     os.popen('xdotool windowactivate --sync %d && xdotool %s' % (wid, command))
