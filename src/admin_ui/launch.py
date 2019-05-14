@@ -31,7 +31,7 @@ def launch_sketch(name, params):
     p = sp.Popen([os.path.join(settings.repo_root, 'build/install/lsdome/bin/lsdome'), name], cwd=settings.repo_root)
     return p
 
-def launch_screencast(cmd, params, timeout=5):
+def launch_screencast(cmd, params):
     """Launch a GUI window and screencast it to the pixel mesh
     cmd - command to launch gui program
     params - sketch properties; notably, 'title' is used in detecting the GUI window
@@ -39,6 +39,16 @@ def launch_screencast(cmd, params, timeout=5):
     timeout - abort if gui window can't be found after this many seconds
     returns tuple(window id, list of relevant processes)
     """
+    window, processes = launch_external(cmd, params.get('title'))
+    if window['pid']:
+        params['pid'] = window['pid']
+    sketch = launch_sketch('screencast', params)
+    processes.append(sketch)
+    
+    return (window['wid'], processes)    
+# TODO: detect if content window terminates and report back
+
+def launch_external(cmd, title=None, timeout=5):
     # launch the content process/window
     content = sp.Popen(cmd, shell=True)
 
@@ -49,7 +59,7 @@ def launch_screencast(cmd, params, timeout=5):
     for i in xrange(int(math.ceil(window_search_total_time / window_search_retry_interval))):
         # the actual gui process may be among child processes, which continue to spawn over time
         processes = get_process_descendants(content.pid)
-        windows = get_desktop_windows(set(p.pid for p in processes), params.get('title'))
+        windows = get_desktop_windows(set(p.pid for p in processes), title)
         if windows:
             if len(windows) > 1:
                 print 'more than one matching window found!'
@@ -59,7 +69,7 @@ def launch_screencast(cmd, params, timeout=5):
     print 'process ids:', [p.pid for p in processes]
     if window is None:
         print 'could not detect window; aborting...'
-        if 'title' not in params:
+        if not 'title':
             print 'window may not report a pid, so specify a title filter'
         terminate(processes)
         return None, None
@@ -67,13 +77,7 @@ def launch_screencast(cmd, params, timeout=5):
     # make window always on top
     os.popen('wmctrl -i -r %d -b add,above' % window['wid'])
 
-    if window['pid']:
-        params['pid'] = window['pid']
-    sketch = launch_sketch('screencast', params)
-    processes.append(sketch)
-    
-    return (window['wid'], processes)    
-# TODO: detect if content window terminates and report back
+    return (window, processes)    
 
 ROM_CORES = {
     'nes': '/usr/lib/libretro/nestopia_libretro.so',
