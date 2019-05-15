@@ -126,7 +126,7 @@ def all_content():
                 'speed': .25,
             }),
 
-            Content('video', 'video:chrissy_poi_zoom', params={
+            Content('video', 'video:chrissy_poi_zoom', geometries=['lsdome'], params={
                 'path': os.path.join(VIDEO_DIR, 'hayley_chrissy_fire_spinning.mp4'),
             }, placement_filter=lambda p: p.name == 'poi (01-10 21:44)'),
         ]
