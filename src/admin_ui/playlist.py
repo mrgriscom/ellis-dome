@@ -85,9 +85,13 @@ class Content(object):
 
 # placement filter that ensures crisp alignment with lsdome panel/pixel geometry
 def pixel_exact(p):
-    # ideally should check all placement params are at their defaults, but this is good enough for lsdome
+    # forcing zero-rotation is sufficient for lsdome, and achieves the same spirit for prometheus (which
+    # doesn't have a concept of 'pixel exact') while still allowing for some variation in wing overlap
     return getattr(p, 'rot', 0) == 0 and p.is_1to1
-
+# like pixel_exact, but stretch to fit full canvas (so not 'exact', but still 'aligned')
+def align_but_stretch(p):
+    return getattr(p, 'rot', 0) == 0 and p.stretch
+    
 _all_content = None
 def all_content():
     global _all_content
@@ -108,7 +112,7 @@ def all_content():
             Content('fft', sound_reactive=True),
             Content('pixelflock', sound_reactive=True, sound_required=False, kinect_enabled=True, kinect_required=False),
             Content('kinectdepth', 'kinectdepth', kinect_enabled=True,
-                    placement_filter=lambda p: getattr(p, 'rot', 0) == 0 and p.stretch),
+                    placement_filter=align_but_stretch),
             Content('screencast', 'projectm', cmdline='projectM-pulseaudio', sound_reactive=True, volume_adjust=1.5,
                     server_side_parameters=projectm_parameters(),
                     post_launch=lambda manager: projectm_control(manager, 'next'), # get off the default pattern
