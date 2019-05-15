@@ -38,12 +38,12 @@ public class Binary extends PixelMeshAnimation<LedPixel> {
 	period.scale = NumericParameter.Scale.LOG;
 	period.init(.1);
 	
-	maxBits = (int)Math.ceil(Math.log(mesh.coords.size()) / Math.log(2.));
-	System.out.println(mesh.coords.size() + " pixels, " + maxBits + " bits");
+	maxBits = (int)Math.ceil(Math.log(mesh._allPixels().size()) / Math.log(2.));
+	System.out.println(mesh._allPixels().size() + " pixels, " + maxBits + " bits");
 	
 	pixelIds = new HashMap<LedPixel, Integer>();
-	for (int i = 0; i < mesh.coords.size(); i++) {
-	    pixelIds.put(mesh.coords.get(i), i);
+	for (int i = 0; i < mesh._allPixels().size(); i++) {
+	    pixelIds.put(mesh._allPixels().get(i), i);
 	}
     }
     

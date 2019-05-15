@@ -62,7 +62,7 @@ public class FadecandyTest extends PixelMeshAnimation<LedPixel> {
 
 	// verify that sizes match
 	int[] pixelCounts = new int[servers.size()];
-	for (LedPixel c : mesh.coords) {
+	for (LedPixel c : mesh._allPixels()) {
 	    pixelCounts[mesh.getOpcChannel(c)] += 1;
 	}
 	boolean sizeMismatch = false;
@@ -80,7 +80,7 @@ public class FadecandyTest extends PixelMeshAnimation<LedPixel> {
 	// map virtual pixels to fc-controlled physical pixels
 	pixels = new HashMap<LedPixel, PhysicalPixel>();
 	pixelCounts = new int[servers.size()];
-	for (LedPixel c : mesh.coords) {
+	for (LedPixel c : mesh._allPixels()) {
 	    int serverIx = mesh.getOpcChannel(c);
 	    PhysicalPixel px = servers.get(serverIx).pixels[pixelCounts[serverIx]];
 	    pixels.put(c, px);

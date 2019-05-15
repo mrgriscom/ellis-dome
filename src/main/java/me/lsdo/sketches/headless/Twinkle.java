@@ -36,7 +36,7 @@ public class Twinkle extends PixelMeshAnimation<LedPixel> {
         super(mesh);
         brightness = new HashMap<LedPixel, Double>();
         saturation = new HashMap<LedPixel, Double>();
-        for (LedPixel c : mesh.coords) {
+        for (LedPixel c : mesh.coords()) {
             brightness.put(c, Math.pow(Math.random(), POWER_LAW));
             saturation.put(c, Math.random());
         }

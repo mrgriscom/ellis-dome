@@ -31,7 +31,7 @@ public class Harmonics extends PixelMeshAnimation<DomePixel> {
 	// Iteration order matters. Currently follows the order visible to the fadecandy.
 	// If this is radially symmetric, it yields nice patterns.
 	panelCount = new HashMap<TriCoord, Integer>();
-	for (DomePixel c : dome.coords) {
+	for (DomePixel c : dome.coords()) {
 	    if (!panelCount.containsKey(c.panel)) {
 		panelCount.put(c.panel, panelCount.size());
 	    }
