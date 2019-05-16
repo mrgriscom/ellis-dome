@@ -1,6 +1,7 @@
 import os.path
 import ConfigParser
 from datetime import datetime
+import collections
 
 py_root = os.path.dirname(os.path.abspath(__file__))
 repo_root = reduce(lambda a, b: os.path.dirname(a), xrange(2), py_root)
@@ -36,6 +37,15 @@ quiet_hours = [
     (datetime(2019, 4, 30, 7, 0), datetime(2019, 4, 30, 11, 0)),
     (datetime(2019, 5,  1, 7, 0), datetime(2019, 5,  1, 11, 0)),
     (datetime(2019, 5,  2, 7, 0), datetime(2019, 5,  2, 11, 0)),
+]
+# turn-off times for silent burns. unlike quiet_hours, the turn-off attempt
+# happens only once, and remains off until reactivated manually. system must
+# be running and responsive at the turn-off time.
+# NOT FUNCTIONAL YET
+GoDarkAt = collections.namedtuple('GoDarkAt', ['at', 'just_audio'])
+go_dark_times = [
+    datetime(2019, 5, 1, 17, 30),
+    GoDarkAt(datetime(2019, 5, 5, 19, 30), just_audio=True),
 ]
 
 kinect = False

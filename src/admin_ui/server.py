@@ -297,22 +297,25 @@ class QuietHoursThread(threading.Thread):
 
     def run(self):
         while self.up:
-            param = self.get_param()
-            get_val = lambda: param.get_value()['sliderPos']
-            
-            quiet = self.is_quiet_hours(datetime.now())
-            muted = get_val() < 1e-3
-            if quiet != muted:
-                if quiet:
-                    print 'muting for start of quiet hours', datetime.now()
-                    self.last_volume = get_val()
-                    broadcast_event(self.param_id, 'slider', 0.)
-                else:
-                    print 'unmuting for end of quiet hours', datetime.now()
-                    broadcast_event(self.param_id, 'slider', self.last_volume)
-                
+            self.handle_intervals()
+            self.handle_instants()
             time.sleep(1.)
 
+    def handle_intervals(self):
+        quiet = self.is_quiet_hours(datetime.now())
+        muted = self.get_param_val() < 1e-3
+        if quiet != muted:
+            if quiet:
+                print 'muting for start of quiet hours', datetime.now()
+                self.last_volume = self.get_param_val()
+                broadcast_event(self.param_id, 'slider', 0.)
+            else:
+                print 'unmuting for end of quiet hours', datetime.now()
+                broadcast_event(self.param_id, 'slider', self.last_volume)
+
+    def handle_instants(self):
+        pass
+                
     def flatten_quiet_hours(self):
         return list(itertools.chain(*sorted(settings.quiet_hours)))
             
@@ -323,10 +326,12 @@ class QuietHoursThread(threading.Thread):
     def is_quiet_hours(self, t):
         return bisect.bisect_right(self.flatten_quiet_hours(), t) % 2 == 1
             
-    def get_param(self):
+    def get_param_val(self):
         # volume parameter should always be present
-        return manager.content.params[self.param_id]
-    
+        # note this is different from querying system volume as this considers the param's min/max limits
+        param = manager.content.params[self.param_id]
+        return param.get_value()['sliderPos']
+        
 pending_placement_save = None
 def start_placement_save(name):
     if not manager.content.running():
