@@ -38,6 +38,12 @@ public class KinectDepth extends PApplet {
     }    
     WindowAnimation canvas;
 
+    // returns whether kinect depth value is out of bounds
+    public static boolean kinectOOB(double val) {
+	// not actually sure which value is returned by kinect for oob; cover all our bases
+	return (val <= 0 || val >= (1<<11)-1);
+    }
+    
     public void settings() {
 	// Note: nothing is ever rendered to the processing window -- we sample
 	// from the kinect buffers directly. In fact the only reason this is a
@@ -66,7 +72,7 @@ public class KinectDepth extends PApplet {
 		    int i = x + y*kinect.width;
 		    double rawDepth = depth[i];
 
-		    if (rawDepth == 0) {
+		    if (kinectOOB(rawDepth)) {
 			return color(0, 0, 0);
 		    } else if (debug.get()) {
 			return (rawDepth <= nearThresh.get() ?
