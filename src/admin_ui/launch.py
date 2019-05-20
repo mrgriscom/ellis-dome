@@ -40,6 +40,9 @@ def launch_screencast(cmd, params):
     returns tuple(window id, list of relevant processes)
     """
     window, processes = launch_external(cmd, params.get('title'))
+    if window is None:
+        return None, None
+
     if window['pid']:
         params['pid'] = window['pid']
     sketch = launch_sketch('screencast', params)
