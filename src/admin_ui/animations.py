@@ -11,6 +11,8 @@ import json
 import psutil
 import settings
 import playlist
+import collections
+from datetime import datetime
 
 # daemon that controls the currently running thing, and responsible for turning play intention into action (choosing a placement, initializing params, etc.)
 
@@ -124,13 +126,15 @@ class ContentInvocation(object):
         self.processes = []
         self.timeout = None
         self.window_id = None
-        self.params = {}
+        self.params = collections.OrderedDict()
 
         # universal params
-        self.add_param(QuietModeParameter(self.manager))
         if settings.audio_out:
             self.add_param(MasterVolumeParameter(self.manager))
-        
+        self.add_param(QuietModeParameter(self.manager))
+        for p in [p for p in sorted(settings.quiet_hours, key=lambda p: p.start) if not p.expired(datetime.now())]:
+            self.add_param(p.param(self.manager))
+            
     def running(self):
         return bool(self.info)
 
@@ -603,7 +607,7 @@ class QuietModeParameter(Parameter):
     def param_def(self):
         param = {
             'name': 'quiet mode',
-            'category': 'audio',
+            'category': 'quiet',
             'isEnum': True,
             'values': ['resume', 'silent', 'silent+dark'] if settings.audio_out else ['resume', 'dark'],
         }
@@ -637,25 +641,29 @@ class QuietModeParameter(Parameter):
 
     def go_silent(self):
         if settings.audio_out and not self.is_muted():
+            print 'muting'
             self.set_last_volume()
             self.manager.broadcast_evt_func(self.volume_param_id, 'slider', 0.)
 
     def resume_audio(self):
         if settings.audio_out and self.is_muted() and self.last_volume:
+            print 'resuming audio'
             self.manager.broadcast_evt_func(self.volume_param_id, 'slider', self.last_volume)
             
     def go_dark(self):
         black = [c for c in playlist.all_content().values() if c.sketch == 'black'][0]
         # if anything is running (except the black-out sketch, which likely means a duplicate button press, so ignore for idempotence)
         if self.manager.content.info and self.manager.content.info['name'] != black.name:
+            print 'suspending display'
             self.set_last_playlist()
             self.manager.set_playlist(None, 0)
         # run black sketch regardless (as last frame persists on LEDs)
         self.manager.play(black, 5)
-
+        
     def resume_display(self):
         # if no playlist running (will supersede one-off content)
         if not self.manager.playlist and self.last_playlist:
+            print 'resuming display'
             self.manager.stop_current()
             self.manager.set_playlist(*self.last_playlist)
 
@@ -665,3 +673,28 @@ class QuietModeParameter(Parameter):
     
     def is_muted(self):
         return self.volume_param().current_vol()['abs'] < 1e-3
+
+class QuietPeriodParameter(Parameter):
+    def __init__(self, manager, period):
+        self.period = period
+        Parameter.__init__(self, manager)
+
+    def fmttime(self, dt):
+        return dt.strftime('%a %-m/%-d %H:%M')
+        
+    def param_def(self):
+        return {
+            'name': 'quiet period%s: %s (start %s)' % (' (audio-only)' if not self.period.visual else '', self.period.name or '--', self.fmttime(self.period.start)),
+            'category': 'quiet',
+            'isEnum': True,
+            'values': ['no', 'yes'],
+            'captions': ['resume at %s' % self.fmttime(self.period.end), 'hold (require manual resume)'],
+        }
+
+    def handle_input_event(self, type, val):
+        if type != 'set':
+            return
+        self.period.held = self.to_bool(val)
+
+    def _update_value(self, val):
+        val['value'] = self.from_bool(self.period.held)

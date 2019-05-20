@@ -351,6 +351,7 @@ function initParam(param) {
 	placement: 'placement_controls',
 	mesh_effects: 'effects_controls',
 	audio: 'audio_controls',
+	quiet: 'quiet_controls',
     }[param.category] || 'controls'));
     
     var $container = $('<div class="control" />');
