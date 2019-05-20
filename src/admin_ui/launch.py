@@ -44,8 +44,8 @@ def launch_screencast(cmd, params):
         params['pid'] = window['pid']
     sketch = launch_sketch('screencast', params)
     processes.append(sketch)
-    
-    return (window['wid'], processes)    
+
+    return (window['wid'], processes)
 # TODO: detect if content window terminates and report back
 
 def launch_external(cmd, title=None, timeout=5):
@@ -77,10 +77,10 @@ def launch_external(cmd, title=None, timeout=5):
     # make window always on top
     os.popen('wmctrl -i -r %d -b add,above' % window['wid'])
 
-    return (window, processes)    
+    return (window, processes)
 
 EMULATORS = {
-    'mame': {'cmd': 'mame -window %s'},
+    'mame': {'cmd': 'mame %s'},
 }
 RETROARCH_CORES = {
     'nes': '/usr/lib/libretro/nestopia_libretro.so',
@@ -110,7 +110,7 @@ def launch_emulator(rom):
 def gui_interaction(wid, command):
     os.popen('xdotool windowactivate --sync %d && xdotool %s' % (wid, command))
 
-    
+
 def pulse_ctx():
     return contextlib.closing(Pulse('lsdome-admin:%s' % uuid.uuid4().hex))
 
@@ -137,7 +137,7 @@ def set_master_volume(vol):
             return False
         os.popen('pactl set-sink-volume %d %d' % (o.index, int(2**16 * vol)))
         return True
-    
+
 # configure the audio settings of the launched content. do this in a thread so as to
 # not block launching -- audio config is not on the critical path so can be done async.
 # the thread attempts configuration for a short timeout then gives up and dies.
@@ -152,7 +152,7 @@ class AudioConfigThread(threading.Thread):
         self.input_volume = input_volume
         self.output_volume = output_volume
         self.audio_out_detect_callback = audio_out_detect_callback
-        
+
     def proc_input_id(self, client):
         return self.get_pulse_id(client.source_output_list(), self.pids_predicate())
 
@@ -161,14 +161,14 @@ class AudioConfigThread(threading.Thread):
 
     def audio_input_id(self, client):
         return self.get_pulse_id(client.source_list(), lambda e: e.name == self.audio_input)
-    
+
     def set_audio_input(self, client, source_id):
         proc = self.proc_input_id(client)
         if proc is None:
             return False
         os.popen('pactl move-source-output %d %d' % (proc, source_id))
         return True
-    
+
     def set_input_volume(self, client, vol):
         # vol 1. = max hardware volume w/o software scaling; >1 allowed
         proc = self.proc_input_id(client)
@@ -187,7 +187,7 @@ class AudioConfigThread(threading.Thread):
 
     def run(self):
         self.run_inline(self.timeout)
-        
+
     def run_inline(self, timeout=0):
         with pulse_ctx() as client:
             tasks = {}
@@ -220,7 +220,7 @@ class AudioConfigThread(threading.Thread):
                 print 'failed to set input to %s' % self.audio_input
             # failure to set output volume not an error because we don't reliably know which content
             # produces audio (we only know audio that we care about)
-            
+
     @staticmethod
     def get_pulse_item(items, pred):
         matches = filter(pred, items)
@@ -236,7 +236,7 @@ class AudioConfigThread(threading.Thread):
     def pids_predicate(self):
         return lambda e: int(e.proplist.get('application.process.id', '0')) in self.pids
 
-    
+
 def terminate(procs):
     """Kill each process in procs"""
     for p in (procs or []):
@@ -267,7 +267,7 @@ def get_desktop_windows(pids, title=None):
         return ' '.join(s.split()).lower()
     def title_match(prefix, window):
         return norm_title(window['title']).startswith(norm_title(prefix))
-    
+
     match = [w for w in windows if w['pid'] in pids]
     if title is not None:
         match = [w for w in (match or windows) if title_match(title, w)]
@@ -279,4 +279,3 @@ def get_process_descendants(pid):
     except psutil.NoSuchProcess:
         return []
     return [root] + root.children(recursive=True)
-
