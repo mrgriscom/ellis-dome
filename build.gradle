@@ -3,6 +3,9 @@ apply plugin: 'application'
 
 mainClassName = "me.lsdo.Driver"
 
+// if you keep seeming to compile against a stale lsdome.jar,
+// remove lsdome-processing/library/ !!
+
 def use_local_lsdome_processing_lib = true
 def local_processing_install = System.getProperty("user.home") + '/processing-3.3.7'
 def local_processing_user_dir = System.getProperty("user.home") + '/sketchbook'
