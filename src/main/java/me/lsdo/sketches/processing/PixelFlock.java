@@ -248,7 +248,7 @@ public class PixelFlock extends PApplet {
 		    for (int y = 0; y < kinect.height; y++) {
 			int i = x + y*kinect.width;
 			int rawDepth = depth[i];
-			if (rawDepth == 0 || rawDepth > depthThresh.get()) {
+			if (KinectDepth.kinectOOB(rawDepth) || rawDepth > depthThresh.get()) {
 			    continue;
 			}
 
@@ -277,7 +277,7 @@ public class PixelFlock extends PApplet {
                                     continue;
                                 }
 				int neighborDepth = depth[nx + ny*kinect.width];
-				if (neighborDepth != 0 && neighborDepth <= depthThresh.get()) {
+				if (!KinectDepth.kinectOOB(neighborDepth) && neighborDepth <= depthThresh.get()) {
 				    numOverThreshNeighbors++;
 				}
 			    }
@@ -324,7 +324,7 @@ public class PixelFlock extends PApplet {
 
 		    double nearThresh = kinectCeiling;
 		    double farThresh = kinectFloor;
-		    double lum = (rawDepth == 0 || rawDepth > 2000 ? 0. : 1. - Math.max(rawDepth - nearThresh, 0.) / (farThresh - nearThresh));
+		    double lum = (KinectDepth.kinectOOB(rawDepth) ? 0. : 1. - Math.max(rawDepth - nearThresh, 0.) / (farThresh - nearThresh));
 		    if (active) {
 			display.pixels[i] = color(0, 100, (int)(100*lum));
 		    } else {

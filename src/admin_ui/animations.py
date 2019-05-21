@@ -1,4 +1,5 @@
 import os
+import os.path
 import launch
 import time
 import threading
@@ -11,6 +12,8 @@ import json
 import psutil
 import settings
 import playlist
+import collections
+from datetime import datetime
 
 # daemon that controls the currently running thing, and responsible for turning play intention into action (choosing a placement, initializing params, etc.)
 
@@ -124,12 +127,15 @@ class ContentInvocation(object):
         self.processes = []
         self.timeout = None
         self.window_id = None
-        self.params = {}
+        self.params = collections.OrderedDict()
 
         # universal params
         if settings.audio_out:
             self.add_param(MasterVolumeParameter(self.manager))
-        
+        self.add_param(QuietModeParameter(self.manager))
+        for p in [p for p in sorted(settings.quiet_hours, key=lambda p: p.start) if not p.expired(datetime.now())]:
+            self.add_param(p.param(self.manager))
+            
     def running(self):
         return bool(self.info)
 
@@ -545,12 +551,26 @@ class MasterVolumeParameter(Parameter):
         launch.set_master_volume(vol)
 
     def _update_value(self, val):
-        vol = launch.get_master_volume()
+        vol = self.current_vol()
         val.update({
-            'value': '%d%%' % (100. * vol),
-            'sliderPos': vol / self.MAX_VOL,
+            'value': '%d%%' % (100. * vol['abs']),
+            'sliderPos': vol['slider'],
         })
+        # this func is only called when broadcasting current value, so cache it here
+        self.last_value = vol['slider']
 
+    # get current volume *without* modifying parameter state
+    def current_vol(self):
+        vol = launch.get_master_volume()
+        return {'abs': vol, 'slider': vol / self.MAX_VOL}
+
+    # update parameter slider if system volume has been changed through other means
+    def reconcile(self):
+        cur_val = self.current_vol()['slider']
+        last_val = getattr(self, 'last_value', cur_val) # avoid race condition if param not fully initialized
+        if abs(cur_val - last_val) > 1e-3:
+            self.manager.broadcast_evt_func(self.param['name'], 'slider', cur_val)
+    
 class OutputTrackParameter(Parameter):
     def param_def(self):
         return {
@@ -571,3 +591,112 @@ class OutputTrackParameter(Parameter):
 
     def _update_value(self, val):
         val['value'] = self.from_bool(self.manager.content.info.get('has_audio', False))
+
+class QuietModeParameter(Parameter):
+    volume_param_id = MasterVolumeParameter(None).param['name']
+
+    # static vars because parameter instance is recreated each time content changes
+    # note this stores slider % rather than abs volume for easy restoring
+    last_volume = None
+    # note: only set last volume during an explicit mute event -- don't cache every volume change,
+    # otherwise, we might restore to just barely-above-mute
+    def set_last_volume(self):
+        QuietModeParameter.last_volume = self.volume_param().current_vol()['slider']
+    last_playlist = None
+    def set_last_playlist(self):
+        QuietModeParameter.last_playlist = (self.manager.playlist, self.manager.default_duration) if self.manager.playlist else None
+    
+    def param_def(self):
+        param = {
+            'name': 'quiet mode',
+            'category': 'quiet',
+            'isEnum': True,
+            'values': ['resume', 'silent', 'silent+dark'] if settings.audio_out else ['resume', 'dark'],
+        }
+        param['captions'] = [{
+            'resume': 'resume normal operation',
+            'silent': 'go silent (still lit)',
+            'dark': 'go dark',
+            'silent+dark': 'go silent & dark',
+        }[val] for val in param['values']]
+        return param
+
+    def handle_input_event(self, type, val):
+        if type != 'set':
+            return
+        if val == 'resume':
+            self.resume_display()
+            self.resume_audio()
+        elif val == 'silent':
+            self.go_silent()
+        elif val == 'dark':
+            self.go_dark()
+        elif val == 'silent+dark':
+            self.go_silent()
+            self.go_dark()
+        else:
+            raise RuntimeError('unrecognized action ' + val)
+            
+    def _update_value(self, val):
+        # never update val because we treat these as action buttons (no state)
+        pass
+
+    def go_silent(self):
+        if settings.audio_out and not self.is_muted():
+            print 'muting (was %.2f)' % self.volume_param().current_vol()['abs']
+            self.set_last_volume()
+            self.manager.broadcast_evt_func(self.volume_param_id, 'slider', 0.)
+
+    def resume_audio(self):
+        if settings.audio_out and self.is_muted() and self.last_volume:
+            print 'resuming audio'
+            self.manager.broadcast_evt_func(self.volume_param_id, 'slider', self.last_volume)
+            
+    def go_dark(self):
+        black = [c for c in playlist.all_content().values() if c.sketch == 'black'][0]
+        # if anything is running (except the black-out sketch, which likely means a duplicate button press, so ignore for idempotence)
+        if self.manager.content.info and self.manager.content.info['name'] != black.name:
+            print 'suspending display'
+            self.set_last_playlist()
+            self.manager.set_playlist(None, 0)
+        # run black sketch regardless (as last frame persists on LEDs)
+        self.manager.play(black, 5)
+        
+    def resume_display(self):
+        # if no playlist running (will supersede one-off content)
+        if not self.manager.playlist and self.last_playlist:
+            print 'resuming display'
+            self.manager.stop_current()
+            self.manager.set_playlist(*self.last_playlist)
+
+    def volume_param(self):
+        # volume parameter should always be present
+        return self.manager.content.params[self.volume_param_id]
+    
+    def is_muted(self):
+        return self.volume_param().current_vol()['abs'] < 1e-3
+
+class QuietPeriodParameter(Parameter):
+    def __init__(self, manager, period):
+        self.period = period
+        Parameter.__init__(self, manager)
+
+    def fmttime(self, dt):
+        return dt.strftime('%a %-m/%-d %H:%M')
+        
+    def param_def(self):
+        return {
+            'name': 'quiet period%s: %s (start %s)' % (' (audio-only)' if not self.period.visual else '', self.period.name or '--', self.fmttime(self.period.start)),
+            'category': 'quiet',
+            'isEnum': True,
+            'values': ['no', 'yes'],
+            'captions': ['resume at %s' % self.fmttime(self.period.end), 'hold (require manual resume)'],
+        }
+
+    def handle_input_event(self, type, val):
+        if type != 'set':
+            return
+        self.period.held = self.to_bool(val)
+
+    def _update_value(self, val):
+        val['value'] = self.from_bool(self.period.held)

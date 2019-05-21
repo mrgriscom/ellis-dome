@@ -6,6 +6,7 @@ import settings
 import animations
 import playlist
 import launch
+import quiet
 
 from tornado.ioloop import IOLoop
 import tornado.web as web
@@ -17,7 +18,7 @@ from optparse import OptionParser
 import logging
 import json
 import zmq
-from datetime import datetime
+from datetime import datetime, timedelta
 import threading
 import Queue
 import time
@@ -288,44 +289,81 @@ class QuietHoursThread(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.up = True
-        self.last_volume = None
-        self.param_id = animations.MasterVolumeParameter(None).param['name']
-        self.validate_quiet_hours()
+        self.last_run = None
+        self.param_id = animations.QuietModeParameter(None).param['name']
 
     def terminate(self):
         self.up = False
 
     def run(self):
         while self.up:
-            param = self.get_param()
-            get_val = lambda: param.get_value()['sliderPos']
+            now = datetime.now()
             
-            quiet = self.is_quiet_hours(datetime.now())
-            muted = get_val() < 1e-3
-            if quiet != muted:
-                if quiet:
-                    print 'muting for start of quiet hours', datetime.now()
-                    self.last_volume = get_val()
-                    broadcast_event(self.param_id, 'slider', 0.)
-                else:
-                    print 'unmuting for end of quiet hours', datetime.now()
-                    broadcast_event(self.param_id, 'slider', self.last_volume)
-                
+            # a bit out of place, but this is actually the easiest place to handle this
+            self.get_param().volume_param().reconcile()
+
+            self.update_daytime_quiet_hours(now)
+
+            periods = quiet.GoDarkSet(settings.quiet_hours)
+            def exec_event(type, start_action, end_action):
+                ev, skipped = periods.latest_event(type, now, self.last_run)
+                if skipped:
+                    print 'skipping %s of %s quiet period [%s] due to %s' % (skipped['type'], type, skipped['time'], skipped['status'])
+                if ev:
+                    if self.last_run or ev['type'] == 'start':
+                        print now, '%s quiet period %s [%s]' % (type, ev['type'], ev['time'])
+                    action = {'start': start_action, 'end': end_action}[ev['type']]
+                    getattr(self.get_param(), action)()
+            exec_event('audio', 'go_silent', 'resume_audio')
+            exec_event('visual', 'go_dark', 'resume_display')
+
+            # remove param once expired. active periods are regenerated on content reload,
+            # but due to the nature of quiet hours, running content won't be changing often.
+            # (note that param won't disappear from open UI sessions until refresh)
+            # cache ref to dict to avoid race conditions if content changes
+            cur_params = manager.content.params
+            for k, v in cur_params.items():  # no iteritems due to deletion during iteration
+                if isinstance(v, animations.QuietPeriodParameter) and v.period.expired(now):
+                    del cur_params[k]
+                        
+            self.last_run = now
             time.sleep(1.)
 
-    def flatten_quiet_hours(self):
-        return list(itertools.chain(*sorted(settings.quiet_hours)))
-            
-    def validate_quiet_hours(self):
-        assert len(self.flatten_quiet_hours()) == len(set(self.flatten_quiet_hours()))
-        assert self.flatten_quiet_hours() == sorted(self.flatten_quiet_hours())
-            
-    def is_quiet_hours(self, t):
-        return bisect.bisect_right(self.flatten_quiet_hours(), t) % 2 == 1
+    def update_daytime_quiet_hours(self, now):
+        if not settings.auto_quiet_daytime:
+            return
+        import astral
+
+        def to_local_time(utc):
+            return datetime.fromtimestamp((utc.replace(tzinfo=None) - datetime.utcfromtimestamp(0)).total_seconds())
+
+        days_in_advance = 1
+        d = self.last_run.date() + timedelta(days=1 + days_in_advance) if self.last_run else now.date()
+        cutoff = now.date() + timedelta(days=days_in_advance)
+        while d <= cutoff:
+            try:
+                suninfo = astral.Astral().sun_utc(d, *settings.latlon)
+                sunrise = to_local_time(suninfo['sunrise'])
+                sunset = to_local_time(suninfo['sunset'])
+                start = sunrise - timedelta(minutes=getattr(settings, 'mins_before_sunrise', 0))
+                end = sunset + timedelta(minutes=getattr(settings, 'mins_after_sunset', 0))
+                if end > start:
+                    #print 'adding daylight off period %s to %s' % (start, end)
+                    self.add_period(quiet.GoDark(start, end-start, name='daylight hours'))
+            except astral.AstralError:
+                # arctic operation not supported
+                pass
+            d += timedelta(days=1)
+
+    def add_period(self, p):
+        settings.quiet_hours.append(p)
+        # will be out of order in the list until content change; nothing we can do about this... meh
+        manager.content.add_param(p.param(manager))
             
     def get_param(self):
-        # volume parameter should always be present
+        # quiet mode parameter is a universal param -- should always be present
         return manager.content.params[self.param_id]
+
     
 pending_placement_save = None
 def start_placement_save(name):

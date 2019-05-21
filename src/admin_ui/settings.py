@@ -1,6 +1,7 @@
 import os.path
 import ConfigParser
-from datetime import datetime
+from datetime import datetime, timedelta
+from quiet import GoDark
 
 py_root = os.path.dirname(os.path.abspath(__file__))
 repo_root = reduce(lambda a, b: os.path.dirname(a), xrange(2), py_root)
@@ -25,18 +26,29 @@ load_java_settings(os.path.join(repo_root, 'config.properties'))
 
 # true if the installation has speakers
 audio_out = True
-# designated quiet times when the audio will be forcibly muted (and can't be
-# overridden). mainly here for when the dome will be unattended. less useful
-# for silent burns as those don't have a defined end time due to conditions
-# and delays, but those mostly occur near sunset (when we'll be present) or
-# sunrise (when we don't care about turning sound back on after).
-# also, this has no effect on generator noise...
+
+# designated quiet times to automatically turn off just audio or both audio
+# and visuals. shut-off/re-enable happens once at the designated time (or first
+# time the system is running afterward if offline during the designated time).
+# audio/visuals can be re-enabled manually at any time during the window.
+# re-enable at end of window will not happen if there is an overlapping quiet
+# window. automatic re-enable can also be disabled in the UI, such as if a burn
+# is running very late.
+# note: this cannot turn off the generator but disabling lights should reduce
+# generator load and noise
 quiet_hours = [
-    (datetime(2019, 4, 29, 7, 0), datetime(2019, 4, 29, 11, 0)),
-    (datetime(2019, 4, 30, 7, 0), datetime(2019, 4, 30, 11, 0)),
-    (datetime(2019, 5,  1, 7, 0), datetime(2019, 5,  1, 11, 0)),
-    (datetime(2019, 5,  2, 7, 0), datetime(2019, 5,  2, 11, 0)),
+    GoDark(datetime(2019, 4, 29,  7,  0), timedelta(hours=4), just_audio=True, name='mon-thu quiet hours'),
+    GoDark(datetime(2019, 4, 30,  7,  0), timedelta(hours=4), just_audio=True, name='mon-thu quiet hours'),
+    GoDark(datetime(2019, 5,  1,  7,  0), timedelta(hours=4), just_audio=True, name='mon-thu quiet hours'),
+    GoDark(datetime(2019, 5,  2,  7,  0), timedelta(hours=4), just_audio=True, name='mon-thu quiet hours'),
+    GoDark(datetime(2019, 5,  1, 17, 30), timedelta(hours=3), name='!xam burn'),
+    GoDark(datetime(2019, 5,  5, 19, 30), timedelta(hours=3), name='temple burn', just_audio=True),
 ]
+# auto-quiet (both audio and visuals) from sunrise to sunset.
+auto_quiet_daytime = True
+mins_before_sunrise = 10
+mins_after_sunset = -45 # re-enable before sunset since we usually get it running again around then
+latlon = (-32.327, 19.749)
 
 kinect = False
 # kinect depth value for the closest distance we care about (used for cutting off color ramps, etc.)
