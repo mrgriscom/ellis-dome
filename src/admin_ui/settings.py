@@ -37,12 +37,12 @@ audio_out = True
 # note: this cannot turn off the generator but disabling lights should reduce
 # generator load and noise
 quiet_hours = [
-    GoDark(datetime(2019, 4, 29, 7, 0), timedelta(hours=4), just_audio=True, name='mon-thu quiet hours'),
-    GoDark(datetime(2019, 4, 30, 7, 0), timedelta(hours=4), just_audio=True, name='mon-thu quiet hours'),
-    GoDark(datetime(2019, 5,  1, 7, 0), timedelta(hours=4), just_audio=True, name='mon-thu quiet hours'),
-    GoDark(datetime(2019, 5,  2, 7, 0), timedelta(hours=4), just_audio=True, name='mon-thu quiet hours'),
-    GoDark(datetime(2019, 5, 1, 17, 30), timedelta(hours=3), name='!xam burn'),
-    GoDark(datetime(2019, 5, 5, 19, 30), timedelta(hours=3), name='temple burn', just_audio=True),
+    GoDark(datetime(2019, 4, 29,  7,  0), timedelta(hours=4), just_audio=True, name='mon-thu quiet hours'),
+    GoDark(datetime(2019, 4, 30,  7,  0), timedelta(hours=4), just_audio=True, name='mon-thu quiet hours'),
+    GoDark(datetime(2019, 5,  1,  7,  0), timedelta(hours=4), just_audio=True, name='mon-thu quiet hours'),
+    GoDark(datetime(2019, 5,  2,  7,  0), timedelta(hours=4), just_audio=True, name='mon-thu quiet hours'),
+    GoDark(datetime(2019, 5,  1, 17, 30), timedelta(hours=3), name='!xam burn'),
+    GoDark(datetime(2019, 5,  5, 19, 30), timedelta(hours=3), name='temple burn', just_audio=True),
 ]
 # auto-quiet (both audio and visuals) from sunrise to sunset.
 auto_quiet_daytime = True

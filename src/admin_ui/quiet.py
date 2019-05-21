@@ -19,10 +19,17 @@ class GoDark(object):
         return dt >= self.end
     
     def events(self, type, all_periods):
+        def _event(which, status):
+            return {'time': getattr(self, which), 'type': which, 'period': self, 'status': status}
+        
         if getattr(self, type):
-            yield (self.start, 'start', self)
-            if not self.held and not self.end_overlaps_other_period(type, all_periods):
-                yield (self.end, 'end', self)
+            yield _event('start', 'active')
+            end_status = 'active'
+            if self.held:
+                end_status = 'hold'
+            elif self.end_overlaps_other_period(type, all_periods):
+                end_status = 'overlapping period'
+            yield _event('end', end_status)
 
     def end_overlaps_other_period(self, type, all_periods):
         assert getattr(self, type)
@@ -39,11 +46,17 @@ class GoDarkSet(object):
 
     def events(self, type):
         # ensure in case of stard/end at same instant, prev period's end event comes before next period's start event
-        sort_key=lambda e: (e[0], ['end', 'start'].index(e[1]))
-        return sorted(itertools.chain(*(p.events(type, self.periods) for p in self.periods)))
+        sort_key=lambda e: (e['time'], ['end', 'start'].index(e['type']))
+        return sorted(itertools.chain(*(p.events(type, self.periods) for p in self.periods)), key=sort_key)
 
+    # return most recent event to process (excluding events that should be skipped), also return the most recent skipped event if it that is more recent
     def latest_event(self, type, now, last):
-        events = [e for e in self.events(type) if e[0] <= now and (e[0] > last if last else True)]
-        return events[-1] if events else None
+        def time_filter(evs):
+            filtered = [e for e in evs if e['time'] <= now and (e['time'] > last if last else True)]
+            return filtered[-1] if filtered else None
+        events = self.events(type)
+        latest = time_filter(events)
+        latest_active = time_filter([e for e in events if e['status'] == 'active'])
+        return latest_active, (latest if latest != latest_active else None)
 
         

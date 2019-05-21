@@ -306,17 +306,20 @@ class QuietHoursThread(threading.Thread):
 
             periods = quiet.GoDarkSet(settings.quiet_hours)
             def exec_event(type, start_action, end_action):
-                ev = periods.latest_event(type, now, self.last_run)
+                ev, skipped = periods.latest_event(type, now, self.last_run)
+                if skipped:
+                    print 'skipping %s of %s quiet period [%s] due to %s' % (skipped['type'], type, skipped['time'], skipped['status'])
                 if ev:
-                    print now, '%s quiet period %s [%s]' % (type, ev[1], getattr(ev[2], ev[1]))
-                    action = {'start': start_action, 'end': end_action}[ev[1]]
+                    if self.last_run or ev['type'] == 'start':
+                        print now, '%s quiet period %s [%s]' % (type, ev['type'], ev['time'])
+                    action = {'start': start_action, 'end': end_action}[ev['type']]
                     getattr(self.get_param(), action)()
             exec_event('audio', 'go_silent', 'resume_audio')
             exec_event('visual', 'go_dark', 'resume_display')
 
             # remove param once expired. active periods are regenerated on content reload,
-            # but due to the nature of quiet hours, running content won't be changing often
-            # (param won't disappear from open UI sessions until refresh)
+            # but due to the nature of quiet hours, running content won't be changing often.
+            # (note that param won't disappear from open UI sessions until refresh)
             # cache ref to dict to avoid race conditions if content changes
             cur_params = manager.content.params
             for k, v in cur_params.items():  # no iteritems due to deletion during iteration
@@ -345,7 +348,7 @@ class QuietHoursThread(threading.Thread):
                 start = sunrise - timedelta(minutes=getattr(settings, 'mins_before_sunrise', 0))
                 end = sunset + timedelta(minutes=getattr(settings, 'mins_after_sunset', 0))
                 if end > start:
-                    print 'adding daylight off period %s to %s' % (start, end)
+                    #print 'adding daylight off period %s to %s' % (start, end)
                     self.add_period(quiet.GoDark(start, end-start, name='daylight hours'))
             except astral.AstralError:
                 # arctic operation not supported

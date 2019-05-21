@@ -1,4 +1,5 @@
 import os
+import os.path
 import launch
 import time
 import threading
@@ -592,8 +593,9 @@ class OutputTrackParameter(Parameter):
         val['value'] = self.from_bool(self.manager.content.info.get('has_audio', False))
 
 class QuietModeParameter(Parameter):
-    # static vars because parameter instance is recreated each time content changes
     volume_param_id = MasterVolumeParameter(None).param['name']
+
+    # static vars because parameter instance is recreated each time content changes
     # note this stores slider % rather than abs volume for easy restoring
     last_volume = None
     # note: only set last volume during an explicit mute event -- don't cache every volume change,
@@ -641,7 +643,7 @@ class QuietModeParameter(Parameter):
 
     def go_silent(self):
         if settings.audio_out and not self.is_muted():
-            print 'muting'
+            print 'muting (was %.2f)' % self.volume_param().current_vol()['abs']
             self.set_last_volume()
             self.manager.broadcast_evt_func(self.volume_param_id, 'slider', 0.)
 
