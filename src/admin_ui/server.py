@@ -136,6 +136,24 @@ class WebsocketHandler(AuthenticationMixin, websocket.WebSocketHandler):
             msg = {'type': key, key: msg[key]}
         self.write_message(json.dumps(msg))
 
+        
+class SuicideHandler(AuthenticationMixin, web.RequestHandler):
+    @web.authenticated
+    def get(self):
+        self.render('kill.html')
+
+    @web.authenticated
+    def post(self):
+        # don't orphan running content (not necessary once we can persist state (content PIDs, etc.) across runs)
+        manager.stop_all()
+        time.sleep(3.)  # give time to terminate content
+
+        pid = os.getpid()
+        print 'self-terminating process %d' % pid
+        psutil.Process(pid).kill()
+
+        # no response returned
+        
 keepalive_timeout = 5.
 class ButtonPressManager(threading.Thread):
     def __init__(self):
@@ -454,6 +472,7 @@ if __name__ == "__main__":
         (r'/', MainHandler),
         web.URLSpec('/login', LoginHandler, name='login'),
         (r'/game(/.*)?', GamesHandler),
+        (r'/suicide', SuicideHandler),
         (r'/socket/main', WebsocketHandler, {'playlists': playlists, 'get_content': lambda: contents}),
         (r'/socket/game/(.*)', WebsocketHandler, {'get_content': lambda query: playlist.load_games(query)}),
         (r'/(.*)', web.StaticFileHandler, {'path': web_path('static')}),
