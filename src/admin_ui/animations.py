@@ -170,7 +170,13 @@ class ContentInvocation(object):
         
     def pids(self):
         return [p.pid for p in (self.processes or [])]
-        
+
+# sketch params whose value should persist across sketches
+# maps: param_name -> sketch config property name
+sticky_params = {
+    'brightness': 'max_brightness',
+}
+    
 class PlayManager(threading.Thread):
     def __init__(self, broadcast_evt_func, callback_wrapper=None):
         threading.Thread.__init__(self)
@@ -188,6 +194,7 @@ class PlayManager(threading.Thread):
         self.audio_input = default_audio_input()
         self.placement_mode = None
         self.locked_placement_ix = None
+        self.sticky_param_vals = {}
         
         self.placements = load_placements()
         self.placement_modes = sorted(set(itertools.chain(*(p.modes for p in self.placements))) - set(['custom']))
@@ -207,6 +214,9 @@ class PlayManager(threading.Thread):
             self.subscribers.remove(s)
 
     def notify(self, msg):
+        if msg.get('type') == 'param_value' and msg['name'] in sticky_params:
+            self.sticky_param_vals[msg['name']] = msg['value']
+        
         # need this to capture the subscriber and decouple it from the loop variable
         def notify_func(s):
             return lambda: s.notify(msg)
@@ -281,6 +291,9 @@ class PlayManager(threading.Thread):
         params = dict(settings.default_sketch_properties)
         params.update(content.params)
         self.content.info['params'] = params
+
+        for k, v in self.sticky_param_vals.iteritems():
+            params[sticky_params[k]] = v
 
         placement = None
         if self.locked_placement_ix is not None:
