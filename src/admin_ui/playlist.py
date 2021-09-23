@@ -91,7 +91,7 @@ def pixel_exact(p):
 # like pixel_exact, but stretch to fit full canvas (so not 'exact', but still 'aligned')
 def align_but_stretch(p):
     return getattr(p, 'rot', 0) == 0 and p.stretch
-    
+
 _all_content = None
 def all_content():
     global _all_content
@@ -108,6 +108,7 @@ def all_content():
             Content('moire'),
             Content('rings'),
             Content('tube'),
+            #Content('screencast', 'vc', manual=True, cmdline='ping 4.2.2.1',  params={'title': 'hangouts'}, has_audio=True),
             Content('twinkle'),
             Content('fft', sound_reactive=True),
             Content('pixelflock', sound_reactive=True, sound_required=False, kinect_enabled=True, kinect_required=False),
@@ -117,6 +118,8 @@ def all_content():
                     server_side_parameters=projectm_parameters(),
                     post_launch=lambda manager: projectm_control(manager, 'next'), # get off the default pattern
             ),
+            Content('screencast', 'glava', cmdline='glava', sound_reactive=True, params={'title': 'glava'}),
+            Content('screencast', 'matrix', cmdline='/usr/lib/xscreensaver/xmatrix -no-trace -delay 25000', params={'title': 'xmatrix'}),
             Content('stream', 'hdmi-in', manual=True, stretch_aspect=True, params={
                 'camera': 'FHD Capture: FHD Capture',
             }),
@@ -236,7 +239,7 @@ def filter_games_favorites(all_games):
     with open(settings.rom_favorites) as f:
         favs = set(os.path.splitext(g.strip())[0] for g in f.readlines())
     return dict((k, v) for k, v in all_games.iteritems() if k in favs)
-        
+
 class Playlist(object):
     def __init__(self, name, choices):
         self.name = name
