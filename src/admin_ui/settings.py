@@ -25,7 +25,7 @@ def load_java_settings(path):
 load_java_settings(os.path.join(repo_root, 'config.properties'))
 
 # true if the installation has speakers
-audio_out = True
+audio_out = False
 
 # designated quiet times to automatically turn off just audio or both audio
 # and visuals. shut-off/re-enable happens once at the designated time (or first
@@ -36,7 +36,8 @@ audio_out = True
 # is running very late.
 # note: this cannot turn off the generator but disabling lights should reduce
 # generator load and noise
-quiet_hours = [
+quiet_hours = []
+"""
     GoDark(datetime(2019, 4, 29,  7,  0), timedelta(hours=4), just_audio=True, name='mon-thu quiet hours'),
     GoDark(datetime(2019, 4, 30,  7,  0), timedelta(hours=4), just_audio=True, name='mon-thu quiet hours'),
     GoDark(datetime(2019, 5,  1,  7,  0), timedelta(hours=4), just_audio=True, name='mon-thu quiet hours'),
@@ -44,19 +45,20 @@ quiet_hours = [
     GoDark(datetime(2019, 5,  1, 17, 30), timedelta(hours=3), name='!xam burn'),
     GoDark(datetime(2019, 5,  5, 19, 30), timedelta(hours=3), name='temple burn', just_audio=True),
 ]
+"""
 # auto-quiet (both audio and visuals) from sunrise to sunset.
 auto_quiet_daytime = True
 mins_before_sunrise = 10
 mins_after_sunset = -45 # re-enable before sunset since we usually get it running again around then
-latlon = (-32.327, 19.749)
+latlon = (-32.52, 19.96)
 
 kinect = False
 # kinect depth value for the closest distance we care about (used for cutting off color ramps, etc.)
-kinect_ceiling = 750
+kinect_ceiling = 580 #750
 # kinect depth value for the farthest distance we care about, typically the ground
-kinect_floor = 960
+kinect_floor = 980 #960
 # kinect depth threshold to trigger things, typically reachable by raising a limb from kinect_floor
-kinect_activation = 850
+kinect_activation = 620 #850
 
 media_path = '/home/drew/lsdome-media/'
 roms_path = '/home/drew/roms/'
