@@ -31,7 +31,7 @@ class Placement(object):
         'yo_poststretch': 'post-stretch y-offset',
     }
     scale_params = ['scale', 'xscale', 'yscale']
-    
+
     def __init__(self, config):
         self.geometry = config['geometry']
         self.name = config['name']
@@ -54,7 +54,7 @@ class Placement(object):
 
     def fullname(self):
         return ('[custom] ' if self.custom else '') + '%s, %s' % ('stretch aspect' if self.stretch else ('preserve aspect (%s)' % self.aspect_text), self.name)
-        
+
     def to_json(self, ix):
         return {
             'name': self.fullname(),
@@ -64,7 +64,7 @@ class Placement(object):
     @property
     def is_1to1(self):
         return not self.stretch and abs(self.ideal_aspect_ratio - 1.) < .01
-    
+
     def filter(self, content, mode):
         if content.placement_filter:
             return content.placement_filter(self)
@@ -96,7 +96,7 @@ class Placement(object):
             broadcast_func(param_name, 'set', getattr(self, field, default_val))
         for k, v in self.geometry_params.iteritems():
             broadcast_func(k, 'set', v)
-        
+
 def load_placements(path=None):
     placements_config_path = os.path.join(settings.py_root, 'placements.csv')
     if path is None:
@@ -135,7 +135,7 @@ class ContentInvocation(object):
         self.add_param(QuietModeParameter(self.manager))
         for p in [p for p in sorted(settings.quiet_hours, key=lambda p: p.start) if not p.expired(datetime.now())]:
             self.add_param(p.param(self.manager))
-            
+
     def running(self):
         return bool(self.info)
 
@@ -145,7 +145,7 @@ class ContentInvocation(object):
         yield {'type': 'params', 'params': [p.param for p in self.params.values()], 'invocation': self.uuid}
         for p in self.params.values():
             yield p.get_value()
-        
+
     def notify(self, sub):
         for msg in self._bulk_notify_msgs():
             sub.notify(msg)
@@ -153,7 +153,7 @@ class ContentInvocation(object):
     def notify_all(self):
         for msg in self._bulk_notify_msgs():
             self.manager.notify(msg)
-            
+
     def set_timeout(self, timeout):
         self.timeout = timeout
         self.manager.notify({'duration': self.timeout})
@@ -162,21 +162,21 @@ class ContentInvocation(object):
     def update_info(self, kv):
         self.info.update(kv)
         self.manager.notify({'content': self.info})
-        
+
     def add_param(self, param):
         self.params[param.param['name']] = param
         self.manager.notify({'type': 'params', 'params': [param.param], 'invocation': self.uuid})
         self.manager.notify(param.get_value())
-        
+
     def pids(self):
         return [p.pid for p in (self.processes or [])]
 
 # sketch params whose value should persist across sketches
 # maps: param_name -> sketch config property name
 sticky_params = {
-    'brightness': 'max_brightness',
+    'luminance': 'max_brightness',
 }
-    
+
 class PlayManager(threading.Thread):
     def __init__(self, broadcast_evt_func, callback_wrapper=None):
         threading.Thread.__init__(self)
@@ -186,7 +186,7 @@ class PlayManager(threading.Thread):
         self.lock = threading.Lock()
         self.callback_wrapper = callback_wrapper
         self.broadcast_evt_func = broadcast_evt_func
-        
+
         self.content = ContentInvocation(self)
         self.playlist = None
         self.default_duration = None
@@ -195,10 +195,10 @@ class PlayManager(threading.Thread):
         self.placement_mode = None
         self.locked_placement_ix = None
         self.sticky_param_vals = {}
-        
+
         self.placements = load_placements()
         self.placement_modes = sorted(set(itertools.chain(*(p.modes for p in self.placements))) - set(['custom']))
-        
+
     def subscribe(self, s):
         with self.lock:
             self.subscribers.append(s)
@@ -208,7 +208,7 @@ class PlayManager(threading.Thread):
             s.notify({'locked_placement': self.locked_placement_ix})
             # ping java world and force re-broadcast of its params
             self.broadcast_evt_func('_paraminfo', 'set')
-            
+
     def unsubscribe(self, s):
         with self.lock:
             self.subscribers.remove(s)
@@ -216,16 +216,16 @@ class PlayManager(threading.Thread):
     def notify(self, msg):
         if msg.get('type') == 'param_value' and msg['name'] in sticky_params:
             self.sticky_param_vals[msg['name']] = msg['value']
-        
+
         # need this to capture the subscriber and decouple it from the loop variable
         def notify_func(s):
             return lambda: s.notify(msg)
-            
+
         with self.lock:
             for s in self.subscribers:
                 wrapper = self.callback_wrapper or (lambda func: func())
                 wrapper(notify_func(s))
-            
+
     # play content immediately, after which normal playlist will resume
     def play(self, content, duration):
         self.queue.put(lambda: self._play_content(content, duration))
@@ -237,13 +237,13 @@ class PlayManager(threading.Thread):
 
     def extend_duration(self, duration, relnow=False, from_sketch=False):
         self.queue.put(lambda: self._extend_duration(duration, relnow, from_sketch))
-        
+
     def set_placement_mode(self, mode):
         self.queue.put(lambda: self._set_placement_mode(mode))
 
     def lock_placement(self, placement_ix):
         self.queue.put(lambda: self._lock_placement(placement_ix))
-        
+
     # terminate the current content; playlist will start something else, if loaded
     def stop_current(self):
         self.queue.put(lambda: self._stop_playback())
@@ -260,7 +260,7 @@ class PlayManager(threading.Thread):
 
     def add_placement(self, config):
         self.queue.put(lambda: self.placements.append(Placement(config)))
-        
+
     def terminate(self):
         self.up = False
 
@@ -280,7 +280,7 @@ class PlayManager(threading.Thread):
 
             self.update_background_audio()
         self._stop_all()
-        
+
     def _play_content(self, content, duration=None):
         if self.content.running():
             self._stop_playback()
@@ -310,7 +310,7 @@ class PlayManager(threading.Thread):
 
         for param_factory in content.server_side_parameters:
             self.content.add_param(param_factory(self))
-        
+
         audio_config = {}
         if settings.audio_out:
             if not content.has_audio:
@@ -339,7 +339,7 @@ class PlayManager(threading.Thread):
             if settings.kinect:
                 for kp in ('kinect_ceiling', 'kinect_floor', 'kinect_activation'):
                     params[kp] = getattr(settings, kp)
-            
+
         if content.sketch == 'screencast':
             gui_invocation = launch.launch_screencast(content.cmdline, params)
             self.content.processes = gui_invocation[1]
@@ -357,7 +357,7 @@ class PlayManager(threading.Thread):
                     params['repeat'] = False
                     self.content.info['sketch_controls_duration'] = True
                     duration = settings.sketch_controls_duration_failsafe_timeout
-                    
+
             p = launch.launch_sketch(content.sketch, params)
             self.content.processes = [p]
         launch.AudioConfigThread(self.content.pids(), **audio_config).start()
@@ -371,7 +371,7 @@ class PlayManager(threading.Thread):
 
     def get_candidate_placements(self, content):
         return [p for p in self.placements if p.filter(content, self.placement_mode)]
-            
+
     def _set_playlist(self, playlist, duration=None):
         self.playlist = playlist
         self.default_duration = duration
@@ -384,7 +384,7 @@ class PlayManager(threading.Thread):
         else:
             json = None
         return {'playlist': json}
-        
+
     def _set_placement_mode(self, mode):
         self.placement_mode = mode
         self.notify(self._placement_mode_json())
@@ -401,18 +401,18 @@ class PlayManager(threading.Thread):
     def _lock_placement(self, placement_ix):
         self.locked_placement_ix = placement_ix
         self.notify({'locked_placement': self.locked_placement_ix})
-    
+
     def _extend_duration(self, duration, relnow, from_sketch):
         if from_sketch != self.content.info.get('sketch_controls_duration', False):
             return
-        
+
         if self.content.timeout:
             if duration is None:
                 self.content.set_timeout(None)
             else:
                 base = time.time() if relnow else self.content.timeout
                 self.content.set_timeout(base + duration)
-            
+
     def _stop_playback(self):
         launch.terminate(self.content.processes)
         self.content = ContentInvocation(self)
@@ -433,11 +433,11 @@ class PlayManager(threading.Thread):
             return
         param.handle_input_event(type, val)
         self.notify(param.get_value())
-            
+
     def update_background_audio(self):
         if not settings.audio_out:
             return
-        
+
         play_background_audio = not self.content.info.get('has_audio', False)
         if play_background_audio != self.background_audio_running:
             background_audio(play_background_audio)
@@ -448,7 +448,7 @@ def default_audio_input():
     monitors = [s for s in sources if 'monitor' in s]
     mics = [s for s in sources if s not in monitors]
     return (monitors if settings.audio_out else mics)[0]
-    
+
 def background_audio(enable):
     try:
         audio_player_instance = [p for p in psutil.process_iter() if p.name() == 'audacious'][0]
@@ -458,14 +458,14 @@ def background_audio(enable):
     # do nothing if media player not already running, otherwise we may unintentionally launch it
     if not audio_player_instance:
         return
-    
+
     command = 'play' if enable else 'pause'
     os.popen('audacious --%s &' % command)
 
-    
+
 # duplicate the java Parameter API so we can add UI parameters strictly from the server code.
 # this implementation is much more stripped down
-    
+
 class Parameter(object):
     def __init__(self, manager):
         self.manager = manager
@@ -473,7 +473,7 @@ class Parameter(object):
 
     def param_def(self):
         raise RuntimeError('abstract method')
-        
+
     def handle_input_event(self, type, val):
         raise RuntimeError('abstract method')
 
@@ -486,7 +486,7 @@ class Parameter(object):
         return val
 
     def _update_value(self, val):
-        raise RuntimeError('abstract method')        
+        raise RuntimeError('abstract method')
 
     @staticmethod
     def to_bool(val):
@@ -495,7 +495,7 @@ class Parameter(object):
     @staticmethod
     def from_bool(val):
         return 'yes' if val else 'no'
-    
+
 class AudioSensitivityParameter(Parameter):
     MIN_SENS = .3
     MAX_SENS = 3.
@@ -503,7 +503,7 @@ class AudioSensitivityParameter(Parameter):
     def __init__(self, manager, sens):
         Parameter.__init__(self, manager)
         self.value = sens
-    
+
     def param_def(self):
         return {
             'name': 'audio sensitivity',
@@ -583,7 +583,7 @@ class MasterVolumeParameter(Parameter):
         last_val = getattr(self, 'last_value', cur_val) # avoid race condition if param not fully initialized
         if abs(cur_val - last_val) > 1e-3:
             self.manager.broadcast_evt_func(self.param['name'], 'slider', cur_val)
-    
+
 class OutputTrackParameter(Parameter):
     def param_def(self):
         return {
@@ -618,7 +618,7 @@ class QuietModeParameter(Parameter):
     last_playlist = None
     def set_last_playlist(self):
         QuietModeParameter.last_playlist = (self.manager.playlist, self.manager.default_duration) if self.manager.playlist else None
-    
+
     def param_def(self):
         param = {
             'name': 'quiet mode',
@@ -649,7 +649,7 @@ class QuietModeParameter(Parameter):
             self.go_dark()
         else:
             raise RuntimeError('unrecognized action ' + val)
-            
+
     def _update_value(self, val):
         # never update val because we treat these as action buttons (no state)
         pass
@@ -664,7 +664,7 @@ class QuietModeParameter(Parameter):
         if settings.audio_out and self.is_muted() and self.last_volume:
             print 'resuming audio'
             self.manager.broadcast_evt_func(self.volume_param_id, 'slider', self.last_volume)
-            
+
     def go_dark(self):
         black = [c for c in playlist.all_content().values() if c.sketch == 'black'][0]
         # if anything is running (except the black-out sketch, which likely means a duplicate button press, so ignore for idempotence)
@@ -674,7 +674,7 @@ class QuietModeParameter(Parameter):
             self.manager.set_playlist(None, 0)
         # run black sketch regardless (as last frame persists on LEDs)
         self.manager.play(black, 5)
-        
+
     def resume_display(self):
         # if no playlist running (will supersede one-off content)
         if not self.manager.playlist and self.last_playlist:
@@ -685,7 +685,7 @@ class QuietModeParameter(Parameter):
     def volume_param(self):
         # volume parameter should always be present
         return self.manager.content.params[self.volume_param_id]
-    
+
     def is_muted(self):
         return self.volume_param().current_vol()['abs'] < 1e-3
 
@@ -696,7 +696,7 @@ class QuietPeriodParameter(Parameter):
 
     def fmttime(self, dt):
         return dt.strftime('%a %-m/%-d %H:%M')
-        
+
     def param_def(self):
         return {
             'name': 'quiet period%s: %s (start %s)' % (' (audio-only)' if not self.period.visual else '', self.period.name or '--', self.fmttime(self.period.start)),
