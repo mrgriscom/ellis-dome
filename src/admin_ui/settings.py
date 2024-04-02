@@ -76,11 +76,6 @@ default_sketch_properties = {
 
 opc_simulator_path = '/home/drew/dev/lsdome/openpixelcontrol/bin/gl_server'
 
-# in some installs tornado callbacks don't seem to work correctly; set this
-# to true to disable them (this could in theory break things, but in practice
-# it seems to work fine).
-tornado_callbacks_hack = False
-
 enable_security = True
 # if access is compromised, change BOTH of these (password for new logins, secret to invalidate existing)
 login_password = None

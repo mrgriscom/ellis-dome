@@ -49,12 +49,12 @@ class AuthenticationMixin(object):
             else:
                 handler(self, *args)
         return _wrap
-    
+
 class MainHandler(AuthenticationMixin, web.RequestHandler):
     @web.authenticated
     def get(self):
         self.render('main.html', onload='init', geom=settings.geometry, default_duration=settings.default_duration/60.)
-        
+
 class GamesHandler(AuthenticationMixin, web.RequestHandler):
     @web.authenticated
     def get(self, suffix):
@@ -65,8 +65,8 @@ class GamesHandler(AuthenticationMixin, web.RequestHandler):
 class LoginHandler(BasicAuthMixin, web.RequestHandler):
     def prepare(self):
         # torpedo request before there's a chance of sending passwords in the clear
-        assert settings.enable_security        
-    
+        assert settings.enable_security
+
     @auth_required(realm='Protected', auth_func=lambda username: settings.login_password)
     def get(self):
         self.set_secure_cookie(ID_COOKIE, VALID_USER, path='/')
@@ -81,7 +81,7 @@ class WebsocketHandler(AuthenticationMixin, websocket.WebSocketHandler):
     def get(self, *args):
         # intercept and authenticate before websocket setup / protocol switch
         super(WebsocketHandler, self).get(*args)
-        
+
     def open(self, *args):
         self.contents = self.get_content(*args)
 
@@ -136,8 +136,8 @@ class WebsocketHandler(AuthenticationMixin, websocket.WebSocketHandler):
             msg = {'type': key, key: msg[key]}
         self.write_message(json.dumps(msg))
 
-        
-class SuicideHandler(AuthenticationMixin, web.RequestHandler):
+
+class RebootHandler(AuthenticationMixin, web.RequestHandler):
     @web.authenticated
     def get(self):
         self.render('kill.html')
@@ -153,7 +153,7 @@ class SuicideHandler(AuthenticationMixin, web.RequestHandler):
         psutil.Process(pid).kill()
 
         # no response returned
-        
+
 keepalive_timeout = 5.
 class ButtonPressManager(threading.Thread):
     def __init__(self):
@@ -316,7 +316,7 @@ class QuietHoursThread(threading.Thread):
     def run(self):
         while self.up:
             now = datetime.now()
-            
+
             # a bit out of place, but this is actually the easiest place to handle this
             self.get_param().volume_param().reconcile()
 
@@ -343,7 +343,7 @@ class QuietHoursThread(threading.Thread):
             for k, v in cur_params.items():  # no iteritems due to deletion during iteration
                 if isinstance(v, animations.QuietPeriodParameter) and v.period.expired(now):
                     del cur_params[k]
-                        
+
             self.last_run = now
             time.sleep(1.)
 
@@ -377,12 +377,12 @@ class QuietHoursThread(threading.Thread):
         settings.quiet_hours.append(p)
         # will be out of order in the list until content change; nothing we can do about this... meh
         manager.content.add_param(p.param(manager))
-            
+
     def get_param(self):
         # quiet mode parameter is a universal param -- should always be present
         return manager.content.params[self.param_id]
 
-    
+
 pending_placement_save = None
 def start_placement_save(name):
     if not manager.content.running():
@@ -421,7 +421,7 @@ def validate_config():
         config = json.load(f)
     if config['color']['whitepoint'] != [1, 1, 1]:
         print '*** NOT RUNNING AT FULL BRIGHTNESS ***'
-    
+
 
 if __name__ == "__main__":
 
@@ -436,13 +436,17 @@ if __name__ == "__main__":
 
     if settings.enable_security:
         assert settings.login_password, 'password not configured!'
-        
+
     threads = []
     def add_thread(th):
         th.start()
         threads.append(th)
 
-    manager = animations.PlayManager(broadcast_event, (lambda func: IOLoop.instance().add_callback(func)) if not settings.tornado_callbacks_hack else None)
+    def _callback():
+        # trap a ref to the main loop in a closure; IOLoop.instance() doesn't work from helper threads in tornado 5+
+        main_loop = IOLoop.current()
+        return lambda func: main_loop.add_callback(func)
+    manager = animations.PlayManager(broadcast_event, _callback())
     add_thread(manager)
 
     playlists = playlist.load_playlists()
@@ -467,12 +471,12 @@ if __name__ == "__main__":
         add_thread(QuietHoursThread())
 
     validate_config()
-    
+
     application = web.Application([
         (r'/', MainHandler),
         web.URLSpec('/login', LoginHandler, name='login'),
         (r'/game(/.*)?', GamesHandler),
-        (r'/suicide', SuicideHandler),
+        (r'/reincarnate', RebootHandler),
         (r'/socket/main', WebsocketHandler, {'playlists': playlists, 'get_content': lambda: contents}),
         (r'/socket/game/(.*)', WebsocketHandler, {'get_content': lambda query: playlist.load_games(query)}),
         (r'/(.*)', web.StaticFileHandler, {'path': web_path('static')}),
