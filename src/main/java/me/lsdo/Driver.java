@@ -32,9 +32,9 @@ public class Driver
 	processingSketches.put("gif", AnimatedGif.class);
 	processingSketches.put("ripple", Ripple.class);
 	processingSketches.put("layouttest", LayoutTest.class);
-	
-	headlessSketches.put("black", Black.class);
+
 	headlessSketches.put("cloud", Cloud.class);
+	headlessSketches.put("colortest", ColorTest.class);
 	headlessSketches.put("dontknow", DontKnow.class);
 	headlessSketches.put("gridtest", TriangularGridTest.class);
 	headlessSketches.put("harmonics", Harmonics.class);
@@ -107,7 +107,7 @@ public class Driver
 	// runSketch() still seems to do the trick, so use that unless a reason not to?
 	//app.main(new String[] {sketch.getName()});
     }
-    
+
     private static void RunAnimation(PixelMesh mesh, String name) {
 	Class<PixelMeshAnimation> sketch = headlessSketches.get(name);
         PixelMeshAnimation animation;

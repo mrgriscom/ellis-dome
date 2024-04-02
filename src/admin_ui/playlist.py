@@ -97,7 +97,7 @@ def all_content():
     global _all_content
     if not _all_content:
         _all_content = [
-            Content('black', '[util] black (note: keeps running and using cpu)', manual=True),
+            Content('colortest', '[util] color test', manual=True),
             Content('gridtest', '[util] uvw grid test', geometries=['lsdome'], manual=True),
             Content('fctest', '[util] fc topology test', params={'fcconfig': fadecandy_config()}),
             Content('layouttest', '[util] cartesian test (mouse)', manual=True, placement_filter=pixel_exact),
@@ -122,6 +122,9 @@ def all_content():
             Content('screencast', 'matrix', cmdline='/usr/lib/xscreensaver/xmatrix -no-trace -delay 25000', params={'title': 'xmatrix'}),
             Content('stream', 'hdmi-in', manual=True, stretch_aspect=True, params={
                 'camera': 'FHD Capture: FHD Capture',
+            }),
+            Content('stream', 'phonecam', manual=True, stretch_aspect=True, params={
+                'camera': 'Droidcam',
             }),
 
             Content('kaleidoscope', geometries=['lsdome'], placement_filter=pixel_exact, params={'scale': 2.}),
