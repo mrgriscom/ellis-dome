@@ -21,11 +21,10 @@ import random
 inactive_time_for_suspend = 30 # minutes
 hard_shutdown_at = .05 # battery%
 
-# TODO assumes 68.4 Wh full
 est_battery_life = 3.5 # hours, max load
 safety_margin = 2.5
 
-keep_active_battery_threshold = inactive_time_for_suspend * (100. / (est_battery_life * 60.)) * safety_margin + hard_shutdown_at
+keep_active_battery_threshold = inactive_time_for_suspend / (est_battery_life * 60.) * safety_margin + hard_shutdown_at
 #print keep_active_battery_threshold
 
 def keep_active():
