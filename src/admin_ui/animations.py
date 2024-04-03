@@ -141,7 +141,7 @@ class ContentInvocation(object):
 
     def _bulk_notify_msgs(self):
         yield {'content': self.info}
-        yield {'duration': self.timeout}
+        yield {'type': 'duration', 'duration': self.timeout, 'server_now': time.time()}
         yield {'type': 'params', 'params': [p.param for p in self.params.values()], 'invocation': self.uuid}
         for p in self.params.values():
             yield p.get_value()
@@ -156,7 +156,7 @@ class ContentInvocation(object):
 
     def set_timeout(self, timeout):
         self.timeout = timeout
-        self.manager.notify({'duration': self.timeout})
+        self.manager.notify({'type': 'duration', 'duration': self.timeout, 'server_now': time.time()})
         print 'until', self.timeout
 
     def update_info(self, kv):

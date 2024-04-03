@@ -1,8 +1,4 @@
 
-function clock() {
-    return new Date().getTime() / 1000.;
-}
-
 function AdminUIModel() {
     this.playlists = ko.observableArray();
     this.contents = ko.observableArray();
@@ -18,12 +14,19 @@ function AdminUIModel() {
     this.aspect_ratio = ko.observable();
     this.current_placement_mode = ko.observable();
     this.locked_placement = ko.observable();
-    
+
     var model = this;
-    this.now = ko.observable(new Date());
+    this.local_now = ko.observable(new Date());
     setInterval(function() {
-	model.now(new Date());
+	model.local_now(new Date());
     }, 1000);
+    this.server_clock_offset = ko.observable(0.);
+    this.set_server_now = function(server_now) {
+      model.server_clock_offset(server_now - model.local_now());
+    }
+    this.now = ko.computed(function() {
+      return new Date(model.local_now().getTime() + model.server_clock_offset());
+    });
     this.time_remaining = ko.computed(function() {
 	if (!model.current_timeout()) {
 	    return '\u221e';
@@ -46,7 +49,7 @@ function AdminUIModel() {
     this.locked_placement_name = ko.computed(function() {
 	return model.locked_placement() != null ? model.placements()[model.locked_placement()].name() : null;
     });
-    
+
     this.setMode = function(e) {
 	if (model.placementModes.indexOf(e) == 0) {
 	    e = null;
@@ -78,7 +81,7 @@ function PlaylistModel() {
 function ContentModel() {
     this.name = ko.observable();
     this.available = ko.observable(false);
-    
+
     this.load = function(data) {
 	this.name(data.name);
     }
@@ -92,7 +95,7 @@ function PlacementModel() {
     this.name = ko.observable();
     this.ix = ko.observable();
     this.available = ko.observable(false);
-    
+
     this.load = function(data) {
 	this.name(data.name);
 	this.ix(data.ix);
@@ -116,7 +119,7 @@ function connect(model, mode) {
     if (secure && window.location.host.startsWith('localhost')) {
 	alert("chrome doesn't support secure websockets to 'localhost'; use an actual IP address");
     }
-    
+
     var conn = new WebSocket((secure ? 'wss' : 'ws') + '://' + window.location.host + '/socket/' + mode);
     $('#connectionstatus').text('connecting to server...');
 
@@ -132,7 +135,7 @@ function connect(model, mode) {
 	});
 	scrollTo(0, 0);
     }
-    
+
     conn.onopen = function () {
 	$('#connectionstatus').text('');
     };
@@ -181,7 +184,7 @@ function connect(model, mode) {
 	    var playlist = data.playlist || {items: []};
 	    model.current_playlist(playlist.name);
 	    model.default_duration(playlist.duration / 60.);
-	 
+
 	    _.each(model.contents(), function(e) {
 		e.available(playlist.items.indexOf(e.name()) >= 0);
 	    });
@@ -189,6 +192,9 @@ function connect(model, mode) {
 	    model.locked_placement(data.locked_placement);
 	} else if (data.type == "duration") {
 	    model.current_timeout(data.duration ? new Date(data.duration * 1000) : null);
+            if (data.server_now) {
+                model.set_server_now(new Date(data.server_now * 1000));
+            }
 	} else if (data.type == "params") {
 	    initParams(data);
 	} else if (data.type == "param_value") {
@@ -330,7 +336,7 @@ function initParams(data) {
 	    delete PARAMS[k];
 	}
     });
-    
+
     $.each(data.params, function(i, e) {
 	e.invocation = data.invocation;
 	initParam(e);
@@ -346,7 +352,7 @@ function initParam(param) {
     if (PARAMS[param.name]) {
 	PARAMS[param.name].e.remove();
     }
-    
+
     var $section = $('#' + ({
 	placement: 'placement_controls',
 	mesh_effects: 'effects_controls',
@@ -354,12 +360,12 @@ function initParam(param) {
 	display: 'global_display',
 	quiet: 'quiet_controls',
     }[param.category] || 'controls'));
-    
+
     var $container = $('<div class="control" />');
     $section.append($container);
 
     PARAMS[param.name] = {param: param, e: $container};
-    
+
     if (param.isAction) {
 	var $button = $('<button />');
 	$container.append($button);
@@ -370,7 +376,7 @@ function initParam(param) {
 	for (var i = 0; i < param.values.length; i++) {
 	    var value = param.values[i];
 	    var caption = param.captions[i];
-	    
+
 	    var $button = $('<button />');
 	    $button.text(caption);
 	    $container.append($button);
