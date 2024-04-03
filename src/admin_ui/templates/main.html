@@ -32,6 +32,12 @@ body {
 
 button {
   user-select: none;
+  font-size: 110%;
+  margin-top: 0.5em;
+}
+
+button:active {
+  background: #35d;
 }
 
 .control {
@@ -42,7 +48,7 @@ button {
 
   <div id="connectionstatus" style="color: red;"></div>
   <div id="ui">
-  
+
   <div data-bind="text: battery_status, style: {color: battery_alert() ? 'red' : 'green'}"></div>
 
   <div>
@@ -78,19 +84,60 @@ button {
   <div data-bind="visible: !current_content()">nothing playing</div>
   <div data-bind="visible: current_content">
     <div>currently playing: <span style="font-weight: bold;" data-bind="text: current_content"></span></div>
-    <div>since <span data-bind="text: content_launch_time"></span></div>
-    <div data-bind="visible: current_timeout">
-      until <span data-bind="text: current_timeout"></span> (<span data-bind="text: time_remaining"></span> remaining)
+    <div>remaining time: <span style="font-weight: bold;">
+      <span data-bind="visible: current_timeout, text: time_remaining"></span>
+      <span data-bind="visible: !current_timeout()" style="background-color: #fdd;">playing indefinitely</span>
+    </span></div>
+
+    <div style="font-size: 85%;">(<span data-bind="text: (content_launch_time() ? content_launch_time().toLocaleString() : '')"></span> &ndash;
+      <span data-bind="visible: current_timeout, text: (current_timeout() ? current_timeout().toLocaleString() : '')"></span>)
     </div>
-    <div data-bind="visible: !current_timeout()" style="background-color: #fdd;">playing indefinitely</div>
     <div>aspect ratio: <span data-bind="text: aspect_ratio"></span></div>
   </div>
-  
+
   <div data-bind="foreach: contents">
     <div>
       <button data-bind="click: play">play</button>
       <span data-bind="text: name"></span>
       <span data-bind="visible: available" style="font-weight: bold; color: green;">&#x2713;</span>
+    </div>
+  </div>
+
+  <h3>visualization controls</h3>
+
+  <div id="controls">
+  </div>
+
+  <h3>audio controls</h3>
+
+  <div id="audio_controls">
+  </div>
+
+  <h3>effects</h3>
+
+  <div id="effects_controls">
+  </div>
+
+  <h3>custom placement</h3>
+
+  <div>save this placement preset as <input id="saveas" type="text" placeholder="name"></input> <button id="saveplacement">save</button></div>
+  <br>
+
+  <div id="placement_controls">
+  </div>
+
+  <h3>auto-placement whitelist</h3>
+
+  <div data-bind="visible: locked_placement() != null" style="background-color: #fdd; margin-top: 1em;">
+    locked placement in effect: <span style="font-weight: bold;" data-bind="text: locked_placement_name"></span>
+    <br />
+    <button data-bind="click: $root.unlockPlacement">unlock</button>
+  </div>
+
+  <div data-bind="foreach: placementModes">
+    <div>
+      <button data-bind="click: $root.setMode">whitelist</button>
+      <span data-bind="text: $data, style: {fontWeight: $data == $root.current_placement_mode() ? 'bold' : 'normal'}"></span>
     </div>
   </div>
 
@@ -106,44 +153,6 @@ button {
     </div>
   </div>
 
-  <h3>auto-placement whitelist</h3>
-
-  <div data-bind="visible: locked_placement() != null" style="background-color: #fdd; margin-top: 1em;">
-    locked placement in effect: <span style="font-weight: bold;" data-bind="text: locked_placement_name"></span>
-    <br />
-    <button data-bind="click: $root.unlockPlacement">unlock</button>
-  </div>
-  
-  <div data-bind="foreach: placementModes">
-    <div>
-      <button data-bind="click: $root.setMode">whitelist</button>
-      <span data-bind="text: $data, style: {fontWeight: $data == $root.current_placement_mode() ? 'bold' : 'normal'}"></span>
-    </div>
-  </div>
-
-  <h3>effects</h3>
-
-  <div id="effects_controls">
-  </div>
-  
-  <h3>custom placement</h3>
-
-  <div>save this placement preset as <input id="saveas" type="text" placeholder="name"></input> <button id="saveplacement">save</button></div>
-  <br>
-
-  <div id="placement_controls">
-  </div>
-  
-  <h3>visualization controls</h3>
-
-  <div id="controls">
-  </div>
-  
-  <h3>audio controls</h3>
-
-  <div id="audio_controls">
-  </div>
-
   <h3>global display</h3>
 
   <div id="global_display">
@@ -155,9 +164,8 @@ button {
   </div>
 
   </div>
-  
+
   <hr>
-  
+
 </body>
 </html>
-

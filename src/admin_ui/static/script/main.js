@@ -1,4 +1,5 @@
 
+
 function AdminUIModel() {
     this.playlists = ko.observableArray();
     this.contents = ko.observableArray();
@@ -413,7 +414,8 @@ function updateParamValue(val) {
 	    $b.css('font-weight', value == val.value ? 'bold' : 'normal');
 	}
     } else if (param.isNumeric) {
-	$e.find('#value').text(val.value);
+        var numVal = +val.value;
+	$e.find('#value').text(isNaN(numVal) ? val.value : numVal.toPrecision(3));
 	if (param.isBounded) {
 	    var k = val.sliderPos;
 	    var sliderVal = SLIDER_MIN * (1 - k) + SLIDER_MAX * k;
