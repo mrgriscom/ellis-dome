@@ -325,6 +325,8 @@ BUTTON_KEEPALIVES = {};
 function buttonAction(id, pressed) {
     if (pressed) {
 	sendEvent(id, 'button', true);
+        // clear any active keepalives just in case press triggered twice w/o release in between
+	clearInterval(BUTTON_KEEPALIVES[id]);
 	BUTTON_KEEPALIVES[id] = setInterval(function() {
 	    sendEvent(id, 'button-keepalive');
 	}, 1000);
