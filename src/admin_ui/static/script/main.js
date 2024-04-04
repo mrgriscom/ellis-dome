@@ -260,6 +260,11 @@ function bindSlider(sel, id, relative, rel_sens) {
     var $e = $(sel);
     $e.slider({min: SLIDER_MIN, max: SLIDER_MAX});
     $e.slider('value', mid);
+
+    // TODO
+    // click-anywhere-on-slider-bar to move handle is disabled in our css
+    // it would be nice if we could re-enable this functionality JUST through dbl-click
+
     $e.lastVal = $e.slider('value');
     $e.on('slide', function(evt, ui) {
 	var cur = ui.value;

@@ -72,7 +72,7 @@ class Content(object):
         vid = self.params['path']
         try:
             duration = float(os.popen('mediainfo --Inform="Video;%%Duration%%" "%s"' % vid).readlines()[0].strip())/1000.
-        except RuntimeError:
+        except (ValueError, RuntimeError):
             print 'could not read duration of %s' % vid
             duration = 0
         return duration
