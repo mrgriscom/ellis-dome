@@ -180,7 +180,7 @@ function connect(model, mode) {
 	} else if (data.type == "content") {
 	    model.current_content(data.content.name);
 	    model.content_launch_time(new Date(data.content.launched_at * 1000));
-	    model.aspect_ratio(data.content.aspect || 'n/a');
+	    model.aspect_ratio(data.content.aspect);
 	} else if (data.type == "playlist") {
 	    var playlist = data.playlist || {items: []};
 	    model.current_playlist(playlist.name);
@@ -283,29 +283,36 @@ function bindSlider(sel, id, relative, rel_sens) {
 }
 
 function bindRadioButton(sel, id, subval) {
-    $(sel).mousedown(function() {
-	sendEvent(id, 'set', subval);
-    });
-    $(sel).bind('touchstart', function(e) {
-	e.preventDefault();
+    $(sel).click(function() {
 	sendEvent(id, 'set', subval);
     });
 }
 
-function bindButton(sel, id) {
-    $(sel).mousedown(function() {
+function bindClickButton(sel, id, subval) {
+    $(sel).click(function() {
 	buttonAction(id, true);
+	buttonAction(id, false);
     });
+}
+
+function bindPressReleaseButton(sel, id) {
+    var offcolor = '#ffc';
+    var oncolor = '#35d';
+    $(sel).css('background', offcolor);
+    var set_state = function(on) {
+        $(sel).css('background', on ? oncolor : offcolor);
+	buttonAction(id, on);
+    }
+
+    $(sel).mousedown(function() { set_state(true); });
     $(sel).bind('touchstart', function(e) {
 	e.preventDefault();
-	buttonAction(id, true);
+        set_state(true);
     });
-    $(sel).mouseup(function() {
-	buttonAction(id, false);
-    });
+    $(sel).mouseup(function() { set_state(false); });
     $(sel).bind('touchend', function(e) {
 	e.preventDefault();
-	buttonAction(id, false);
+        set_state(false);
     });
 }
 
@@ -367,11 +374,15 @@ function initParam(param) {
 
     PARAMS[param.name] = {param: param, e: $container};
 
-    if (param.isAction) {
+    if (param.isAction || param.isMomentary) {
 	var $button = $('<button />');
 	$container.append($button);
 	$button.text(param.description || param.name);
-	bindButton($button, param.name);
+        if (param.isMomentary) {
+	    bindPressReleaseButton($button, param.name);
+        } else {
+	    bindClickButton($button, param.name);
+        }
     } else if (param.isEnum) {
 	$container.html('<div id="title" />');
 	for (var i = 0; i < param.values.length; i++) {

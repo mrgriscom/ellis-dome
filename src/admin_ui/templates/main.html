@@ -92,14 +92,14 @@ button:active {
     <div style="font-size: 85%;">(<span data-bind="text: (content_launch_time() ? content_launch_time().toLocaleString() : '')"></span> &ndash;
       <span data-bind="visible: current_timeout, text: (current_timeout() ? current_timeout().toLocaleString() : '')"></span>)
     </div>
-    <div>aspect ratio: <span data-bind="text: aspect_ratio"></span></div>
+    <div>aspect ratio: <span data-bind="text: (aspect_ratio() != null ? aspect_ratio().toPrecision(3) : 'n/a')"></span></div>
   </div>
 
   <div data-bind="foreach: contents">
     <div>
       <button data-bind="click: play">play</button>
-      <span data-bind="text: name"></span>
       <span data-bind="visible: available" style="font-weight: bold; color: green;">&#x2713;</span>
+      <span data-bind="text: name"></span>
     </div>
   </div>
 
@@ -148,8 +148,8 @@ button:active {
       <button data-bind="click: set">set</button>
       <button data-bind="click: lock, visible: ix() != $root.locked_placement()">lock</button>
       <span data-bind="visible: ix() == $root.locked_placement()" style="font-weight: bold;">[locked]</span>
-      <span data-bind="text: name"></span>
       <span data-bind="visible: available" style="font-weight: bold; color: green;">&#x2713;</span>
+      <span data-bind="text: name"></span>
     </div>
   </div>
 
