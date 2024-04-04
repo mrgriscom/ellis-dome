@@ -97,7 +97,7 @@ def all_content():
     global _all_content
     if not _all_content:
         _all_content = [
-            Content('colortest', '[util] color test', manual=True),
+            Content('colortest', '[util] color test', manual=True),  # NOTE: this sketch is referenced by name for go-dark functionality
             Content('gridtest', '[util] uvw grid test', geometries=['lsdome'], manual=True),
             Content('fctest', '[util] fc topology test', params={'fcconfig': fadecandy_config()}),
             Content('layouttest', '[util] cartesian test (mouse)', manual=True, placement_filter=pixel_exact),

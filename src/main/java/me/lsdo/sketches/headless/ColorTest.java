@@ -54,6 +54,8 @@ public class ColorTest extends PixelMeshAnimation<LedPixel> {
         sat.min = 0;
         sat.max = 1;
 
+        // NOTE: go-dark functionality relies on the default color of this sketch being black!
+        // FIXME: load this from config and have go-dark set it before invocation
         color.init(Color.BLACK);
     }
 

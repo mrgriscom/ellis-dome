@@ -666,7 +666,7 @@ class QuietModeParameter(Parameter):
             self.manager.broadcast_evt_func(self.volume_param_id, 'slider', self.last_volume)
 
     def go_dark(self):
-        black = [c for c in playlist.all_content().values() if c.sketch == 'black'][0]
+        black = [c for c in playlist.all_content().values() if c.sketch == 'colortest'][0]
         # if anything is running (except the black-out sketch, which likely means a duplicate button press, so ignore for idempotence)
         if self.manager.content.info and self.manager.content.info['name'] != black.name:
             print 'suspending display'
