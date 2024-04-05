@@ -244,8 +244,9 @@ def droidcam_parameters():
                 return
             print 'launching droidcam'
             # don't invoke via shell or else we just terminate the shell process at end and leave droidcam running
-            p = sp.Popen(['/home/shen/droidcam/droidcam-cli', self.ip, '4747'])
+            p = sp.Popen(['/home/shen/droidcam/droidcam-cli', self.ip, '4747'], stdin=sp.PIPE)
             self.content.processes.append(p)
+            self.content.droidcam = p
 
     class DroidcamConnectAction(animations.Parameter):
         def param_def(self):
@@ -284,7 +285,28 @@ def droidcam_parameters():
         def _update_value(self, val):
             pass
 
-    return [DroidcamConnectAction]
+    class DroidcamTorchAction(animations.Parameter):
+        def param_def(self):
+            return {
+                'name': 'toggle torch',
+                'isAction': True,
+            }
+
+        def handle_input_event(self, type, val):
+            if type != 'press':
+                return
+
+            dc = getattr(self.manager.content, 'droidcam', None)
+            if dc:
+                try:
+                    dc.stdin.write('L\n')
+                except Exception as e:
+                    print e
+
+        def _update_value(self, val):
+            pass
+
+    return [DroidcamConnectAction, DroidcamTorchAction]
 
 def game_content(rom):
     try:
