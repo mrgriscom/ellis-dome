@@ -244,6 +244,7 @@ def terminate(procs):
     """Kill each process in procs"""
     for p in (procs or []):
         try:
+            print 'killing %d' % p.pid
             p.kill()
         except psutil.NoSuchProcess:
             pass

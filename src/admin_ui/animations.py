@@ -415,6 +415,7 @@ class PlayManager(threading.Thread):
 
     def _stop_playback(self):
         launch.terminate(self.content.processes)
+        getattr(self.content, 'cleanup', lambda: None)()
         self.content = ContentInvocation(self)
         self.content.notify_all()
         print 'content stopped'

@@ -123,10 +123,11 @@ def all_content():
             Content('stream', 'hdmi-in', manual=True, stretch_aspect=True, params={
                 'camera': 'FHD Capture: FHD Capture',
             }),
-            Content('stream', 'phonecam', manual=True, stretch_aspect=True, params={
-                'camera': 'Droidcam',
-            }),
-
+            Content('stream', 'phonecam', manual=True, stretch_aspect=True,
+                    server_side_parameters=droidcam_parameters(),
+                    params={
+                        'camera': 'Droidcam',
+                    }),
             Content('kaleidoscope', geometries=['lsdome'], placement_filter=pixel_exact, params={'scale': 2.}),
             Content('kaleidoscope', geometries=['prometheus'], params={'scale': 3.2}),
             Content('imgkaleidoscope', 'hearts', geometries=['lsdome'], placement_filter=pixel_exact, params={
@@ -198,6 +199,92 @@ def projectm_parameters():
         def _update_value(self, val):
             pass
     return [ProjectMNextPatternAction]
+
+def droidcam_parameters():
+    import animations
+    import time
+    import subprocess as sp
+    import threading
+
+    IP_SUBNET = '192.168.1'
+    DHCP_RANGE = list(xrange(100, 200))
+
+    class DroidcamConnectThread(threading.Thread):
+        def __init__(self, content, ip):
+            threading.Thread.__init__(self)
+            self.up = True
+            self.content = content
+            self.ip = ip
+
+        def terminate(self):
+            self.up = False
+
+        def run(self):
+            print 'connecting to %s' % self.ip
+            # wait for port to open up before connecting
+            # on mobile port will only open if droidcam app is open, which it won't be at same time as admin ui
+            while self.up:
+                try:
+                    xmlscan = os.popen('nmap %s  -p 4747 -Pn -n --open -oX -' % self.ip).read()
+                    import xml.etree.ElementTree as ET
+                    ips = [e.find('address').get('addr') for e in ET.fromstring(xmlscan).findall('host')]
+                except Exception as e:
+                    print 'nmap error', e
+                    ips = []
+                if self.ip in ips:
+                    print 'port is open'
+                    break
+                time.sleep(.1)
+
+            if not self.up:
+                return
+            print 'killing existing droidcam instances'
+            os.popen('killall -9 droidcam-cli').read()
+            if not self.up:
+                return
+            print 'launching droidcam'
+            # don't invoke via shell or else we just terminate the shell process at end and leave droidcam running
+            p = sp.Popen(['/home/shen/droidcam/droidcam-cli', self.ip, '4747'])
+            self.content.processes.append(p)
+
+    class DroidcamConnectAction(animations.Parameter):
+        def param_def(self):
+            ips = ['.%d' % i for i in DHCP_RANGE]
+            return {
+                'name': 'phone ip',
+                'isEnum': True,
+                'values': ips,
+                'captions': ips,
+            }
+
+        def stop_other_threads(self):
+            existing_thread = getattr(self.manager.content, 'connect_thread', None)
+            if existing_thread:
+                print 'killing existing thread'
+                existing_thread.terminate()
+                existing_thread.join(5.)
+
+        def handle_input_event(self, type, val):
+            if type != 'set':
+                return
+
+            def cleanup():
+                self.stop_other_threads()
+                os.popen('killall -9 droidcam-cli').read()
+            self.manager.content.cleanup = cleanup
+
+            ip_addr = IP_SUBNET + val
+            print 'droidcam %s' % ip_addr
+
+            self.stop_other_threads()
+            connect_thread = DroidcamConnectThread(self.manager.content, ip_addr)
+            connect_thread.start()
+            self.manager.content.connect_thread = connect_thread
+
+        def _update_value(self, val):
+            pass
+
+    return [DroidcamConnectAction]
 
 def game_content(rom):
     try:
