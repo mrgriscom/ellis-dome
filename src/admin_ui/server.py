@@ -248,6 +248,10 @@ class ZMQListener(threading.Thread):
             manager.update_content_info({'aspect': msg['aspect']})
         if msg['type'] == 'placement':
             commit_placement_save(msg)
+        if msg['type'] == 'transform':
+            self.broadcast(msg)
+        if msg['type'] == 'pixels':
+            manager.set_pixels(msg)
 
     def terminate(self):
         self.up = False
