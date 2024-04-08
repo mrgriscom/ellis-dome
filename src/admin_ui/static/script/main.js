@@ -227,6 +227,8 @@ function connect(model, mode) {
 }
 
 function init() {
+    init_canvas();
+
     _init('main');
 }
 
@@ -452,12 +454,24 @@ function updateParamValue(val) {
     }
 }
 
+function init_canvas() {
+    var canvas_width = Math.min($('#ui').width(), 600);
+    var canvas = document.getElementById("placement_display");
+    canvas.width = canvas_width;
+    canvas.height = canvas_width / (16/9.);
+}
+
 function drawPlacement(_) {
   var model = this;
   var canvas = document.getElementById("placement_display");
   var ctx = canvas.getContext("2d");
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // clear canvas but make opaque
+  ctx.beginPath();
+  ctx.rect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+
   ctx.save();
 
   if (!model.pixels() || !model.transform()) {
