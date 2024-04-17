@@ -114,9 +114,12 @@ def all_content():
             Content('pixelflock', sound_reactive=True, sound_required=False, kinect_enabled=True, kinect_required=False),
             Content('kinectdepth', 'kinectdepth', kinect_enabled=True,
                     placement_filter=align_but_stretch),
-            Content('screencast', 'projectm', cmdline='projectM-pulseaudio', sound_reactive=True, volume_adjust=1.5,
-                    server_side_parameters=projectm_parameters(),
-                    post_launch=lambda manager: projectm_control(manager, 'next'), # get off the default pattern
+#            Content('screencast', 'projectm', cmdline='projectM-pulseaudio', sound_reactive=True, volume_adjust=1.5,
+#                    server_side_parameters=projectm_parameters(),
+#                    post_launch=lambda manager: projectm_control(manager, 'next'), # get off the default pattern
+#            ),
+            Content('screencast', 'butterchurn', cmdline='google-chrome --app=http://localhost:7999/demo.html', sound_reactive=True, volume_adjust=1.,
+                    server_side_parameters=butterchurn_parameters(),
             ),
             Content('screencast', 'glava', cmdline='glava', sound_reactive=True, params={'title': 'glava'}),
             Content('screencast', 'matrix', cmdline='/usr/lib/xscreensaver/xmatrix -no-trace -delay 25000', params={'title': 'xmatrix'}),
@@ -199,6 +202,48 @@ def projectm_parameters():
         def _update_value(self, val):
             pass
     return [ProjectMNextPatternAction]
+
+def butterchurn_control(mgr, command):
+    interaction = {
+        'next': 'key n',
+        'prev': 'key p',
+    }[command]
+    launch.gui_interaction(mgr.content.window_id, interaction)
+
+def butterchurn_parameters():
+    import animations
+    class ButterChurnNextPatternAction(animations.Parameter):
+        def param_def(self):
+            return {
+                'name': 'next pattern',
+                'isAction': True,
+            }
+
+        def handle_input_event(self, type, val):
+            if type != 'press':
+                return
+            butterchurn_control(self.manager, 'next')
+
+        def _update_value(self, val):
+            pass
+    class ButterChurnPrevPatternAction(animations.Parameter):
+        def param_def(self):
+            return {
+                'name': 'prev pattern',
+                'isAction': True,
+            }
+
+        def handle_input_event(self, type, val):
+            if type != 'press':
+                return
+            butterchurn_control(self.manager, 'prev')
+
+        def _update_value(self, val):
+            pass
+    return [
+        ButterChurnNextPatternAction,
+        ButterChurnPrevPatternAction,
+    ]
 
 def droidcam_parameters():
     import animations
