@@ -53,7 +53,7 @@ class AuthenticationMixin(object):
 class MainHandler(AuthenticationMixin, web.RequestHandler):
     @web.authenticated
     def get(self):
-        self.render('main.html', onload='init', geom=settings.geometry, default_duration=settings.default_duration/60.)
+        self.render('main.html', onload='init', geom=settings.geometry, default_duration=settings.default_duration/60., audio_sample_duration=settings.audio_input_sample_duration)
 
 class GamesHandler(AuthenticationMixin, web.RequestHandler):
     @web.authenticated
@@ -119,6 +119,14 @@ class WebsocketHandler(AuthenticationMixin, websocket.WebSocketHandler):
             manager.extend_duration(data['duration'], True)
         if action == 'save_placement':
             start_placement_save(data['name'])
+        if action == 'sample_audio':
+            dir = web_path('static', 'audiosamples')
+            os.popen('arecord -D pulse -d %(duration)d -f S16_LE -c1 -r44100 %(wav)s ; lame -V2 %(wav)s ; sox %(wav)s %(wavds)s rate 16k ; sox %(wavds)s -n spectrogram -o %(spectro)s' % {
+                'duration': settings.audio_input_sample_duration,
+                'wav': os.path.join(dir, 'sample.wav'),
+                'wavds': os.path.join(dir, 'downsample.wav'),
+                'spectro': os.path.join(dir, 'spectrogram.png'),
+            })
 
     def on_close(self):
         manager.unsubscribe(self)

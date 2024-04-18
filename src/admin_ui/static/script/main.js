@@ -263,6 +263,17 @@ function _init(mode) {
 	CONN.send(JSON.stringify({action: 'save_placement', name: name}));
 	alert('reload the page to access the saved placement');
     });
+    $('#audiosample').click(function() {
+	CONN.send(JSON.stringify({action: 'sample_audio'}));
+        $('#audiosample_inprogress').show();
+        $('#audioresults').hide();
+        // TODO should clear existing timeout
+        setTimeout(function() {
+          $('#audiosample_inprogress').hide();
+          $('#audioresults').show();
+        }, (AUDIO_SAMPLE_DURATION + .5) * 1000);
+
+    });
 }
 
 SLIDER_MIN = -100;

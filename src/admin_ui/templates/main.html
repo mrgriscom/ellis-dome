@@ -18,6 +18,8 @@
 {% autoescape None %}
 DATA = null;
 
+AUDIO_SAMPLE_DURATION = {{ audio_sample_duration }};
+
 $(document).ready({{ onload }});
 
   </script>
@@ -118,6 +120,13 @@ span.ui-slider-handle {
   <h3>audio controls</h3>
 
   <div id="audio_controls">
+  </div>
+
+  <button id="audiosample">sample audio input ({{ audio_sample_duration }}s delay)</button>
+  <div id="audiosample_inprogress" style="display: none;">sampling&hellip;</div>
+  <div id="audioresults" style="margin-top: 0.5em;">
+    <a target="_blank" href="audiosamples/sample.mp3">audio capture</a>
+    <a target="_blank" href="audiosamples/spectrogram.png">spectrogram</a>
   </div>
 
   <h3>effects</h3>
