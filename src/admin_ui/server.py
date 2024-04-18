@@ -121,13 +121,21 @@ class WebsocketHandler(AuthenticationMixin, websocket.WebSocketHandler):
             start_placement_save(data['name'])
         if action == 'sample_audio':
             dir = web_path('static', 'audiosamples')
-            os.popen('timeout %(duration)s pacat -r %(wav)s -d %(input)s --rate=44100 --format=s16ne --channels=1 --file-format=wav ; lame -V2 %(wav)s ; sox %(wav)s %(wavds)s rate 16k ; sox %(wavds)s -n spectrogram -o %(spectro)s' % {
+            params = {
                 'duration': settings.audio_input_sample_duration,
                 'wav': os.path.join(dir, 'sample.wav'),
                 'wavds': os.path.join(dir, 'downsample.wav'),
+                'mp3': os.path.join(dir, 'sample.mp3'),
                 'spectro': os.path.join(dir, 'spectrogram.png'),
                 'input': manager.audio_input,
-            })
+            }
+            # delete old captures to avoid confusion
+            for k in ('wav', 'wavds', 'mp3', 'spectro'):
+                os.remove(params[k])
+            # popen seems to block the main event loop (even though returns immediately?) so fire off in a thread
+            def _exec():
+                os.popen('timeout %(duration)s pacat -r %(wav)s -d %(input)s --rate=44100 --format=s16ne --channels=1 --file-format=wav ; lame -V2 %(wav)s ; sox %(wav)s %(wavds)s rate 16k ; sox %(wavds)s -n spectrogram -o %(spectro)s' % params)
+            threading.Thread(target=_exec).start()
 
     def on_close(self):
         manager.unsubscribe(self)
