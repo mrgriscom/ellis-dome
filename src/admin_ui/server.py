@@ -121,11 +121,12 @@ class WebsocketHandler(AuthenticationMixin, websocket.WebSocketHandler):
             start_placement_save(data['name'])
         if action == 'sample_audio':
             dir = web_path('static', 'audiosamples')
-            os.popen('arecord -D pulse -d %(duration)d -f S16_LE -c1 -r44100 %(wav)s ; lame -V2 %(wav)s ; sox %(wav)s %(wavds)s rate 16k ; sox %(wavds)s -n spectrogram -o %(spectro)s' % {
+            os.popen('timeout %(duration)s pacat -r %(wav)s -d %(input)s --rate=44100 --format=s16ne --channels=1 --file-format=wav ; lame -V2 %(wav)s ; sox %(wav)s %(wavds)s rate 16k ; sox %(wavds)s -n spectrogram -o %(spectro)s' % {
                 'duration': settings.audio_input_sample_duration,
                 'wav': os.path.join(dir, 'sample.wav'),
                 'wavds': os.path.join(dir, 'downsample.wav'),
                 'spectro': os.path.join(dir, 'spectrogram.png'),
+                'input': manager.audio_input,
             })
 
     def on_close(self):
