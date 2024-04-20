@@ -99,7 +99,7 @@ def all_content():
         _all_content = [
             Content('colortest', '[util] color test', manual=True),  # NOTE: this sketch is referenced by name for go-dark functionality
             Content('gridtest', '[util] uvw grid test', geometries=['lsdome'], manual=True),
-            Content('fctest', '[util] fc topology test', params={'fcconfig': fadecandy_config()}),
+            Content('fctest', '[util] fc topology test', params=fadecandy_config()),
             Content('layouttest', '[util] cartesian test (mouse)', manual=True, placement_filter=pixel_exact),
             Content('binary', '[util] binary decomp', manual=True),
             Content('cloud'),
@@ -173,10 +173,11 @@ def load_videos():
 
 def fadecandy_config():
     if settings.geometry == 'lsdome':
-        fcconfig = 'lsdome_%spanel.json' % settings.num_panels
+        layouts = ['src/config/simulator_layouts/lsdome_%spanel.json' % settings.num_panels]
     elif settings.geometry == 'prometheus':
-        fcconfig = 'prometheus_wing.json'
-    return os.path.join(settings.repo_root, 'src/config/fadecandy', fcconfig)
+        layouts = filter(None, (getattr(settings, k, None) for k in ('layout', 'layout2')))
+    fcconfigs = [os.path.join(settings.repo_root, layout.replace('/simulator_layouts/', '/fadecandy/')) for layout in layouts]
+    return dict(zip(['fcconfig', 'fcconfig2'], fcconfigs))
 
 def projectm_control(mgr, command):
     interaction = {
