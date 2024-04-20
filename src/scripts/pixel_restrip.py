@@ -116,16 +116,16 @@ def gen_fcconfig():
         fadecandies.append(strandlens[:num_strands])
         strandlens = strandlens[num_strands:]
 
+    count = [0]
     def gen_device(fc):
         dev = {}
         dev['type'] = 'fadecandy'
         dev['serial'] = 'SERIAL'
         dev['map'] = []
 
-        count = 0
         for i, strandlen in enumerate(fc):
-            dev['map'].append([0, count, i*64, strandlen])
-            count += strandlen
+            dev['map'].append([0, count[0], i*64, strandlen])
+            count[0] += strandlen
 
         return dev
     
