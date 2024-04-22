@@ -11,9 +11,11 @@ num_opcs = {
     'prometheus': 2,
 }.get(settings.geometry, 1)
 
-layout = playlist.fadecandy_config().replace('/fadecandy/', '/simulator_layouts/')
+fcconfigs = playlist.fadecandy_config()
+layouts = [fcconfigs[k].replace('/fadecandy/', '/simulator_layouts/') for k in sorted(fcconfigs.keys())]
 
 for i in xrange(num_opcs):
+    layout = layouts[0 if len(layouts) == 1 else i]
     cmd = '%s -l "%s" -p %d &' % (settings.opc_simulator_path, layout, int(settings.opcport) + i)
     # note: can't set always-on-top for additional simulator windows since the windows can't be searched by pid :-/
     launch.launch_external(cmd, 'OPC')

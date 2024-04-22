@@ -195,6 +195,7 @@ class PlayManager(threading.Thread):
         self.placement_mode = None
         self.locked_placement_ix = None
         self.sticky_param_vals = {}
+        self.pixels = None
 
         self.placements = load_placements()
         self.placement_modes = sorted(set(itertools.chain(*(p.modes for p in self.placements))) - set(['custom']))
@@ -206,8 +207,10 @@ class PlayManager(threading.Thread):
             s.notify(self._playlist_json())
             s.notify(self._placement_mode_json())
             s.notify({'locked_placement': self.locked_placement_ix})
+            s.notify({'pixels': self.pixels})
             # ping java world and force re-broadcast of its params
             self.broadcast_evt_func('_paraminfo', 'set')
+            self.broadcast_evt_func('_txinfo', 'set')
 
     def unsubscribe(self, s):
         with self.lock:
@@ -401,6 +404,14 @@ class PlayManager(threading.Thread):
     def _lock_placement(self, placement_ix):
         self.locked_placement_ix = placement_ix
         self.notify({'locked_placement': self.locked_placement_ix})
+
+    def set_pixels(self, pixels):
+        if self.pixels is not None:
+            # only handle once as they never change
+            return
+
+        self.pixels = [[[int(v*1000) for v in [px['x'], px['y']]] for px in pxs] for pxs in pixels['planes']]
+        self.notify({'pixels': self.pixels})
 
     def _extend_duration(self, duration, relnow, from_sketch):
         if from_sketch != self.content.info.get('sketch_controls_duration', False):

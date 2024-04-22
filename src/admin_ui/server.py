@@ -53,7 +53,7 @@ class AuthenticationMixin(object):
 class MainHandler(AuthenticationMixin, web.RequestHandler):
     @web.authenticated
     def get(self):
-        self.render('main.html', onload='init', geom=settings.geometry, default_duration=settings.default_duration/60.)
+        self.render('main.html', onload='init', geom=settings.geometry, default_duration=settings.default_duration/60., audio_sample_duration=settings.audio_input_sample_duration)
 
 class GamesHandler(AuthenticationMixin, web.RequestHandler):
     @web.authenticated
@@ -119,6 +119,23 @@ class WebsocketHandler(AuthenticationMixin, websocket.WebSocketHandler):
             manager.extend_duration(data['duration'], True)
         if action == 'save_placement':
             start_placement_save(data['name'])
+        if action == 'sample_audio':
+            dir = web_path('static', 'audiosamples')
+            params = {
+                'duration': settings.audio_input_sample_duration,
+                'wav': os.path.join(dir, 'sample.wav'),
+                'wavds': os.path.join(dir, 'downsample.wav'),
+                'mp3': os.path.join(dir, 'sample.mp3'),
+                'spectro': os.path.join(dir, 'spectrogram.png'),
+                'input': manager.audio_input,
+            }
+            # delete old captures to avoid confusion
+            for k in ('wav', 'wavds', 'mp3', 'spectro'):
+                os.remove(params[k])
+            # popen seems to block the main event loop (even though returns immediately?) so fire off in a thread
+            def _exec():
+                os.popen('timeout %(duration)s pacat -r %(wav)s -d %(input)s --rate=44100 --format=s16ne --channels=1 --file-format=wav ; lame -V2 %(wav)s ; sox %(wav)s %(wavds)s rate 16k ; sox %(wavds)s -n spectrogram -o %(spectro)s' % params)
+            threading.Thread(target=_exec).start()
 
     def on_close(self):
         manager.unsubscribe(self)
@@ -248,6 +265,10 @@ class ZMQListener(threading.Thread):
             manager.update_content_info({'aspect': msg['aspect']})
         if msg['type'] == 'placement':
             commit_placement_save(msg)
+        if msg['type'] == 'transform':
+            self.broadcast(msg)
+        if msg['type'] == 'pixels':
+            manager.set_pixels(msg)
 
     def terminate(self):
         self.up = False
@@ -417,10 +438,11 @@ def commit_placement_save(msg):
 
 # this assumes fc config on hub matches local copy in repo
 def validate_config():
-    with open(playlist.fadecandy_config()) as f:
-        config = json.load(f)
-    if config['color']['whitepoint'] != [1, 1, 1]:
-        print '*** NOT RUNNING AT FULL BRIGHTNESS ***'
+    for configpath in playlist.fadecandy_config().values():
+        with open(configpath) as f:
+            config = json.load(f)
+        if config['color']['whitepoint'] != [1, 1, 1]:
+            print '*** NOT RUNNING AT FULL BRIGHTNESS ***'
 
 
 if __name__ == "__main__":

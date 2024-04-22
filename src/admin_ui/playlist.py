@@ -97,9 +97,9 @@ def all_content():
     global _all_content
     if not _all_content:
         _all_content = [
-            Content('colortest', '[util] color test', manual=True),  # NOTE: this sketch is referenced by name for go-dark functionality
+            Content('colortest', '[util] color test (& set to black)', manual=True),  # NOTE: this sketch is referenced by name for go-dark functionality
             Content('gridtest', '[util] uvw grid test', geometries=['lsdome'], manual=True),
-            Content('fctest', '[util] fc topology test', params={'fcconfig': fadecandy_config()}),
+            Content('fctest', '[util] fc topology test', params=fadecandy_config()),
             Content('layouttest', '[util] cartesian test (mouse)', manual=True, placement_filter=pixel_exact),
             Content('binary', '[util] binary decomp', manual=True),
             Content('cloud'),
@@ -114,9 +114,12 @@ def all_content():
             Content('pixelflock', sound_reactive=True, sound_required=False, kinect_enabled=True, kinect_required=False),
             Content('kinectdepth', 'kinectdepth', kinect_enabled=True,
                     placement_filter=align_but_stretch),
-            Content('screencast', 'projectm', cmdline='projectM-pulseaudio', sound_reactive=True, volume_adjust=1.5,
-                    server_side_parameters=projectm_parameters(),
-                    post_launch=lambda manager: projectm_control(manager, 'next'), # get off the default pattern
+#            Content('screencast', 'projectm', cmdline='projectM-pulseaudio', sound_reactive=True, volume_adjust=1.5,
+#                    server_side_parameters=projectm_parameters(),
+#                    post_launch=lambda manager: projectm_control(manager, 'next'), # get off the default pattern
+#            ),
+            Content('screencast', 'butterchurn', cmdline='google-chrome --app=http://localhost:7999/demo.html', sound_reactive=True, volume_adjust=1.,
+                    server_side_parameters=butterchurn_parameters(),
             ),
             Content('screencast', 'glava', cmdline='glava', sound_reactive=True, params={'title': 'glava'}),
             Content('screencast', 'matrix', cmdline='/usr/lib/xscreensaver/xmatrix -no-trace -delay 25000', params={'title': 'xmatrix'}),
@@ -133,6 +136,12 @@ def all_content():
             Content('imgkaleidoscope', 'hearts', geometries=['lsdome'], placement_filter=pixel_exact, params={
                 'image': "res/img/hearts.jpg",
                 'scale': 1.,
+                'source_scale': 1.3,
+                'speed': .25,
+            }),
+            Content('imgkaleidoscope', 'hearts', geometries=['prometheus'], params={
+                'image': "res/img/hearts.jpg",
+                'scale': 1.6,
                 'source_scale': 1.3,
                 'speed': .25,
             }),
@@ -170,10 +179,11 @@ def load_videos():
 
 def fadecandy_config():
     if settings.geometry == 'lsdome':
-        fcconfig = 'lsdome_%spanel.json' % settings.num_panels
+        layouts = ['src/config/simulator_layouts/lsdome_%spanel.json' % settings.num_panels]
     elif settings.geometry == 'prometheus':
-        fcconfig = 'prometheus_wing.json'
-    return os.path.join(settings.repo_root, 'src/config/fadecandy', fcconfig)
+        layouts = filter(None, (getattr(settings, k, None) for k in ('layout', 'layout2')))
+    fcconfigs = [os.path.join(settings.repo_root, layout.replace('/simulator_layouts/', '/fadecandy/')) for layout in layouts]
+    return dict(zip(['fcconfig', 'fcconfig2'], fcconfigs))
 
 def projectm_control(mgr, command):
     interaction = {
@@ -199,6 +209,48 @@ def projectm_parameters():
         def _update_value(self, val):
             pass
     return [ProjectMNextPatternAction]
+
+def butterchurn_control(mgr, command):
+    interaction = {
+        'next': 'key n',
+        'prev': 'key p',
+    }[command]
+    launch.gui_interaction(mgr.content.window_id, interaction)
+
+def butterchurn_parameters():
+    import animations
+    class ButterChurnNextPatternAction(animations.Parameter):
+        def param_def(self):
+            return {
+                'name': 'next pattern',
+                'isAction': True,
+            }
+
+        def handle_input_event(self, type, val):
+            if type != 'press':
+                return
+            butterchurn_control(self.manager, 'next')
+
+        def _update_value(self, val):
+            pass
+    class ButterChurnPrevPatternAction(animations.Parameter):
+        def param_def(self):
+            return {
+                'name': 'prev pattern',
+                'isAction': True,
+            }
+
+        def handle_input_event(self, type, val):
+            if type != 'press':
+                return
+            butterchurn_control(self.manager, 'prev')
+
+        def _update_value(self, val):
+            pass
+    return [
+        ButterChurnNextPatternAction,
+        ButterChurnPrevPatternAction,
+    ]
 
 def droidcam_parameters():
     import animations

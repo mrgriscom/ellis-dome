@@ -15,6 +15,8 @@ function AdminUIModel() {
     this.aspect_ratio = ko.observable();
     this.current_placement_mode = ko.observable();
     this.locked_placement = ko.observable();
+    this.pixels = ko.observable();
+    this.transform = ko.observable();
 
     var model = this;
     this.local_now = ko.observable(new Date());
@@ -61,6 +63,10 @@ function AdminUIModel() {
     this.unlockPlacement = function(e) {
 	CONN.send(JSON.stringify({action: 'lock_placement', ix: null}));
     }
+
+    this.pixels.subscribe(drawPlacement, model);
+    this.transform.subscribe(drawPlacement, model);
+    this.aspect_ratio.subscribe(drawPlacement, model);
 }
 
 function PlaylistModel() {
@@ -211,12 +217,18 @@ function connect(model, mode) {
 	    }
 	    model.battery_status(status);
 	    model.battery_alert(data.battery_power);
-	}
+	} else if (data.type == "pixels") {
+            model.pixels(data.pixels);
+        } else if (data.type == "transform") {
+            model.transform(data.txs);
+        }
     };
     CONN = conn;
 }
 
 function init() {
+    init_canvas();
+
     _init('main');
 }
 
@@ -250,6 +262,17 @@ function _init(mode) {
 	}
 	CONN.send(JSON.stringify({action: 'save_placement', name: name}));
 	alert('reload the page to access the saved placement');
+    });
+    $('#audiosample').click(function() {
+	CONN.send(JSON.stringify({action: 'sample_audio'}));
+        $('#audiosample_inprogress').show();
+        $('#audioresults').hide();
+        // TODO should clear existing timeout
+        setTimeout(function() {
+          $('#audiosample_inprogress').hide();
+          $('#audioresults').show();
+        }, (AUDIO_SAMPLE_DURATION + .5) * 1000);
+
     });
 }
 
@@ -440,4 +463,120 @@ function updateParamValue(val) {
 	    P.$slider.slider('value', sliderVal);
 	}
     }
+}
+
+function init_canvas() {
+    var canvas_width = Math.min($('#ui').width(), 600);
+    var canvas = document.getElementById("placement_display");
+    canvas.width = canvas_width;
+    canvas.height = canvas_width / (16/9.);
+}
+
+function drawPlacement(_) {
+  var model = this;
+  var canvas = document.getElementById("placement_display");
+  var ctx = canvas.getContext("2d");
+
+  // clear canvas but make opaque
+  ctx.beginPath();
+  ctx.rect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+
+  ctx.save();
+
+  if (!model.pixels() || !model.transform()) {
+    return;
+  }
+
+  var forEachPlane = function(process) {
+    for (var ix in model.pixels()) {
+      var pxs = model.pixels()[ix];
+      var tx = model.transform()[ix];
+      ctx.save()
+      ctx.transform(tx.U.x, tx.U.y, tx.V.x, tx.V.y, tx.origin.x, tx.origin.y);
+      process(pxs, ix);
+      ctx.restore();
+    }
+  }
+
+  // determine the canvas render bounds -- project the pixels to see if they fall
+  // outside the sketch screen bounds
+  var width = 1;
+  var height = 1;
+  var plane_centers = [];
+  forEachPlane(function(pxs) {
+    var matrix = ctx.getTransform();
+    var sx = 0;
+    var sy = 0;
+    for (var px of pxs) {
+      var x = px[0]/1000.;
+      var y = px[1]/1000.;
+      var proj_x = matrix.a * x + matrix.c * y + matrix.e;
+      var proj_y = matrix.b * x + matrix.d * y + matrix.f;
+      width = Math.max(width, Math.abs(proj_x));
+      height = Math.max(height, Math.abs(proj_y));
+
+      // compute weighted avg of pixels as origin for rendering basis vectors
+      sx += x;
+      sy += y;
+    }
+    plane_centers.push([sx / pxs.length, sy / pxs.length]);
+  });
+
+  // determine scaling factor
+  var aspect = model.aspect_ratio() || 1.;
+  width *= aspect;
+
+  width *= 2;
+  height *= 2;
+  margin = 1.05;
+
+  var scale = Math.max(width / canvas.width, height / canvas.height);
+  scale *= margin;
+
+  // set base transform, 0-centered, vertical sketch limits at +1/-1
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.scale(1 / scale, -1. / scale);
+
+  // draw screen bounds before applying aspect transform so we don't stretch horizontal vs vertical lines (nitpicky, i know)
+  ctx.strokeStyle = "#aaa";
+  ctx.lineWidth = .02;
+  ctx.beginPath();
+  ctx.rect(-aspect, -1, 2*aspect, 2);
+  ctx.stroke();
+
+  // apply aspect transform correction (because aspect is 'baked in' to all sketch coordinates so that the rendering canvas is a unit square)
+  ctx.scale(aspect, 1.);
+
+  // pixels and basis axes will stretch with transform but don't care
+
+  // draw pixels
+  ctx.fillStyle = "black";
+  forEachPlane(function(pxs) {
+    for (var px of pxs) {
+      ctx.beginPath();
+      ctx.arc(px[0]/1000., px[1]/1000., .01, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+  });
+  // draw axes
+  ctx.lineWidth = .025;
+  var drawAxis = function(x, y, color) {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = color;
+    ctx.stroke();
+  }
+  forEachPlane(function(_, ix) {
+    ctx.save();
+    ctx.translate(plane_centers[ix][0], plane_centers[ix][1]);
+    drawAxis(1, 0, "red");
+    drawAxis(0, 1, "blue");
+    ctx.restore();
+  });
+
+  // undo transforms to clear canvas easily
+  ctx.restore();
 }

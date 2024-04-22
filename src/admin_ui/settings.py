@@ -27,6 +27,8 @@ load_java_settings(os.path.join(repo_root, 'config.properties'))
 # true if the installation has speakers
 audio_out = False
 
+audio_input_sample_duration = 5 # s
+
 # designated quiet times to automatically turn off just audio or both audio
 # and visuals. shut-off/re-enable happens once at the designated time (or first
 # time the system is running afterward if offline during the designated time).

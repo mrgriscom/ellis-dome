@@ -18,6 +18,8 @@
 {% autoescape None %}
 DATA = null;
 
+AUDIO_SAMPLE_DURATION = {{ audio_sample_duration }};
+
 $(document).ready({{ onload }});
 
   </script>
@@ -120,6 +122,13 @@ span.ui-slider-handle {
   <div id="audio_controls">
   </div>
 
+  <button id="audiosample">sample audio input ({{ audio_sample_duration }}s)</button>
+  <div id="audiosample_inprogress" style="display: none;">sampling&hellip;</div>
+  <div id="audioresults" style="margin-top: 0.5em;">
+    <a target="_blank" href="audiosamples/sample.mp3">audio capture</a>
+    <a target="_blank" href="audiosamples/spectrogram.png">spectrogram</a>
+  </div>
+
   <h3>effects</h3>
 
   <div id="effects_controls">
@@ -129,6 +138,8 @@ span.ui-slider-handle {
 
   <div>save this placement preset as <input id="saveas" type="text" placeholder="name"></input> <button id="saveplacement">save</button></div>
   <br>
+
+  <canvas id="placement_display" style="position: sticky; top: 0px; z-index: 999999;"></canvas>
 
   <div id="placement_controls">
   </div>
