@@ -118,7 +118,7 @@ def all_content():
 #                    server_side_parameters=projectm_parameters(),
 #                    post_launch=lambda manager: projectm_control(manager, 'next'), # get off the default pattern
 #            ),
-            Content('screencast', 'butterchurn', cmdline='google-chrome --app=http://localhost:7999/demo.html', sound_reactive=True, volume_adjust=1.,
+            Content('screencast', 'butterchurn', cmdline='killall -9 chrome ; google-chrome --app=http://localhost:7999/demo.html', sound_reactive=True, volume_adjust=1.,
                     server_side_parameters=butterchurn_parameters(),
             ),
             Content('screencast', 'glava', cmdline='glava', sound_reactive=True, params={'title': 'glava'}),
@@ -212,7 +212,7 @@ def projectm_parameters():
 
 def butterchurn_control(mgr, command):
     interaction = {
-        'next': 'key n',
+        'next': 'key h', # hard cut
         'prev': 'key p',
     }[command]
     launch.gui_interaction(mgr.content.window_id, interaction)
