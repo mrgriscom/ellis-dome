@@ -81,12 +81,18 @@ def to_strands():
 
 strands = list(to_strands())
 
-def reposition_pixels(old_strip, num_new_px):
+def reposition_pixels(old_strip, num_new_px, in_space_for=None):
+    OLD_PITCH_MM = 142.5
+    NEW_PITCH_MM = 149.5
+    
+    if not in_space_for:
+        in_space_for = num_new_px
+    
     path = vsub(old_strip['end'], old_strip['start'])
     old_len = vnorm(path)
     vdir = vmult(path, 1./old_len)
     old_pitch = old_len / (old_strip['num_px']-1)
-    new_pitch = 149.5 / 142.5 * old_pitch
+    new_pitch = NEW_PITCH_MM / OLD_PITCH_MM * old_pitch * (float(in_space_for) / num_new_px)
     return [vadd(old_strip['start'], vmult(vdir, new_pitch * i)) for i in range(num_new_px)]
         
 def new_strands():
@@ -99,7 +105,7 @@ def new_strands():
             csvrow = data[physical_strip_ix]
             
             new_px.extend([None]*strip['num_spacer'])
-            new_px.extend(reposition_pixels(strip, int(csvrow['newpx'])))
+            new_px.extend(reposition_pixels(strip, int(csvrow['newpx']), int(csvrow['in space for'])))
             
             logical_strip_ix += 1
         yield new_px
