@@ -39,7 +39,7 @@
       width: 50px;
     }
   </style>
-  <link rel="stylesheet" href="https://unpkg.com/normalize.css/normalize.css" />
+  <link rel="stylesheet" href="normalize.css" />
 
   <script>
     $(function() {
@@ -57,6 +57,32 @@
       var presetCycleLength = 45000;
       var presetRandom = true;
       var canvas = document.getElementById('canvas');
+
+        RATINGS = [3,5,4,2,1,2,3,0,4,0,4,2,1,0,3,2,0,4,0,4,0,3,3,3,1,1,2,0,0,4,2,5,1,1,5,1,0,0,0,0,1,4,2,0,0,0,2,4,2,0,2,2,4,3,4,0,1,2,0,2,2,1,0,0,1,1,3,1,1,0,3,4,4,5,1,0,0,0,2,2,4,0,0,1,3,0,1,2,5,1,2,2,2,1,3,2,0,0,3,3,0,0,4,0,2,4,3,3,2,1,0,0,0,0,2,3,0,5,5,0,3,0,3,0,1,0,0,0,0,2,3,0,3,0,0,1,2,1,2,4,3,1,3,1,1,1,3,0,4,4,0,0,0,0,3,1,2,1,2,0,1,0,0,1,0,2,2,2,0,0,1,2,2,0,2,0,2,2,0,0,1,0,0,3,4,1,0,0,0,2,0,3,0,0,1,0,0,2,0,0,0,0,2,0,4,3,2,2,3,3,2,0,1,1,0,0,0,3,0,1,0,3,0,3,3,2,0,2,0,4,2,5,3,3,4,1,3,1,0,1,0,0,3,2,0];
+
+        function pickRand() {
+            var x = Math.random();
+            if (x < .15) {
+                var rating = 2;
+            } else if (x < .5) {
+                var rating = 3;
+            } else if (x < .85) {
+                var rating = 4;
+            } else {
+                var rating = 5;
+            }
+            var opts = [];
+            for (var i = 0; i < presetKeys.length; i++) {
+                if (RATINGS[i] == rating) {
+                    opts.push(i);
+                }
+            }
+            var preset = opts[Math.floor(Math.random() * opts.length)];
+            console.log(rating, RATINGS[preset], preset);
+            return preset;
+
+            //return Math.floor(Math.random() * presetKeys.length);
+        }
 
       function connectToAudioAnalyzer(sourceNode) {
         if(delayedAudible) {
@@ -137,7 +163,7 @@
 
         var numPresets = presetKeys.length;
         if (presetRandom) {
-          presetIndex = Math.floor(Math.random() * presetKeys.length);
+            presetIndex = pickRand();
         } else {
           presetIndex = (presetIndex + 1) % numPresets;
         }
@@ -240,7 +266,7 @@
         }
         presets = _(presets).toPairs().sortBy(([k, v]) => k.toLowerCase()).fromPairs().value();
         presetKeys = _.keys(presets);
-        presetIndex = Math.floor(Math.random() * presetKeys.length);
+          presetIndex = pickRand();
 
         var presetSelect = document.getElementById('presetSelect');
         for(var i = 0; i < presetKeys.length; i++) {
