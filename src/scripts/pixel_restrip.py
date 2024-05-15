@@ -105,7 +105,7 @@ def new_strands():
             csvrow = data[physical_strip_ix]
             
             new_px.extend([None]*strip['num_spacer'])
-            new_px.extend(reposition_pixels(strip, int(csvrow['newpx']), int(csvrow['in space for'])))
+            new_px.extend(reposition_pixels(strip, int(csvrow['newpx']), int(csvrow['in space for']) if csvrow['in space for'] else None))
             
             logical_strip_ix += 1
         yield new_px
