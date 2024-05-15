@@ -103,10 +103,10 @@ def all_content():
             Content('layouttest', '[util] cartesian test (mouse)', manual=True, placement_filter=pixel_exact),
             Content('binary', '[util] binary decomp', manual=True),
             Content('cloud'),
-            Content('dontknow'),
+            #Content('dontknow'),
             Content('harmonics', geometries=['lsdome']),
             Content('moire'),
-            Content('rings'),
+            #Content('rings'),
             Content('tube'),
             #Content('screencast', 'vc', manual=True, cmdline='ping 4.2.2.1',  params={'title': 'hangouts'}, has_audio=True),
             Content('twinkle'),
@@ -146,9 +146,9 @@ def all_content():
                 'speed': .25,
             }),
 
-            Content('video', 'video:chrissy_poi_zoom', geometries=['lsdome'], params={
+            Content('video', 'video:chrissy_poi_zoom', geometries=['prometheus'], params={
                 'path': os.path.join(VIDEO_DIR, 'hayley_chrissy_fire_spinning.mp4'),
-            }, placement_filter=lambda p: p.name == 'poi (01-10 21:44)'),
+            }, placement_filter=lambda p: p.name == 'Chrissy (04-29 12:36)'),
         ]
         _all_content.extend(load_videos())
         _all_content = [c for c in _all_content if not c.geometries or settings.geometry in c.geometries]
@@ -172,6 +172,8 @@ def load_videos():
             args['play_mode'] = 'full'
         if any(k in vid for k in ('knife', 'flood')):
             args['has_audio'] = True
+        if 'zz_vero' in vid:
+            args['manual'] = True
 
         yield Content('video', 'video:%s' % os.path.relpath(vid, VIDEO_DIR), stretch_aspect=True, params={
             'path': vid,
